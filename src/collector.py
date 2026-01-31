@@ -14,6 +14,7 @@ from graceful_exit import should_exit, register_cleanup
 
 log = get_logger("Collector")
 
+
 class ReceiptHandler(FileSystemEventHandler):
     def __init__(self, task_queue):
         self.task_queue = task_queue
@@ -22,12 +23,13 @@ class ReceiptHandler(FileSystemEventHandler):
         if not event.is_directory:
             self.task_queue.put(event.src_path)
 
+
 class CollectorWorker(threading.Thread):
     def __init__(self, task_queue, worker_id):
         super().__init__(daemon=True, name=f"Worker-{worker_id}")
         self.task_queue = task_queue
         self.db = DBHelper()
-        self.allowed_exts = {'.pdf', '.jpg', '.jpeg', '.png', '.csv', '.xlsx'}
+        self.allowed_exts = {".pdf", ".jpg", ".jpeg", ".png", ".csv", ".xlsx"}
         # [Optimization 1] 时空关联缓冲区 (Temporal-Spatial Buffer)
         self.batch_buffer = []
         self.last_buffer_flush = time.time()
@@ -35,7 +37,7 @@ class CollectorWorker(threading.Thread):
     def run(self):
         log.info(f"{self.name} 已启动...")
         process_timeout = ConfigManager.get("collector.process_timeout", 30)
-        
+
         while not should_exit():
             try:
                 self.db.update_heartbeat(self.name, "RUNNING")
@@ -44,14 +46,17 @@ class CollectorWorker(threading.Thread):
                     self.batch_buffer.append(file_path)
                 except queue.Empty:
                     pass
-                
+
                 # 缓冲区满或超过 5 秒未刷新则处理 (F3.1.3)
-                if self.batch_buffer and (len(self.batch_buffer) >= 5 or (time.time() - self.last_buffer_flush > 5)):
+                if self.batch_buffer and (
+                    len(self.batch_buffer) >= 5
+                    or (time.time() - self.last_buffer_flush > 5)
+                ):
                     self._flush_buffer()
-                
-                if self.batch_buffer: # If still has items (not flushed yet), loop back
+
+                if self.batch_buffer:  # If still has items (not flushed yet), loop back
                     continue
-                    
+
                 self.db.update_heartbeat(self.name, "IDLE")
                 time.sleep(1)
             except Exception as e:
@@ -59,21 +64,59 @@ class CollectorWorker(threading.Thread):
                 time.sleep(1)
 
     def _flush_buffer(self):
-        if not self.batch_buffer: return
-        log.info(f"正在处理时空关联批次 (Size: {len(self.batch_buffer)})")
-        
-        # [Optimization 1] 生成组 ID (Spatial-Temporal Aggregation)
-        # 简单策略：同一个批次内的照片视为一个逻辑组
-        group_id = f"SG-{int(time.time()/300)}-{hashlib.md5(str(self.batch_buffer).encode()).hexdigest()[:6]}"
-        
+        if not self.batch_buffer:
+            return
+        log.info(f"正在处理时空关联批次 (Total Size: {len(self.batch_buffer)})")
+
+        # [Optimization 1] 增强型智能分组 (Smart Temporal Grouping)
+        # Cluster files by time window (60s) to form logical events
+
+        # 1. Get file modification times
+        files_with_time = []
         for path in self.batch_buffer:
             try:
-                if self._should_process(path):
-                    self._process_file(path, group_id=group_id)
-                self.task_queue.task_done()
-            except Exception as e:
-                log.error(f"处理缓冲文件失败 {path}: {e}")
-                
+                mtime = os.path.getmtime(path)
+                files_with_time.append((path, mtime))
+            except:
+                files_with_time.append((path, time.time()))
+
+        # 2. Sort by time
+        files_with_time.sort(key=lambda x: x[1])
+
+        # 3. Cluster
+        groups = []
+        if files_with_time:
+            current_group = [files_with_time[0]]
+            for i in range(1, len(files_with_time)):
+                prev_time = current_group[-1][1]
+                curr_time = files_with_time[i][1]
+
+                # If gap > 60s, break group
+                if curr_time - prev_time > 60:
+                    groups.append(current_group)
+                    current_group = [files_with_time[i]]
+                else:
+                    current_group.append(files_with_time[i])
+            groups.append(current_group)
+
+        # 4. Process clusters
+        for group in groups:
+            # Generate group ID based on first file time and hash of paths
+            first_time = int(group[0][1])
+            paths_str = "".join([x[0] for x in group])
+            group_hash = hashlib.md5(paths_str.encode()).hexdigest()[:6]
+            group_id = f"SG-{first_time}-{group_hash}"
+
+            log.info(f"  - 发现分组 {group_id} (包含 {len(group)} 个文件)")
+
+            for path, _ in group:
+                try:
+                    if self._should_process(path):
+                        self._process_file(path, group_id=group_id)
+                    self.task_queue.task_done()
+                except Exception as e:
+                    log.error(f"处理缓冲文件失败 {path}: {e}")
+
         self.batch_buffer.clear()
         self.last_buffer_flush = time.time()
 
@@ -81,32 +124,45 @@ class CollectorWorker(threading.Thread):
         """增量扫描逻辑：检查路径是否已在 DB 中"""
         try:
             with self.db.transaction() as conn:
-                res = conn.execute("SELECT id FROM transactions WHERE file_path = ?", (file_path,)).fetchone()
+                res = conn.execute(
+                    "SELECT id FROM transactions WHERE file_path = ?", (file_path,)
+                ).fetchone()
                 return res is None
         except:
             return True
 
     def _process_file(self, file_path, group_id=None):
         import uuid
+
         trace_id = str(uuid.uuid4())
-        
-        time.sleep(0.1) # 降低资源占用
-        if not os.path.exists(file_path): return
-        
+
+        time.sleep(0.1)  # 降低资源占用
+        if not os.path.exists(file_path):
+            return
+
         # [Suggestion 10] 增加文件锁定检查
         try:
-            with open(file_path, 'a'):
+            with open(file_path, "a"):
                 pass
         except IOError:
-            log.warning(f"文件正在被写入，跳过本次处理: {file_path}", extra={'trace_id': trace_id})
+            log.warning(
+                f"文件正在被写入，跳过本次处理: {file_path}",
+                extra={"trace_id": trace_id},
+            )
             return
 
         ext = os.path.splitext(file_path)[1].lower()
-        if ext not in self.allowed_exts: return
-        
+        if ext not in self.allowed_exts:
+            return
+
         # [Optimization 1] 影子银企直连识别
-        if ext in {'.csv', '.xlsx'} and any(kw in file_path.lower() for kw in ["流水", "statement", "bank"]):
-            log.info(f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...", extra={'trace_id': trace_id})
+        if ext in {".csv", ".xlsx"} and any(
+            kw in file_path.lower() for kw in ["流水", "statement", "bank"]
+        ):
+            log.info(
+                f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...",
+                extra={"trace_id": trace_id},
+            )
             self._parse_bank_statement(file_path)
             return
 
@@ -121,7 +177,8 @@ class CollectorWorker(threading.Thread):
 
         # 混合哈希计算
         file_hash = calculate_file_hash(file_path)
-        if not file_hash: return
+        if not file_hash:
+            return
 
         # 入库
         res = self.db.add_transaction_with_tags(
@@ -131,16 +188,19 @@ class CollectorWorker(threading.Thread):
             file_path=file_path,
             file_hash=file_hash,
             group_id=group_id,
-            tags=tags
+            tags=tags,
         )
         if res:
-            log.info(f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}", extra={'trace_id': trace_id})
+            log.info(
+                f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}",
+                extra={"trace_id": trace_id},
+            )
 
     def _parse_bank_statement(self, file_path):
         try:
             import csv
             import pandas as pd
-            
+
             # [Optimization 1] Load mapping from config
             mapping = ConfigManager.get("bank_mapping.default", {})
             col_vendor = mapping.get("vendor_col", "对方户名")
@@ -148,48 +208,56 @@ class CollectorWorker(threading.Thread):
             encoding = mapping.get("encoding", "utf-8-sig")
 
             batch = []
-            
+
             # Support both CSV and Excel
             ext = os.path.splitext(file_path)[1].lower()
-            if ext == '.csv':
+            if ext == ".csv":
                 df = pd.read_csv(file_path, encoding=encoding)
             else:
                 df = pd.read_excel(file_path)
-            
+
             # Normalize columns
             df.columns = [c.strip() for c in df.columns]
-            
+
             if col_vendor not in df.columns or col_amount not in df.columns:
-                log.warning(f"列名不匹配 (Need: {col_vendor}, {col_amount}). Found: {df.columns.tolist()}")
+                log.warning(
+                    f"列名不匹配 (Need: {col_vendor}, {col_amount}). Found: {df.columns.tolist()}"
+                )
                 return
 
             for _, row in df.iterrows():
-                vendor = str(row.get(col_vendor, '未知商户')).strip()
+                vendor = str(row.get(col_vendor, "未知商户")).strip()
                 try:
                     # Clean amount string (remove currency symbols, commas)
-                    amt_str = str(row.get(col_amount, 0)).replace(',', '').replace('¥', '')
+                    amt_str = (
+                        str(row.get(col_amount, 0)).replace(",", "").replace("¥", "")
+                    )
                     amount = float(amt_str)
-                except: 
+                except:
                     continue
-                
-                if amount == 0: continue
-                
+
+                if amount == 0:
+                    continue
+
                 # Use absolute value for now, assuming bank statement mixes +/-
-                batch.append({
-                    "amount": abs(amount), 
-                    "vendor_keyword": vendor, 
-                    "source": "BANK_FLOW"
-                })
-                
+                batch.append(
+                    {
+                        "amount": abs(amount),
+                        "vendor_keyword": vendor,
+                        "source": "BANK_FLOW",
+                    }
+                )
+
                 if len(batch) >= 50:
                     self.db.add_pending_entries_batch(batch)
                     batch = []
-            
+
             if batch:
                 self.db.add_pending_entries_batch(batch)
             log.info(f"流水解析完成: {os.path.basename(file_path)}")
         except Exception as e:
             log.error(f"解析流水失败: {e}")
+
 
 def scan_input_dir(input_dir, task_queue):
     log.info(f"执行全量补偿扫描: {input_dir}")
@@ -198,10 +266,11 @@ def scan_input_dir(input_dir, task_queue):
             full_path = os.path.join(root, file)
             task_queue.put(full_path)
 
+
 def start_watching():
     input_dir = ConfigManager.get("path.input")
     os.makedirs(input_dir, exist_ok=True)
-    
+
     task_queue = queue.Queue()
     db = DBHelper()
 
@@ -221,19 +290,21 @@ def start_watching():
     observer.start()
     register_cleanup(observer.stop)
     register_cleanup(observer.join)
-    
+
     scan_interval = ConfigManager.get("intervals.collector_scan", 60)
-    
+
     try:
         while not should_exit():
             db.update_heartbeat("Collector-Master", "ACTIVE")
             time.sleep(scan_interval)
-            if should_exit(): break
+            if should_exit():
+                break
             scan_input_dir(input_dir, task_queue)
     except Exception as e:
         log.error(f"Collector 主循环异常: {e}")
     finally:
         log.info("Collector 正在退出...")
+
 
 if __name__ == "__main__":
     start_watching()
