@@ -4,6 +4,7 @@ import os
 import re
 import threading
 import time
+import uuid
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 
@@ -12,9 +13,12 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
 from privacy_guard import PrivacyGuard
 from config_manager import ConfigManager
-from accounting_agent import AccountingAgent
+from accounting_agent import AccountingAgent, RecoveryWorker
 from match_engine import MatchEngine
 from db_helper import DBHelper
+from sentinel_agent import SentinelAgent
+from collector import CollectorWorker
+import queue
 
 class TestLedgerAlpha(unittest.TestCase):
     @classmethod
@@ -29,10 +33,11 @@ class TestLedgerAlpha(unittest.TestCase):
         with self.db.transaction("IMMEDIATE") as conn:
             conn.execute("DELETE FROM transactions")
             conn.execute("DELETE FROM pending_entries")
+            conn.execute("DELETE FROM dept_budgets")
+            conn.execute("DELETE FROM system_events")
         self.guard = PrivacyGuard()
 
     def tearDown(self):
-        # 可以在这里做清理工作
         pass
 
     def test_privacy_roles(self):
@@ -43,9 +48,7 @@ class TestLedgerAlpha(unittest.TestCase):
         guest_guard = PrivacyGuard(role="GUEST")
         
         self.assertEqual(admin_guard.desensitize(raw), raw)
-        # 审计员半脱敏
         self.assertTrue(re.search(r'138\*{4}5678', auditor_guard.desensitize(raw)))
-        # 访客全脱敏
         self.assertEqual(guest_guard.desensitize(raw), "[PHONE_SECRET]")
 
     def test_db_concurrency_stress(self):
@@ -65,29 +68,82 @@ class TestLedgerAlpha(unittest.TestCase):
         
         self.assertEqual(len(errors), 0, f"并发写入出现错误: {errors}")
 
-    def test_accounting_agent_with_mock(self):
-        """使用 Mock 替代真实 LLM 调用测试业务逻辑"""
-        agent = AccountingAgent("MockPuppy")
-        # 模拟规则库返回
-        mock_reply = MagicMock()
-        mock_reply.content = {"category": "交通费", "confidence": 0.99}
+    def test_sentinel_compliance(self):
+        """测试 Sentinel 的合规性检查 (Budget & Relevance)"""
+        sentinel = SentinelAgent("TestSentinel")
         
-        with patch.object(AccountingAgent, 'reply', return_value=mock_reply):
-            res = agent.reply({"content": "测试滴滴", "amount": 10})
-            self.assertEqual(res.content["category"], "交通费")
+        # 1. 业务相关性测试
+        proposal_bad = {"vendor": "肯德基", "category": "办公用品", "amount": 50}
+        passed, reason = sentinel.check_transaction_compliance(proposal_bad)
+        self.assertFalse(passed)
+        self.assertIn("业务相关性存疑", reason)
+
+        # 2. 预算熔断测试
+        with self.db.transaction("IMMEDIATE") as conn:
+            conn.execute("INSERT INTO dept_budgets (dept_name, monthly_limit, current_spent) VALUES ('R&D', 1000, 900)")
+        
+        proposal_over = {
+            "vendor": "AWS", 
+            "category": "技术服务", 
+            "amount": 200, 
+            "tags": [{"key": "department", "value": "R&D"}]
+        }
+        passed, reason = sentinel.check_transaction_compliance(proposal_over)
+        self.assertFalse(passed)
+        self.assertIn("预算熔断", reason)
+
+    def test_accounting_recovery(self):
+        """测试 AccountingAgent 的自愈恢复逻辑"""
+        agent = AccountingAgent("TestAccountant")
+        worker = RecoveryWorker(agent)
+        
+        # 1. 插入一个被驳回的单据
+        tid = self.db.add_transaction(
+            vendor="阿里云计算", 
+            amount=500.0, 
+            status="REJECTED", 
+            category="错误科目",
+            inference_log="{}"
+        )
+        
+        # 2. 执行恢复
+        worker._attempt_recovery({"id": tid, "vendor": "阿里云计算", "amount": 500.0, "inference_log": "{}"})
+        
+        # 3. 验证结果
+        with self.db.transaction("DEFERRED") as conn:
+            row = conn.execute("SELECT status, category FROM transactions WHERE id = ?", (tid,)).fetchone()
+            self.assertEqual(row['status'], 'PENDING_AUDIT')
+            self.assertEqual(row['category'], '技术服务费-云资源')
+
+    def test_collector_traceability(self):
+        """测试采集器是否正确生成 Trace ID"""
+        q = queue.Queue()
+        collector = CollectorWorker(q, 0)
+        
+        # 模拟文件处理
+        test_file = "/tmp/test_receipt.jpg"
+        with open(test_file, 'w') as f: f.write("dummy content")
+        
+        try:
+            collector._process_file(test_file)
+            
+            # 验证 DB 中是否有 trace_id
+            with self.db.transaction("DEFERRED") as conn:
+                row = conn.execute("SELECT trace_id FROM transactions WHERE file_path = ?", (test_file,)).fetchone()
+                self.assertIsNotNone(row)
+                self.assertTrue(len(row['trace_id']) > 10)
+        finally:
+            if os.path.exists(test_file): os.remove(test_file)
 
     def test_end_to_end_matching_flow(self):
         """集成测试：模拟完整对账链路"""
-        # 1. 注入模拟数据
         self.db.add_transaction(amount=99.9, vendor='模拟供应商', status='PENDING')
         with self.db.transaction("IMMEDIATE") as conn:
             conn.execute("INSERT INTO pending_entries (amount, vendor_keyword, status) VALUES (99.9, '模拟', 'PENDING')")
         
-        # 2. 执行对账
         engine = MatchEngine()
         engine.run_matching()
         
-        # 3. 校验结果
         with self.db.transaction("DEFERRED") as conn:
             res = conn.execute("SELECT status FROM transactions WHERE amount = 99.9").fetchone()
             self.assertEqual(res['status'], 'MATCHED')

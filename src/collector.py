@@ -87,6 +87,9 @@ class CollectorWorker(threading.Thread):
             return True
 
     def _process_file(self, file_path, group_id=None):
+        import uuid
+        trace_id = str(uuid.uuid4())
+        
         time.sleep(0.1) # 降低资源占用
         if not os.path.exists(file_path): return
         
@@ -95,7 +98,7 @@ class CollectorWorker(threading.Thread):
             with open(file_path, 'a'):
                 pass
         except IOError:
-            log.warning(f"文件正在被写入，跳过本次处理: {file_path}")
+            log.warning(f"文件正在被写入，跳过本次处理: {file_path}", extra={'trace_id': trace_id})
             return
 
         ext = os.path.splitext(file_path)[1].lower()
@@ -103,7 +106,7 @@ class CollectorWorker(threading.Thread):
         
         # [Optimization 1] 影子银企直连识别
         if ext in {'.csv', '.xlsx'} and any(kw in file_path.lower() for kw in ["流水", "statement", "bank"]):
-            log.info(f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...")
+            log.info(f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...", extra={'trace_id': trace_id})
             self._parse_bank_statement(file_path)
             return
 
@@ -122,6 +125,7 @@ class CollectorWorker(threading.Thread):
 
         # 入库
         res = self.db.add_transaction_with_tags(
+            trace_id=trace_id,
             status="PENDING",
             source_type="MANUAL",
             file_path=file_path,
@@ -130,7 +134,7 @@ class CollectorWorker(threading.Thread):
             tags=tags
         )
         if res:
-            log.info(f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}")
+            log.info(f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}", extra={'trace_id': trace_id})
 
     def _parse_bank_statement(self, file_path):
         try:

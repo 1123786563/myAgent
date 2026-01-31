@@ -26,7 +26,14 @@ class DBHelper:
             
             conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=busy_timeout/1000)
             conn.row_factory = sqlite3.Row
+            
+            # [Optimization 6] High Concurrency Pragmas
             conn.execute(f"PRAGMA journal_mode={journal_mode}")
+            conn.execute("PRAGMA synchronous = NORMAL") # Faster in WAL mode, safe against app crash
+            conn.execute("PRAGMA temp_store = MEMORY")  # Use RAM for temp tables
+            conn.execute("PRAGMA mmap_size = 30000000000") # Use mmap for reading (if supported)
+            conn.execute("PRAGMA cache_size = -64000") # 64MB Cache
+            
             self._local.conn = conn
             # 优化点：初始化预编译语句缓存
             self._local.statement_cache = {}
@@ -515,6 +522,10 @@ class DBHelper:
         [Suggestion 2] 增强幂等入库逻辑，利用 trace_id 防止重复记账
         [Suggestion 3] 集成隐私脱敏网关 (PrivacyGuard)
         """
+        import uuid
+        if 'trace_id' not in kwargs or not kwargs['trace_id']:
+            kwargs['trace_id'] = str(uuid.uuid4())
+
         from privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="DB_WRITER")
         

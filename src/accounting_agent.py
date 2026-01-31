@@ -196,3 +196,95 @@ class AccountingAgent(AgentBase):
     def batch_reply(self, items: list) -> list:
         self._load_rules()
         return [self.reply(item) for item in items]
+
+class RecoveryWorker(threading.Thread):
+    """
+    [Optimization 4] 自愈工作线程 (Self-Healing Worker)
+    负责扫描被审计驳回的单据，并升级到 L2 (OpenManus) 进行重试
+    """
+    def __init__(self, agent):
+        super().__init__(daemon=True, name="Accounting-Recovery")
+        self.agent = agent
+        self.db = DBHelper()
+
+    def run(self):
+        log.info("RecoveryWorker 启动: 监听 REJECTED 队列...")
+        while True:
+            try:
+                # 1. 扫描被驳回的交易
+                with self.db.transaction("DEFERRED") as conn:
+                    # 查找最近 24 小时内被驳回且未尝试过恢复的记录
+                    sql = """
+                        SELECT id, vendor, amount, inference_log 
+                        FROM transactions 
+                        WHERE status = 'REJECTED' 
+                        AND created_at > datetime('now', '-1 day')
+                        AND inference_log NOT LIKE '%RECOVERY_ATTEMPT%'
+                    """
+                    tasks = conn.execute(sql).fetchall()
+                
+                for task in tasks:
+                    self._attempt_recovery(dict(task))
+                
+                time.sleep(60) # 每分钟扫描一次
+            except Exception as e:
+                log.error(f"自愈扫描异常: {e}")
+                time.sleep(60)
+
+    def _attempt_recovery(self, task):
+        tid = task['id']
+        log.info(f"正在尝试修复交易 {tid} (Vendor: {task['vendor']})...")
+        
+        # 模拟调用 L2 OpenManus
+        # 实际应通过 Bus 发送请求，此处简化为本地 L2 逻辑
+        new_category = "待人工确认"
+        reason = "L2无法确定"
+        
+        # 简单的 L2 模拟逻辑
+        if "阿里云" in task['vendor']:
+            new_category = "技术服务费-云资源"
+            reason = "L2知识库命中"
+        elif float(task['amount']) < 100:
+            new_category = "杂项费用"
+            reason = "L2小额豁免"
+            
+        # 更新数据库
+        try:
+            with self.db.transaction("IMMEDIATE") as conn:
+                import json
+                old_log = task['inference_log']
+                new_log_entry = {"step": "RECOVERY_ATTEMPT", "l2_decision": new_category, "reason": reason}
+                
+                # 尝试追加日志
+                try:
+                    log_obj = json.loads(old_log) if old_log else {}
+                    if "recovery_trace" not in log_obj: log_obj["recovery_trace"] = []
+                    log_obj["recovery_trace"].append(new_log_entry)
+                    final_log = json.dumps(log_obj, ensure_ascii=False)
+                except:
+                    final_log = str(old_log) + " | RECOVERY: " + str(new_log_entry)
+
+                conn.execute("""
+                    UPDATE transactions 
+                    SET category = ?, status = 'PENDING_AUDIT', inference_log = ? 
+                    WHERE id = ?
+                """, (new_category, final_log, tid))
+            
+            log.info(f"交易 {tid} 修复成功 -> {new_category}，已重新提交审计。")
+        except Exception as e:
+            log.error(f"交易 {tid} 修复失败: {e}")
+
+if __name__ == "__main__":
+    import threading
+    import time
+    from graceful_exit import should_exit
+    
+    agent = AccountingAgent("Accounting-Master")
+    worker = RecoveryWorker(agent)
+    worker.start()
+    
+    log.info("AccountingAgent 服务已启动 (包含自愈模块)...")
+    
+    # 模拟服务循环，处理来自 Bus 的请求 (此处仅为占位，实际需对接 MQ 或 DB 轮询)
+    while not should_exit():
+        time.sleep(5)

@@ -245,6 +245,16 @@ class AuditorAgent(AgentBase):
         if not self._check_global_balance(category, amount):
             return self._reject(x, "致命错误：该分录将导致全局试算不平衡 (Assets != Liabilities + Equity)")
 
+        # [Optimization 3] 呼叫 Sentinel 进行税务与预算合规性预检
+        from sentinel_agent import SentinelAgent
+        sentinel = SentinelAgent("Sentinel-Audit-Hook")
+        compliance_passed, compliance_reason = sentinel.check_transaction_compliance(proposal)
+        if not compliance_passed:
+             log.warning(f"Sentinel 合规阻断: {compliance_reason} | TraceID={trace_id}")
+             is_rejected = True
+             risk_score = 1.0
+             reasons.append(f"[Sentinel] {compliance_reason}")
+
         # 优化点：检索供应商当前的审计状态
         audit_info = self._get_vendor_audit_info(vendor)
         audit_status = audit_info.get("audit_status", "GRAY")

@@ -26,6 +26,7 @@ class MasterDaemon:
             "InteractionHub": get_path("src", "interaction_hub.py"),
             "Collector": get_path("src", "collector.py"),
             "MatchEngine": get_path("src", "match_engine.py"),
+            "AccountingAgent": get_path("src", "accounting_agent.py"),
             "Auditor": get_path("src", "auditor_agent.py"),
             "Sentinel": get_path("src", "sentinel_agent.py")
         }

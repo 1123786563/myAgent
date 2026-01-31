@@ -158,8 +158,38 @@ class SentinelAgent(AgentBase):
         return None
 
     def _get_monthly_stats(self):
-        # 实际应从 DB 聚合
-        return {"revenue": 95000, "vat_in": 2000}
+        """
+        [Optimization 3] 获取本月经营数据聚合 (Real DB Data)
+        """
+        return self.db.get_monthly_stats()
+
+    def check_transaction_compliance(self, proposal):
+        """
+        [Optimization 3] 公共合规性检查接口 (供 Auditor 调用)
+        返回: (bool passed, str reason)
+        """
+        vendor = proposal.get("vendor", "")
+        category = proposal.get("category", "")
+        amount = float(proposal.get("amount", 0))
+        
+        # 1. 业务相关性检查
+        if not self._check_business_relevance(vendor, category):
+            return False, f"业务相关性存疑: 供应商[{vendor}]与科目[{category}]不匹配"
+            
+        # 2. 预算检查 (如果能提取出部门)
+        # 简单逻辑：假设 tag 中有 department
+        tags = proposal.get("tags", [])
+        dept = next((t['value'] for t in tags if t['key'] == 'department'), None)
+        if dept:
+            if not self._check_budget_compliance(dept, amount):
+                return False, f"预算熔断: 部门[{dept}]余额不足"
+                
+        # 3. 价格离群检查
+        is_normal, deviation = self._analyze_vendor_price_clustering(vendor, category, amount)
+        if not is_normal:
+            return False, f"价格异常: 偏离历史中位数 {deviation:.1%}"
+            
+        return True, "Compliance Check Passed"
 
     def reply(self, x: dict = None) -> dict:
         proposal = x.get("content", {})
