@@ -3,10 +3,181 @@ import json
 import time
 import random
 import os
+import hashlib
+import threading
 from logger import get_logger
 from project_paths import get_path
+from config_manager import ConfigManager
 
 log = get_logger("LLMConnector")
+
+
+class TokenBudgetManager:
+    """
+    [Optimization Iteration 3] Token 用量统计与预算控制
+    防止 LLM 成本失控，支持日/月预算限制
+    """
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls):
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._instance._init_stats()
+        return cls._instance
+
+    def _init_stats(self):
+        self.daily_tokens = 0
+        self.daily_cost_usd = 0.0
+        self.monthly_tokens = 0
+        self.monthly_cost_usd = 0.0
+        self.request_count = 0
+        self.cache_hits = 0
+        self.last_reset_day = time.strftime("%Y-%m-%d")
+        self.last_reset_month = time.strftime("%Y-%m")
+
+        # 从配置加载预算限制
+        self.daily_budget_usd = ConfigManager.get("llm.daily_budget_usd", 10.0)
+        self.monthly_budget_usd = ConfigManager.get("llm.monthly_budget_usd", 200.0)
+
+        # Token 价格 (每 1K tokens)
+        self.input_price_per_1k = ConfigManager.get("llm.input_price_per_1k", 0.0001)
+        self.output_price_per_1k = ConfigManager.get("llm.output_price_per_1k", 0.0002)
+
+    def _maybe_reset_counters(self):
+        """检查并重置日/月计数器"""
+        today = time.strftime("%Y-%m-%d")
+        month = time.strftime("%Y-%m")
+
+        if today != self.last_reset_day:
+            log.info(f"Token 日统计重置: 昨日消耗 {self.daily_tokens} tokens, ${self.daily_cost_usd:.4f}")
+            self.daily_tokens = 0
+            self.daily_cost_usd = 0.0
+            self.last_reset_day = today
+
+        if month != self.last_reset_month:
+            log.info(f"Token 月统计重置: 上月消耗 {self.monthly_tokens} tokens, ${self.monthly_cost_usd:.4f}")
+            self.monthly_tokens = 0
+            self.monthly_cost_usd = 0.0
+            self.last_reset_month = month
+
+    def check_budget(self) -> tuple:
+        """检查预算是否超限，返回 (是否允许, 原因)"""
+        self._maybe_reset_counters()
+
+        if self.daily_cost_usd >= self.daily_budget_usd:
+            return False, f"日预算已用尽 (${self.daily_cost_usd:.2f} >= ${self.daily_budget_usd:.2f})"
+
+        if self.monthly_cost_usd >= self.monthly_budget_usd:
+            return False, f"月预算已用尽 (${self.monthly_cost_usd:.2f} >= ${self.monthly_budget_usd:.2f})"
+
+        return True, "OK"
+
+    def record_usage(self, input_tokens: int, output_tokens: int):
+        """记录 Token 使用量"""
+        self._maybe_reset_counters()
+
+        total_tokens = input_tokens + output_tokens
+        cost = (input_tokens / 1000 * self.input_price_per_1k +
+                output_tokens / 1000 * self.output_price_per_1k)
+
+        with self._lock:
+            self.daily_tokens += total_tokens
+            self.daily_cost_usd += cost
+            self.monthly_tokens += total_tokens
+            self.monthly_cost_usd += cost
+            self.request_count += 1
+
+        log.debug(f"Token 使用: +{total_tokens} (In:{input_tokens}, Out:{output_tokens}), 成本: +${cost:.4f}")
+
+    def record_cache_hit(self):
+        """记录缓存命中"""
+        with self._lock:
+            self.cache_hits += 1
+
+    def get_stats(self) -> dict:
+        """获取统计信息"""
+        self._maybe_reset_counters()
+        return {
+            "daily_tokens": self.daily_tokens,
+            "daily_cost_usd": round(self.daily_cost_usd, 4),
+            "monthly_tokens": self.monthly_tokens,
+            "monthly_cost_usd": round(self.monthly_cost_usd, 4),
+            "request_count": self.request_count,
+            "cache_hits": self.cache_hits,
+            "cache_hit_rate": round(self.cache_hits / max(1, self.request_count + self.cache_hits) * 100, 1)
+        }
+
+
+class LLMResponseCache:
+    """
+    [Optimization Iteration 3] LLM 响应缓存
+    相同查询避免重复调用，节省成本
+    """
+    def __init__(self, max_size: int = 500, ttl_seconds: int = 3600):
+        self.cache = {}
+        self.access_times = {}
+        self.max_size = max_size
+        self.ttl_seconds = ttl_seconds
+        self._lock = threading.Lock()
+
+    def _generate_key(self, prompt: str, model: str) -> str:
+        """生成缓存键"""
+        content = f"{model}:{prompt}"
+        return hashlib.md5(content.encode()).hexdigest()
+
+    def get(self, prompt: str, model: str) -> dict:
+        """获取缓存的响应"""
+        key = self._generate_key(prompt, model)
+
+        with self._lock:
+            if key in self.cache:
+                entry = self.cache[key]
+                # 检查 TTL
+                if time.time() - entry["timestamp"] < self.ttl_seconds:
+                    self.access_times[key] = time.time()
+                    log.debug(f"LLM 缓存命中: {key[:8]}...")
+                    return entry["response"]
+                else:
+                    # 过期，删除
+                    del self.cache[key]
+                    if key in self.access_times:
+                        del self.access_times[key]
+
+        return None
+
+    def set(self, prompt: str, model: str, response: dict):
+        """存储响应到缓存"""
+        key = self._generate_key(prompt, model)
+
+        with self._lock:
+            # LRU 淘汰
+            if len(self.cache) >= self.max_size:
+                oldest_key = min(self.access_times, key=self.access_times.get)
+                del self.cache[oldest_key]
+                del self.access_times[oldest_key]
+                log.debug(f"LLM 缓存淘汰: {oldest_key[:8]}...")
+
+            self.cache[key] = {
+                "response": response,
+                "timestamp": time.time()
+            }
+            self.access_times[key] = time.time()
+
+    def clear(self):
+        """清空缓存"""
+        with self._lock:
+            self.cache.clear()
+            self.access_times.clear()
+        log.info("LLM 响应缓存已清空")
+
+
+# 全局缓存实例
+_response_cache = LLMResponseCache(
+    max_size=ConfigManager.get("llm.cache_max_size", 500),
+    ttl_seconds=ConfigManager.get("llm.cache_ttl_seconds", 3600)
+)
 
 
 class BaseLLM(abc.ABC):
@@ -22,6 +193,206 @@ class BaseLLM(abc.ABC):
         }
         """
         pass
+
+
+class OpenAICompatibleLLM(BaseLLM):
+    """
+    [Optimization Iteration 2] 真实 LLM API 接入
+    [Optimization Iteration 3] 集成 Token 预算管理与响应缓存
+    支持 OpenAI 兼容 API (包括本地部署的模型服务)
+    """
+
+    def __init__(self):
+        self.base_url = ConfigManager.get("llm.base_url", "http://127.0.0.1:8045/v1")
+        self.api_key = ConfigManager.get("llm.api_key", "sk-b175f35fa7c34888a26da2daf42c1bf3")
+        self.model = ConfigManager.get("llm.model", "gemini-3-flash")
+        self.max_retries = ConfigManager.get("llm.max_retries", 3)
+        self.timeout = ConfigManager.get("llm.timeout", 30)
+        self.temperature = ConfigManager.get("llm.temperature", 0.3)
+        self.enable_cache = ConfigManager.get("llm.enable_cache", True)
+
+        self._client = None
+        self._budget_manager = TokenBudgetManager()
+        self._init_client()
+
+        # 系统提示词模板
+        self.system_prompt = """你是一个专业的会计分类助手，负责将交易信息分类到正确的会计科目。
+
+你的任务是：
+1. 分析交易描述和供应商信息
+2. 确定最合适的会计科目分类
+3. 给出分类理由
+4. 评估分类置信度 (0-1)
+
+请以 JSON 格式返回结果：
+{
+    "category": "会计科目名称",
+    "reason": "分类理由",
+    "confidence": 0.95
+}
+
+常见科目包括：技术服务费、业务招待费、差旅费-交通费、办公设备、办公用品、水电费、房租、薪酬福利、广告宣传费、杂项支出等。"""
+
+    def _init_client(self):
+        """初始化 OpenAI 客户端"""
+        try:
+            from openai import OpenAI
+            self._client = OpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key,
+                timeout=self.timeout
+            )
+            log.info(f"LLM 客户端初始化成功: {self.base_url} | Model: {self.model}")
+        except ImportError:
+            log.error("未安装 openai 库，请执行: pip install openai")
+            self._client = None
+        except Exception as e:
+            log.error(f"LLM 客户端初始化失败: {e}")
+            self._client = None
+
+    def _call_api_with_retry(self, messages: list) -> tuple:
+        """带重试机制的 API 调用，返回 (解析结果, usage信息)"""
+        last_error = None
+
+        for attempt in range(self.max_retries):
+            try:
+                response = self._client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=self.temperature,
+                    max_tokens=500
+                )
+
+                content = response.choices[0].message.content
+                log.debug(f"LLM 原始响应: {content[:200]}...")
+
+                # 提取 usage 信息
+                usage = {}
+                if hasattr(response, 'usage') and response.usage:
+                    usage = {
+                        "prompt_tokens": response.usage.prompt_tokens,
+                        "completion_tokens": response.usage.completion_tokens,
+                        "total_tokens": response.usage.total_tokens
+                    }
+
+                # 尝试解析 JSON 响应
+                return self._parse_response(content), usage
+
+            except Exception as e:
+                last_error = e
+                wait_time = (2 ** attempt) + random.uniform(0, 1)
+                log.warning(f"LLM API 调用失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
+
+                if attempt < self.max_retries - 1:
+                    log.info(f"等待 {wait_time:.1f}s 后重试...")
+                    time.sleep(wait_time)
+
+        raise last_error
+
+    def _parse_response(self, content: str) -> dict:
+        """解析 LLM 响应，提取 JSON 结构"""
+        # 尝试直接解析
+        try:
+            return json.loads(content)
+        except json.JSONDecodeError:
+            pass
+
+        # 尝试提取 JSON 块 (处理 markdown 代码块)
+        import re
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', content)
+        if json_match:
+            try:
+                return json.loads(json_match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        # 尝试提取 {...} 部分
+        brace_match = re.search(r'\{[\s\S]*\}', content)
+        if brace_match:
+            try:
+                return json.loads(brace_match.group(0))
+            except json.JSONDecodeError:
+                pass
+
+        # 解析失败，返回默认结构
+        log.warning(f"无法解析 LLM 响应为 JSON: {content[:100]}...")
+        return {
+            "category": "待人工确认",
+            "reason": f"LLM 响应解析失败: {content[:50]}",
+            "confidence": 0.3
+        }
+
+    def generate_response(self, prompt: str, system_role: str = "assistant") -> dict:
+        """
+        调用真实 LLM API 生成分类响应
+        [Optimization Iteration 3] 集成缓存与预算控制
+        """
+        # 1. 检查缓存
+        if self.enable_cache:
+            cached = _response_cache.get(prompt, self.model)
+            if cached:
+                self._budget_manager.record_cache_hit()
+                cached["from_cache"] = True
+                log.info(f"LLM 缓存命中，跳过 API 调用")
+                return cached
+
+        # 2. 检查预算
+        allowed, reason = self._budget_manager.check_budget()
+        if not allowed:
+            log.warning(f"LLM 预算超限: {reason}，降级到 Mock 模式")
+            return MockOpenManusLLM().generate_response(prompt, system_role)
+
+        # 3. 检查客户端
+        if not self._client:
+            log.error("LLM 客户端未初始化，回退到 Mock 模式")
+            return MockOpenManusLLM().generate_response(prompt, system_role)
+
+        start_time = time.time()
+        log.info(f"调用 LLM API: {prompt[:50]}...")
+
+        messages = [
+            {"role": "system", "content": self.system_prompt},
+            {"role": "user", "content": prompt}
+        ]
+
+        try:
+            result, usage = self._call_api_with_retry(messages)
+            elapsed = time.time() - start_time
+
+            # 4. 记录 Token 使用量
+            if usage:
+                self._budget_manager.record_usage(
+                    usage.get("prompt_tokens", 0),
+                    usage.get("completion_tokens", 0)
+                )
+
+            # 标准化响应格式
+            response = {
+                "reasoning": f"LLM Analysis via {self.model}",
+                "result": {
+                    "category": result.get("category", "待人工确认"),
+                    "reason": result.get("reason", "Unknown")
+                },
+                "confidence": float(result.get("confidence", 0.5)),
+                "latency_ms": int(elapsed * 1000),
+                "model": self.model,
+                "from_cache": False
+            }
+
+            # 5. 存入缓存
+            if self.enable_cache:
+                _response_cache.set(prompt, self.model, response)
+
+            log.info(f"LLM 响应成功: {response['result']['category']} (Conf: {response['confidence']:.2f}, Latency: {response['latency_ms']}ms)")
+            return response
+
+        except Exception as e:
+            elapsed = time.time() - start_time
+            log.error(f"LLM API 调用最终失败 ({elapsed:.1f}s): {e}")
+
+            # 降级到 Mock 模式
+            log.warning("降级到 Mock 模式进行分类...")
+            return MockOpenManusLLM().generate_response(prompt, system_role)
 
 
 class MockOpenManusLLM(BaseLLM):
@@ -138,9 +509,45 @@ class MockOpenManusLLM(BaseLLM):
 
 
 class LLMFactory:
+    """
+    [Optimization Iteration 2] 增强的 LLM 工厂
+    支持多种 LLM 后端切换
+    """
+    _instances = {}
+
     @staticmethod
-    def get_llm(type: str = "MOCK"):
-        if type == "MOCK":
-            return MockOpenManusLLM()
+    def get_llm(llm_type: str = None) -> BaseLLM:
+        """
+        获取 LLM 实例 (单例模式)
+
+        Args:
+            llm_type: LLM 类型，可选值:
+                - "OPENAI": 真实 OpenAI 兼容 API
+                - "MOCK": 模拟 LLM (用于测试)
+                - None: 从配置文件读取
+        """
+        if llm_type is None:
+            llm_type = ConfigManager.get("llm.type", "OPENAI")
+
+        llm_type = llm_type.upper()
+
+        # 单例缓存
+        if llm_type in LLMFactory._instances:
+            return LLMFactory._instances[llm_type]
+
+        if llm_type == "OPENAI":
+            instance = OpenAICompatibleLLM()
+        elif llm_type == "MOCK":
+            instance = MockOpenManusLLM()
         else:
-            raise NotImplementedError(f"LLM type {type} not implemented")
+            log.warning(f"未知的 LLM 类型 '{llm_type}'，使用 Mock 模式")
+            instance = MockOpenManusLLM()
+
+        LLMFactory._instances[llm_type] = instance
+        return instance
+
+    @staticmethod
+    def reset():
+        """清除缓存的实例 (用于测试或配置变更后重新初始化)"""
+        LLMFactory._instances.clear()
+        log.info("LLM 实例缓存已清除")

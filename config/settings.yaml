@@ -22,6 +22,16 @@ threshold:
   confidence_low: 0.5
   token_budget_per_task: 2.0
 
+# [Optimization Iteration 2] LLM 配置
+llm:
+  type: "OPENAI"                                    # OPENAI | MOCK
+  base_url: "http://127.0.0.1:8045/v1"             # OpenAI 兼容 API 地址
+  api_key: "sk-b175f35fa7c34888a26da2daf42c1bf3"   # API 密钥
+  model: "gemini-3-flash"                           # 模型名称
+  max_retries: 3                                    # 最大重试次数
+  timeout: 30                                       # 请求超时 (秒)
+  temperature: 0.3                                  # 生成温度 (0-1)
+
 agents:
   accounting:
     model: "gpt-4o-mini"

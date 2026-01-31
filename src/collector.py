@@ -303,23 +303,49 @@ class CollectorWorker(threading.Thread):
             )
 
     def _parse_bank_statement(self, file_path):
+        """
+        [Optimization Iteration 3] 增强的银行流水解析
+        - 更完善的编码检测
+        - 详细的错误日志
+        - 解析统计
+        """
+        import uuid
+        trace_id = str(uuid.uuid4())[:8]
+
         try:
             import pandas as pd
 
             # Support both CSV and Excel
             ext = os.path.splitext(file_path)[1].lower()
-            try:
-                if ext == ".csv":
-                    # Try common encodings
+            df = None
+            encoding_used = None
+
+            # [Optimization Iteration 3] 增强编码检测
+            if ext == ".csv":
+                encodings_to_try = ["utf-8-sig", "utf-8", "gbk", "gb2312", "gb18030", "latin-1"]
+                for enc in encodings_to_try:
                     try:
-                        df = pd.read_csv(file_path, encoding="utf-8-sig")
-                    except:
-                        df = pd.read_csv(file_path, encoding="gbk")
-                else:
+                        df = pd.read_csv(file_path, encoding=enc)
+                        encoding_used = enc
+                        break
+                    except (UnicodeDecodeError, pd.errors.ParserError):
+                        continue
+                    except Exception as e:
+                        log.warning(f"尝试编码 {enc} 失败: {type(e).__name__}")
+                        continue
+
+                if df is None:
+                    log.error(f"无法解析 CSV 文件，所有编码均失败: {file_path}", extra={"trace_id": trace_id})
+                    return
+            else:
+                try:
                     df = pd.read_excel(file_path)
-            except Exception as read_err:
-                log.error(f"File read error: {read_err}")
-                return
+                    encoding_used = "excel"
+                except Exception as e:
+                    log.error(f"Excel 文件读取失败: {e}", extra={"trace_id": trace_id})
+                    return
+
+            log.info(f"文件读取成功 (编码: {encoding_used}): {os.path.basename(file_path)}", extra={"trace_id": trace_id})
 
             # Normalize columns
             df.columns = [str(c).strip() for c in df.columns]
@@ -327,26 +353,31 @@ class CollectorWorker(threading.Thread):
 
             # [Optimization 2] Dynamic Parser Selection
             parser = None
+            parser_name = "Unknown"
             if AliPayParser.match(columns):
                 parser = AliPayParser()
-                log.info(f"Detected AliPay statement: {os.path.basename(file_path)}")
+                parser_name = "AliPay"
             elif WeChatParser.match(columns):
                 parser = WeChatParser()
-                log.info(f"Detected WeChat statement: {os.path.basename(file_path)}")
+                parser_name = "WeChat"
             else:
                 parser = GenericParser()
-                log.info(f"Using Generic parser for: {os.path.basename(file_path)}")
+                parser_name = "Generic"
+
+            log.info(f"使用解析器: {parser_name} | 文件: {os.path.basename(file_path)}", extra={"trace_id": trace_id})
 
             batch = parser.parse(df)
 
             if batch:
                 self.db.add_pending_entries_batch(batch)
-                log.info(f"流水解析完成: {len(batch)} entries added.")
+                log.info(f"流水解析完成: {len(batch)} 条记录已入库 | 解析器: {parser_name}", extra={"trace_id": trace_id})
             else:
-                log.warning(f"No valid entries found in {file_path}")
+                log.warning(f"未找到有效记录: {file_path} | 解析器: {parser_name}", extra={"trace_id": trace_id})
 
+        except ImportError:
+            log.error("pandas 库未安装，无法解析流水文件", extra={"trace_id": trace_id})
         except Exception as e:
-            log.error(f"解析流水失败: {e}")
+            log.error(f"解析流水失败: {type(e).__name__}: {e}", extra={"trace_id": trace_id})
 
 
 def scan_input_dir(input_dir, task_queue):

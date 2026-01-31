@@ -1,24 +1,51 @@
 import re
 from functools import lru_cache
 from config_manager import ConfigManager
+from logger import get_logger
+
+log = get_logger("PrivacyGuard")
+
 
 class PrivacyGuard:
+    """
+    [Optimization Iteration 3] 增强型隐私保护网关
+    - 增加 LLM 请求前的敏感信息检测与脱敏
+    - 增加邮箱、地址等更多 PII 模式
+    - 增加脱敏审计日志
+    """
+
     def __init__(self, role="GUEST"):
         # 优化点：基于角色的脱敏等级控制
         self.role = role
         self.phone_pattern = re.compile(r'(1[3-9]\d)(\d{4})(\d{4})')
         self.id_card_pattern = re.compile(r'(\d{4})\d{10,13}(\d{2}[0-9xX])')
         self.bank_card_pattern = re.compile(r'(\d{4})\d{8,11}(\d{4})')
-        
+
+        # [Optimization Iteration 3] 新增 PII 模式
+        self.email_pattern = re.compile(r'([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)')
+        self.address_pattern = re.compile(r'([\u4e00-\u9fa5]{2,}(?:省|市|区|县|镇|村|路|街|号|栋|单元|室)[\u4e00-\u9fa5\d]{2,})')
+        self.amount_pattern = re.compile(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:元|万|USD|CNY)')
+
         self.mask_char = ConfigManager.get("privacy.mask_char", "*")
         self.custom_keywords = ConfigManager.get("privacy.keywords") or []
         self._update_keyword_pattern()
+
+        # [Optimization Iteration 3] 脱敏统计
+        self._stats = {
+            "total_processed": 0,
+            "total_masked": 0,
+            "phone_masked": 0,
+            "id_masked": 0,
+            "bank_masked": 0,
+            "email_masked": 0,
+            "keyword_masked": 0
+        }
 
     def _update_keyword_pattern(self):
         # 优化点：动态合并配置与数据库敏感词
         db_keywords = self._get_db_keywords()
         all_keywords = list(set(self.custom_keywords + db_keywords))
-        
+
         if all_keywords:
             escaped = [re.escape(k) for k in all_keywords]
             self.keyword_pattern = re.compile(f"({'|'.join(escaped)})")
@@ -28,7 +55,59 @@ class PrivacyGuard:
     def _get_db_keywords(self):
         """模拟从数据库加载动态敏感词库"""
         # 实际应调用 DBHelper 查询某张敏感词表
-        return ["薪资", "机密项目", "偷税", "漏税", "个税申报", "法人借款"]
+        return ["薪资", "机密项目", "偷税", "漏税", "个税申报", "法人借款", "密码", "token", "secret", "私钥"]
+
+    def sanitize_for_llm(self, text: str) -> tuple:
+        """
+        [Optimization Iteration 3] LLM 请求前的敏感信息脱敏
+        返回 (脱敏后文本, 是否包含敏感信息)
+        """
+        if not isinstance(text, str) or not text:
+            return text, False
+
+        original = text
+        has_sensitive = False
+
+        # 1. 脱敏手机号
+        if self.phone_pattern.search(text):
+            text = self.phone_pattern.sub(r'\1****\3', text)
+            has_sensitive = True
+            self._stats["phone_masked"] += 1
+
+        # 2. 脱敏身份证
+        if self.id_card_pattern.search(text):
+            text = self.id_card_pattern.sub(r'\1**********\2', text)
+            has_sensitive = True
+            self._stats["id_masked"] += 1
+
+        # 3. 脱敏银行卡
+        if self.bank_card_pattern.search(text):
+            text = self.bank_card_pattern.sub(r'\1********\2', text)
+            has_sensitive = True
+            self._stats["bank_masked"] += 1
+
+        # 4. 脱敏邮箱
+        if self.email_pattern.search(text):
+            text = self.email_pattern.sub(r'\1@***.***', text)
+            has_sensitive = True
+            self._stats["email_masked"] += 1
+
+        # 5. 脱敏敏感关键词
+        if self.keyword_pattern and self.keyword_pattern.search(text):
+            text = self.keyword_pattern.sub(lambda m: '[敏感词]', text)
+            has_sensitive = True
+            self._stats["keyword_masked"] += 1
+
+        self._stats["total_processed"] += 1
+        if has_sensitive:
+            self._stats["total_masked"] += 1
+            log.debug(f"LLM 请求脱敏: 检测到敏感信息并已处理")
+
+        return text, has_sensitive
+
+    def get_stats(self) -> dict:
+        """获取脱敏统计信息"""
+        return self._stats.copy()
 
     @lru_cache(maxsize=128)
     def desensitize(self, text, bypass_role="ADMIN", context="GENERAL", data_type="DEFAULT"):
