@@ -80,7 +80,9 @@ class RoutingRegistry:
                 return "L2-OpenManus"
 
         # 3. 置信度降级
-        if l1_confidence < 0.85:
+        from config_manager import ConfigManager
+        l1_threshold = ConfigManager.get("routing.l1_threshold", 0.95)
+        if l1_confidence < l1_threshold:
             if vendor:
                 self._record_failure(vendor)
             return "L2-OpenManus"
@@ -94,7 +96,10 @@ class RoutingRegistry:
         """
         if not vendor: return
         
-        if confidence < 0.85:
+        from config_manager import ConfigManager
+        l1_threshold = ConfigManager.get("routing.l1_threshold", 0.95)
+        
+        if confidence < l1_threshold:
             # 记录失败
             self.vendor_stats[vendor] = self.vendor_stats.get(vendor, {"failures": 0})
             self.vendor_stats[vendor]["failures"] += 1

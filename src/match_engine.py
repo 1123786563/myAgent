@@ -48,11 +48,25 @@ class MatchEngine:
                     elif v_key in v_target or v_target in v_key:
                         is_match = True
                     else:
-                        # 引入模糊比例计算
+                        # [Optimization 4] 增强型多因子匹配 (Multi-Factor Matching)
+                        # 引入模糊比例计算 + 时间衰减因子
                         ratio = MatchStrategy.get_fuzzy_ratio(v_key, v_target)
-                        if ratio > self.fuzzy_threshold:
+                        
+                        # 计算时间接近度 (天数差)
+                        try:
+                            t_shadow = time.mktime(time.strptime(shadow['created_at'], "%Y-%m-%d %H:%M:%S"))
+                            t_target = time.mktime(time.strptime(f['created_at'], "%Y-%m-%d %H:%M:%S"))
+                            days_diff = abs(t_shadow - t_target) / 86400.0
+                            date_score = max(0, 1.0 - (days_diff / 7.0)) # 7天内线性衰减
+                        except:
+                            date_score = 0.5
+
+                        # 综合评分：语义(70%) + 时间(30%)
+                        final_score = (ratio * 0.7) + (date_score * 0.3)
+                        
+                        if final_score > self.fuzzy_threshold:
                             is_match = True
-                            log.info(f"语义匹配成功: {v_key} <-> {v_target} (Ratio: {ratio:.2f})")
+                            log.info(f"多因子匹配成功: {v_key} <-> {v_target} (Score: {final_score:.2f} | DateDiff: {days_diff:.1f}d)")
                             
                     if is_match:
                         shadow['match_result'] = f['id']

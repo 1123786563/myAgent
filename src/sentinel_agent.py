@@ -116,17 +116,39 @@ class SentinelAgent(AgentBase):
             return True
 
     def _run_tax_stress_test(self, proposal):
+        """
+        [Optimization 5] 增强型税务沙箱模拟 (Tax Sandbox)
+        """
         sim_spending = float(proposal.get("simulated_spending", 0))
         stats = self._get_monthly_stats()
-        current_vat = max(0, stats['revenue'] * 0.13 - stats.get('vat_in', 0))
-        new_vat_in = stats.get('vat_in', 0) + (sim_spending * 0.13)
-        simulated_vat = max(0, stats['revenue'] * 0.13 - new_vat_in)
-        tax_saving = current_vat - simulated_vat
+        
+        # 1. 从数据库加载最新的动态税率
+        vat_rate_general = 0.13
+        try:
+            with self.db.transaction("DEFERRED") as conn:
+                row = conn.execute("SELECT policy_value FROM tax_policies WHERE policy_key = 'vat_rate_general'").fetchone()
+                if row: vat_rate_general = row['policy_value']
+        except:
+            pass
+
+        # 2. 计算当前与模拟后的税负
+        current_vat_out = stats['revenue'] * vat_rate_general
+        current_vat_in = stats.get('vat_in', 0)
+        current_payable = max(0, current_vat_out - current_vat_in)
+        
+        # 模拟新增进项
+        new_vat_in = current_vat_in + (sim_spending * vat_rate_general)
+        simulated_payable = max(0, current_vat_out - new_vat_in)
+        
+        tax_saving = current_payable - simulated_payable
         
         result = {
             "strategy": "TAX_SAVING_SIMULATION",
+            "current_payable": round(current_payable, 2),
+            "simulated_payable": round(simulated_payable, 2),
             "saving": round(tax_saving, 2),
-            "recommendation": "可行" if tax_saving > 1000 else "建议推迟"
+            "recommendation": "建议立即执行" if tax_saving > 1000 else "一般建议",
+            "policy_used": f"VAT_RATE_{vat_rate_general*100}%"
         }
         return LedgerMsg.create(self.name, result, action="STRESS_TEST_RESULT", sender_role="SENTINEL")
 

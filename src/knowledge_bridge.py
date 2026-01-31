@@ -3,6 +3,7 @@ import shutil
 import os
 import hashlib
 import re
+import difflib
 from db_helper import DBHelper
 from logger import get_logger
 
@@ -280,14 +281,15 @@ class KnowledgeBridge:
                     for j in range(i + 1, len(all_gray)):
                         if all_gray[j]['id'] in to_delete: continue
                         
-                        s1, s2 = set(all_gray[i]['entity_name']), set(all_gray[j]['entity_name'])
-                        jaccard = len(s1 & s2) / (len(s1 | s2) + 1e-9)
+                        # [Optimization 4] 使用 SequenceMatcher 替代简单的 Jaccard 集合相似度
+                        # 因为 'Apple Inc' 和 'Apple Corp' 顺序敏感
+                        ratio = difflib.SequenceMatcher(None, all_gray[i]['entity_name'], all_gray[j]['entity_name']).ratio()
                         
-                        if jaccard > 0.85 and all_gray[i]['category_mapping'] == all_gray[j]['category_mapping']:
+                        if ratio > 0.85 and all_gray[i]['category_mapping'] == all_gray[j]['category_mapping']:
                             # 合并：保留评分高的
                             victim = all_gray[i]['id'] if all_gray[i]['quality_score'] < all_gray[j]['quality_score'] else all_gray[j]['id']
                             to_delete.add(victim)
-                            log.info(f"语义合并: [{all_gray[i]['entity_name']}] <-> [{all_gray[j]['entity_name']}] (J:{jaccard:.2f})")
+                            log.info(f"语义合并: [{all_gray[i]['entity_name']}] <-> [{all_gray[j]['entity_name']}] (Ratio:{ratio:.2f})")
                 
                 if to_delete:
                     conn.execute(f"DELETE FROM knowledge_base WHERE id IN ({','.join(map(str, to_delete))})")

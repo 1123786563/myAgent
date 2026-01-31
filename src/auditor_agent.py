@@ -3,6 +3,7 @@ from agentscope.agents import AgentBase
 from logger import get_logger
 from db_helper import DBHelper
 import re
+import os
 
 log = get_logger("AuditorAgent")
 
@@ -13,14 +14,30 @@ class AuditorAgent(AgentBase):
         self.db = DBHelper()
         # 预编译科目编码校验正则
         self.category_pattern = re.compile(r'^\d{4}-\d{2}')
-        # 优化点：从配置中心读取审计阈值 (Suggestion 2)
         self.auto_approve_threshold = ConfigManager.get("audit.auto_approve_threshold", 0.95)
         self.force_manual_amount = ConfigManager.get("audit.force_manual_amount", 100000)
-        log.info(f"AuditorAgent 初始化完成: 大额风控线={self.force_manual_amount}")
+        
+        # [Optimization 1] 加载动态审计规则 (Red Team Rules)
+        self.rules_path = ConfigManager.get("path.audit_rules", "src/audit_rules.yaml")
+        self._load_audit_rules()
+        log.info(f"AuditorAgent 初始化完成: 大额风控线={self.force_manual_amount}, 规则数={len(self.audit_rules)}")
+
+    def _load_audit_rules(self):
+        try:
+            import yaml
+            if os.path.exists(self.rules_path):
+                with open(self.rules_path, 'r', encoding='utf-8') as f:
+                    data = yaml.safe_load(f)
+                    self.audit_rules = data.get('rules', [])
+            else:
+                self.audit_rules = []
+        except Exception as e:
+            log.error(f"审计规则加载失败: {e}")
+            self.audit_rules = []
 
     def _heterogeneous_double_check(self, proposal):
         """
-        模拟异构审计逻辑：使用不同的判别维度
+        模拟异构审计逻辑：使用 YAML 定义的红方规则进行校验
         [Optimization 1] 行业特定审计策略插件 (Sector-Aware)
         """
         content = proposal.get("content", {})
@@ -28,26 +45,37 @@ class AuditorAgent(AgentBase):
         category = content.get("category", "")
         vendor = content.get("vendor", "")
 
-        # 动态加载行业审计规则 (Optimization 1)
+        # 动态加载行业配置
         from config_manager import ConfigManager
-        sector = ConfigManager.get("enterprise.sector", "GENERAL")
-        
-        red_team_rules = [
-            ("餐饮|招待", "研发", "怀疑将个人招待费混入研发支出")
-        ]
-        
-        if sector == "SOFTWARE":
-            red_team_rules.append(("服务器|算力", "办公费用", "软件行业服务器费应区分研发/成本"))
-        elif sector == "RETAIL":
-            red_team_rules.append(("损耗|报废", "管理费用", "零售行业重点审计商品盘亏逻辑"))
+        current_sector = ConfigManager.get("enterprise.sector", "GENERAL")
 
-        for v_pat, c_pat, reason in red_team_rules:
-            if re.search(v_pat, vendor) and re.search(c_pat, category):
-                log.warning(f"红方审计拦截: [{sector}] {reason} | Vendor={vendor}")
-                return False
+        for rule in self.audit_rules:
+            # 1. 行业过滤
+            if rule.get('sector') and rule.get('sector') != current_sector:
+                continue
+            
+            # 2. 正则匹配
+            v_match = re.search(rule.get('vendor_pattern', ''), vendor) if rule.get('vendor_pattern') else True
+            c_match = re.search(rule.get('category_pattern', ''), category) if rule.get('category_pattern') else True
+            
+            # 3. 金额匹配
+            a_min = rule.get('amount_min', 0)
+            a_max = rule.get('amount_max', float('inf'))
+            a_match = a_min <= amount <= a_max
+            
+            if v_match and c_match and a_match:
+                reason = rule.get('reason', '触发审计规则')
+                action = rule.get('action', 'FLAG')
+                log.warning(f"审计规则命中 [{rule['id']}]: {reason} | Action={action}")
+                
+                if action == 'REJECT':
+                    return False
+                # FLAG 可以在此处增加风险分，暂时简单处理为通过但记录日志
         
+        # 保留原有的硬编码兜底逻辑
         if "差旅" in category and amount > 5000:
             return False
+            
         return True
 
     def _update_audit_result(self, vendor, is_success):
@@ -195,7 +223,9 @@ class AuditorAgent(AgentBase):
                     proposal['bundle_total_value'] = group_data['total_amount']
         
         # [Optimization 3] 高风险共识审计触发
-        if amount > self.force_manual_amount * 0.5: # 达到风控线 50% 触发共识
+        from config_manager import ConfigManager
+        consensus_trigger_ratio = ConfigManager.get("audit.consensus_trigger_ratio", 0.5)
+        if amount > self.force_manual_amount * consensus_trigger_ratio: # 动态触发线
             success, details = self._trigger_consensus_audit(x)
             if not success:
                 return self._reject(x, f"共识审计未通过: {details}")

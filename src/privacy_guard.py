@@ -41,6 +41,32 @@ class PrivacyGuard:
             
         new_text = text
         
+        # [Optimization 3] 基于上下文的敏感度升级 (Context-Aware Masking)
+        # 定义不同上下文的敏感关键词映射
+        context_risks = {
+            "PAYROLL": ["工资", "薪金", "奖金", "社保", "公积金"],
+            "LEGAL": ["诉讼", "纠纷", "赔偿", "判决"],
+            "STRATEGIC": ["收购", "合并", "融资", "估值"]
+        }
+        
+        # 检查当前上下文是否触发高级屏蔽
+        sensitive_keywords = context_risks.get(context, [])
+        
+        # 隐式语义上下文推断 (如果 context 是 GENERAL)
+        if context == "GENERAL":
+            for ctx, kws in context_risks.items():
+                if any(kw in text for kw in kws):
+                    sensitive_keywords.extend(kws)
+                    context = ctx # 升级上下文
+        
+        # 如果命中了敏感上下文，执行整句掩码或高强度掩码
+        if sensitive_keywords:
+            if context == "STRATEGIC" and self.role != "BOSS":
+                 return f"[TOP_SECRET_{context}_MASKED]"
+            
+            # 对于其他敏感上下文，对数值进行全部掩盖
+            new_text = re.sub(r'\d{3,}', '***', new_text)
+
         # [Optimization 3] 战略合同敏感脱敏 (Strategic Masking)
         # 如果是战略级合同或敏感财务关键词，即使是 AUDITOR 也强制深度脱敏
         if context in ("STRATEGIC_CONTRACT", "STRATEGIC") or any(kw in text for kw in ["战略合作", "融资意向"]):
@@ -50,15 +76,6 @@ class PrivacyGuard:
         # 如果是敏感财务关键词，无论角色均执行高级掩码
         if any(kw in text for kw in ["薪资", "法人借款", "机密项目"]):
             return f"[FINANCIAL_PROTECTED_{self.mask_char*4}]"
-
-    def semantic_desensitize(self, text):
-        """
-        [Optimization 3] 边缘计算隐私网关：语义脱敏增强 (白皮书 2.3)
-        """
-        # 简化逻辑：如果识别到复杂敏感语义，直接截断并返回摘要
-        if len(text) > 100 and "合同" in text:
-             return f"[SEMANTIC_SUMMARY]: 涉及合同条款的敏感业务逻辑"
-        return self.desensitize(text)
 
         # 2. 正则脱敏
         is_sensitive_context = context in ("NOTE", "COMMENT", "GENERAL")
@@ -86,6 +103,15 @@ class PrivacyGuard:
             pass
             
         return new_text
+
+    def semantic_desensitize(self, text):
+        """
+        [Optimization 3] 边缘计算隐私网关：语义脱敏增强 (白皮书 2.3)
+        """
+        # 简化逻辑：如果识别到复杂敏感语义，直接截断并返回摘要
+        if len(text) > 100 and "合同" in text:
+             return f"[SEMANTIC_SUMMARY]: 涉及合同条款的敏感业务逻辑"
+        return self.desensitize(text)
 
 if __name__ == "__main__":
     guard = PrivacyGuard()
