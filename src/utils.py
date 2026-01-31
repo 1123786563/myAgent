@@ -8,20 +8,32 @@ log = get_logger("Utils")
 
 def timeit(func):
     """
-    性能计时装饰器
+    性能计时与异常自动捕获装饰器 (Suggestion 1)
     """
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.perf_counter()
-        result = func(*args, **kwargs)
-        end_time = time.perf_counter()
-        duration = end_time - start_time
-        if duration > 0.1: # 只记录耗时超过 100ms 的操作
-            log.warning(f"性能警告: {func.__name__} 耗时 {duration:.4f}s")
-        else:
-            log.debug(f"{func.__name__} 耗时 {duration:.4f}s")
-        return result
-    return wrapper
+    import inspect
+    if inspect.iscoroutinefunction(func):
+        @functools.wraps(func)
+        async def async_wrapper(*args, **kwargs):
+            start_time = time.perf_counter()
+            try:
+                result = await func(*args, **kwargs)
+                return result
+            finally:
+                duration = time.perf_counter() - start_time
+                if duration > 0.1:
+                    log.warning(f"Async性能警告: {func.__name__} 耗时 {duration:.4f}s")
+        return async_wrapper
+    else:
+        @functools.wraps(func)
+        def sync_wrapper(*args, **kwargs):
+            start_time = time.perf_counter()
+            try:
+                return func(*args, **kwargs)
+            finally:
+                duration = time.perf_counter() - start_time
+                if duration > 0.1:
+                    log.warning(f"Sync性能警告: {func.__name__} 耗时 {duration:.4f}s")
+        return sync_wrapper
 
 def singleton(cls):
     """

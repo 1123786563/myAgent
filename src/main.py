@@ -112,6 +112,33 @@ class MasterDaemon:
     def run(self):
         log.info(f"=== LedgerAlpha Master Daemon {self.version} 启动 ===")
         
+        # [Suggestion 6] PID 文件加锁，防止多开
+        pid_file = get_path("logs", "master.pid")
+        if os.path.exists(pid_file):
+            try:
+                with open(pid_file, 'r') as f:
+                    old_pid = int(f.read().strip())
+                import psutil
+                if psutil.pid_exists(old_pid):
+                    # [Suggestion 5] 尝试优雅杀掉残留的子进程（如果父进程异常退出）
+                    log.warning(f"检测到残留 PID {old_pid}，正在尝试清理可能存在的僵尸子进程...")
+                    try:
+                        parent = psutil.Process(old_pid)
+                        for child in parent.children(recursive=True):
+                            log.info(f"强制终止残留子进程: {child.pid}")
+                            child.kill()
+                        # parent.kill() # 不杀父进程，直接报错让用户检查
+                    except:
+                        pass
+                    
+                    log.error(f"系统已在运行 (PID: {old_pid})，请勿重复启动！")
+                    return
+            except:
+                pass
+        
+        with open(pid_file, 'w') as f:
+            f.write(str(os.getpid()))
+            
         if not self._preflight_check():
             log.error("系统预检失败，程序退出。")
             return
@@ -142,6 +169,26 @@ class MasterDaemon:
                     "memory_mb": process.memory_info().rss / 1024 / 1024,
                     "threads": threading.active_count()
                 }
+
+                # 优化点：子进程资源熔断监控 (Suggestion 3)
+                mem_limit_mb = ConfigManager.get("performance.proc_memory_limit_mb", 1024)
+                for name, proc in self.processes.items():
+                    try:
+                        p = psutil.Process(proc.pid)
+                        mem = p.memory_info().rss / 1024 / 1024
+                        if mem > mem_limit_mb:
+                            log.error(f"子进程 {name} 内存占用超限 ({mem:.1f}MB > {mem_limit_mb}MB)，触发保护性重启！")
+                            proc.kill()
+                    except:
+                        pass
+
+                # 优化点：Token 消耗熔断监控 (Non-Functional 4.2)
+                token_budget = ConfigManager.get("performance.token_budget_daily", 5.0) # $5.0
+                current_token_spend = self.db.get_daily_token_spend() # 假设库中已有统计
+                if current_token_spend > token_budget:
+                    log.critical(f"触发 Token 消耗熔断！今日支出 ${current_token_spend} 已超额度 ${token_budget}。")
+                    # 执行紧急限流策略，如暂停非关键服务
+                    self.is_running = False
 
                 # 每 60 秒更新一次业务指标
                 if current_time - last_metrics_update > 60:

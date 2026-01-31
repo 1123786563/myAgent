@@ -28,7 +28,7 @@ class PrivacyGuard:
     def _get_db_keywords(self):
         """模拟从数据库加载动态敏感词库"""
         # 实际应调用 DBHelper 查询某张敏感词表
-        return ["薪资", "机密项目"]
+        return ["薪资", "机密项目", "偷税", "漏税", "个税申报", "法人借款"]
 
     @lru_cache(maxsize=128)
     def desensitize(self, text, bypass_role="ADMIN", context="GENERAL", data_type="DEFAULT"):
@@ -41,9 +41,10 @@ class PrivacyGuard:
             
         new_text = text
         
-        # 优化点：基于数据类型的分级脱敏 (F4.1)
-        if data_type == "SALARY" or "薪资" in text:
-            return "[SALARY_DATA_PROTECTED]"
+        # 优化点：基于上下文和财务合规敏感度的分级脱敏 (F4.1)
+        # 如果是敏感财务关键词，无论角色均执行高级掩码
+        if any(kw in text for kw in ["薪资", "法人借款"]):
+            return f"[FINANCIAL_PROTECTED_{self.mask_char*4}]"
 
         # 2. 正则脱敏
         is_sensitive_context = context in ("NOTE", "COMMENT", "GENERAL")

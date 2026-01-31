@@ -95,7 +95,10 @@ class ConfigManager:
 
     @classmethod
     def get(cls, key_path, default=None):
-        cls.load() # 触发潜在的热加载检查
+        # 优化点：避免在高频调用时频繁 stat 文件，仅在间隔大于 1s 时检查
+        import time
+        if time.time() - cls._last_loaded > 1.0:
+            cls.load() 
         
         keys = key_path.split('.')
         val = cls._config

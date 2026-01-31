@@ -7,6 +7,21 @@ log = get_logger("InteractionHub")
 class InteractionHub:
     def __init__(self):
         self.db = DBHelper()
+        self.card_version = "v1.2"
+
+    def create_action_card(self, title, content, actions=None, images=None, payload=None):
+        """
+        [Suggestion 1] 生成标准化的 ActionCard JSON (F3.4.1)
+        """
+        card = {
+            "version": self.card_version,
+            "header": {"title": title, "style": "primary"},
+            "body": {"content": content},
+            "actions": actions or [],
+            "images": images or [],
+            "metadata": payload or {}
+        }
+        return card
 
     def push_card(self, transaction_id, proposal_data, trace_id=None):
         # 优化点：在推送前强制执行隐私脱敏
@@ -17,8 +32,22 @@ class InteractionHub:
         for k, v in proposal_data.items():
             safe_data[k] = guard.desensitize(v, context="NOTE") if isinstance(v, str) else v
             
-        log.info(f"推送已脱敏的交互卡片: Transaction={transaction_id}")
-        return {"transaction_id": transaction_id, "trace_id": trace_id, "data": safe_data}
+        # 封装为标准化卡片
+        actions = [
+            {"label": "确认入账", "value": "CONFIRM", "style": "success"},
+            {"label": "科目修正", "value": "EDIT", "style": "warning"},
+            {"label": "拒绝单据", "value": "REJECT", "style": "danger"}
+        ]
+        
+        card = self.create_action_card(
+            title=f"分录审批 - {safe_data.get('vendor', '未知商户')}",
+            content=f"金额: {safe_data.get('amount')}\n科目: {safe_data.get('category')}\n原因: {safe_data.get('reason')}",
+            actions=actions,
+            payload={"trans_id": transaction_id, "trace_id": trace_id}
+        )
+        
+        log.info(f"推送标准化交互卡片 ({self.card_version}): Transaction={transaction_id}")
+        return card
 
     def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, signature=None, extra_payload=None):
         """

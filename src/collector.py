@@ -68,6 +68,15 @@ class CollectorWorker(threading.Thread):
         time.sleep(0.1) # 降低资源占用
         if not os.path.exists(file_path): return
         
+        # [Suggestion 10] 增加文件锁定检查，防止读取不完整文件
+        try:
+            # 尝试以追加模式打开（但不写入），如果失败则说明文件可能被占用
+            with open(file_path, 'a'):
+                pass
+        except IOError:
+            log.warning(f"文件正在被写入，跳过本次处理: {file_path}")
+            return
+
         ext = os.path.splitext(file_path)[1].lower()
         if ext not in self.allowed_exts: return
         
@@ -76,10 +85,17 @@ class CollectorWorker(threading.Thread):
             if self._is_asset_photo(file_path):
                 log.info(f"检测到资产实物照片: {os.path.basename(file_path)}，启动多模态语义聚合...")
                 self._analyze_multimodal_asset(file_path)
-                # 照片资产处理后可继续作为普通单据入库，或者标记后跳过
         
         if os.path.getsize(file_path) < 100:
             return
+
+        # 优化点：项目维度的自动解析 (Suggestion 8: Project-based Cost Attribution)
+        # 逻辑：如果文件所在的文件夹名称包含项目关键字，自动打标签
+        tags = []
+        parent_dir = os.path.basename(os.path.dirname(file_path))
+        if parent_dir and parent_dir != "input":
+            tags.append({"key": "project_id", "value": parent_dir})
+            log.info(f"自动识别项目属性: {parent_dir}")
 
         # 优化点：银行流水识别逻辑 (F3.1.2)
         if ext in {'.csv', '.xlsx'}:
@@ -92,14 +108,16 @@ class CollectorWorker(threading.Thread):
         file_hash = calculate_file_hash(file_path)
         if not file_hash: return
 
-        res = self.db.add_transaction(
+        # 优化点：使用原子化带标签入库接口
+        res = self.db.add_transaction_with_tags(
             status="PENDING",
             source_type="MANUAL",
             file_path=file_path,
-            file_hash=file_hash
+            file_hash=file_hash,
+            tags=tags
         )
         if res:
-            log.info(f"单据入库成功 ID={res}: {os.path.basename(file_path)}")
+            log.info(f"单据入库成功 ID={res}: {os.path.basename(file_path)} | Tags: {tags}")
 
     def _parse_bank_statement(self, file_path):
         """

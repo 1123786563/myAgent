@@ -2,6 +2,7 @@ import yaml
 import shutil
 import os
 import hashlib
+import re
 from db_helper import DBHelper
 from logger import get_logger
 
@@ -22,17 +23,19 @@ class KnowledgeBridge:
                 # 1. 累加命中次数
                 conn.execute('''
                     UPDATE knowledge_base 
-                    SET hit_count = hit_count + 1, updated_at = CURRENT_TIMESTAMP
+                    SET hit_count = hit_count + 1, 
+                        consecutive_success = consecutive_success + 1,
+                        updated_at = CURRENT_TIMESTAMP
                     WHERE entity_name = ?
                 ''', (keyword,))
                 
                 # 2. 检查是否达到转正阈值 (例如 3 次)
                 row = conn.execute('''
-                    SELECT category_mapping, source, hit_count, reject_count, audit_level 
+                    SELECT category_mapping, audit_status, hit_count, reject_count, consecutive_success 
                     FROM knowledge_base WHERE entity_name = ?
                 ''', (keyword,)).fetchone()
                 
-                if row and row['audit_level'] == 'GRAY' and row['hit_count'] >= 3:
+                if row and row['audit_status'] == 'GRAY' and row['consecutive_success'] >= 3:
                     # 质量检查：驳回数必须为 0 才能自动转正
                     if row['reject_count'] == 0:
                         log.info(f"规则 {keyword} 已通过 3 次审计且零驳回，准备自动转正...")
@@ -52,14 +55,16 @@ class KnowledgeBridge:
             with self.db.transaction("IMMEDIATE") as conn:
                 conn.execute('''
                     UPDATE knowledge_base 
-                    SET reject_count = reject_count + 1, updated_at = CURRENT_TIMESTAMP
+                    SET reject_count = reject_count + 1, 
+                        consecutive_success = 0,
+                        updated_at = CURRENT_TIMESTAMP
                     WHERE entity_name = ?
                 ''', (keyword,))
                 
-                row = conn.execute('SELECT reject_count, audit_level FROM knowledge_base WHERE entity_name = ?', (keyword,)).fetchone()
-                if row and row['audit_level'] == 'GRAY' and row['reject_count'] >= 2:
-                    log.error(f"规则 {keyword} 驳回次数过多 ({row['reject_count']})，已被标记为 FAILED 废弃。")
-                    conn.execute("UPDATE knowledge_base SET audit_level = 'FAILED' WHERE entity_name = ?", (keyword,))
+                row = conn.execute('SELECT reject_count, audit_status FROM knowledge_base WHERE entity_name = ?', (keyword,)).fetchone()
+                if row and row['audit_status'] == 'GRAY' and row['reject_count'] >= 2:
+                    log.error(f"规则 {keyword} 驳回次数过多 ({row['reject_count']})，已被标记为 BLOCKED 废弃。")
+                    conn.execute("UPDATE knowledge_base SET audit_status = 'BLOCKED' WHERE entity_name = ?", (keyword,))
             return True
         except Exception as e:
             log.error(f"记录驳回失败: {e}")
@@ -67,19 +72,19 @@ class KnowledgeBridge:
 
     def promote_rule(self, keyword, category):
         """
-        正式将 GRAY 规则转为 VERIFIED 并同步至 YAML
+        正式将 GRAY 规则转为 STABLE 并同步至 YAML
         """
         try:
             with self.db.transaction("IMMEDIATE") as conn:
                 conn.execute('''
                     UPDATE knowledge_base 
-                    SET audit_level = 'VERIFIED' 
+                    SET audit_status = 'STABLE' 
                     WHERE entity_name = ?
                 ''', (keyword,))
             
             # 同步至本地 SOP 规则库
             self._sync_to_yaml(keyword, category)
-            log.info(f"规则 {keyword} 转正成功！")
+            log.info(f"规则 {keyword} 转正成功 (STABLE)！")
         except Exception as e:
             log.error(f"转正同步失败: {e}")
 
@@ -116,17 +121,22 @@ class KnowledgeBridge:
                 shutil.copy(self.rules_path, backup_path)
 
             # 2. 更新数据库
-            audit_status = 'VERIFIED' if source == 'MANUAL' else 'GRAY'
+            audit_status = 'STABLE' if source == 'MANUAL' else 'GRAY'
             with self.db.transaction("IMMEDIATE") as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT OR REPLACE INTO knowledge_base 
-                    (entity_name, category_mapping, source, audit_level, hit_count)
-                    VALUES (?, ?, ?, ?, (SELECT IFNULL(hit_count,0) FROM knowledge_base WHERE entity_name=?)+1)
-                ''', (keyword, category, source, audit_status, keyword))
+                    INSERT INTO knowledge_base 
+                    (entity_name, category_mapping, audit_status, hit_count)
+                    VALUES (?, ?, ?, 1)
+                    ON CONFLICT(entity_name) DO UPDATE SET
+                        category_mapping = excluded.category_mapping,
+                        audit_status = CASE WHEN audit_status = 'BLOCKED' THEN 'GRAY' ELSE audit_status END,
+                        hit_count = hit_count + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                ''', (keyword, category, audit_status))
 
-            # 3. 更新 YAML (仅限 MANUAL 手动转正)
-            if audit_status == 'VERIFIED':
+            # 3. 更新 YAML (仅限 STABLE)
+            if audit_status == 'STABLE':
                 with open(self.rules_path, 'r', encoding='utf-8') as f:
                     data = yaml.safe_load(f) or {"rules": []}
                 
@@ -141,14 +151,14 @@ class KnowledgeBridge:
                 with open(self.rules_path, 'w', encoding='utf-8') as f:
                     yaml.safe_dump(data, f, allow_unicode=True)
                 
-                # 优化点：写后读校验机制
+                # 写后读校验机制
                 with open(self.rules_path, 'r', encoding='utf-8') as f:
                     check_data = yaml.safe_load(f)
                     if not any(r['keyword'] == keyword for r in check_data.get('rules', [])):
                         raise IOError("YAML 写入校验失败！")
             
             success = True
-            log.info(f"知识同步完成: {keyword} -> {category}")
+            log.info(f"知识同步完成: {keyword} -> {category} (Status: {audit_status})")
 
         except Exception as e:
             log.error(f"同步失败，触发回滚: {e}")
@@ -160,6 +170,21 @@ class KnowledgeBridge:
                 os.remove(backup_path)
         return success
 
+    def record_match_success(self, keyword):
+        """
+        [Suggestion 3] 记录对账成功经验，增强预记账置信度
+        """
+        try:
+            with self.db.transaction("IMMEDIATE") as conn:
+                conn.execute('''
+                    UPDATE knowledge_base 
+                    SET hit_count = hit_count + 1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE entity_name = ?
+                ''', (keyword,))
+        except Exception as e:
+            log.error(f"记录对账经验失败: {keyword}, {e}")
+
     def cleanup_stale_rules(self, min_hits=0, days_old=30):
         """
         优化点：自动清理长期未命中且低置信度的临时规则
@@ -169,9 +194,9 @@ class KnowledgeBridge:
                 # 删除 30 天前创建且命中次数为 0 的 GRAY 规则
                 sql = """
                     DELETE FROM knowledge_base 
-                    WHERE audit_level = 'GRAY' 
+                    WHERE audit_status = 'GRAY' 
                     AND hit_count <= ? 
-                    AND snap_time < date('now', ?)
+                    AND updated_at < date('now', ?)
                 """
                 cursor = conn.execute(sql, (min_hits, f'-{days_old} days'))
                 log.info(f"清理了 {cursor.rowcount} 条过期临时规则。")

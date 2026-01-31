@@ -30,6 +30,14 @@ class DBHelper:
             self._local.conn = conn
             # 优化点：初始化预编译语句缓存
             self._local.statement_cache = {}
+        
+        # [Suggestion 3] 连接活性探测 (Keep-alive check)
+        try:
+            self._local.conn.execute("SELECT 1")
+        except (sqlite3.OperationalError, sqlite3.InterfaceError):
+            self._local.conn = None
+            return self._get_conn()
+            
         return self._local.conn
 
     def _get_cursor(self, sql):
@@ -153,8 +161,10 @@ class DBHelper:
                 entity_name TEXT UNIQUE,
                 category_mapping TEXT,
                 hit_count INTEGER DEFAULT 0,
-                reject_count INTEGER DEFAULT 0, -- 新增：记录审计驳回次数
-                audit_level TEXT DEFAULT 'GRAY',
+                reject_count INTEGER DEFAULT 0, -- 记录审计驳回次数
+                audit_status TEXT DEFAULT 'GRAY', -- GRAY, STABLE, BLOCKED
+                consecutive_success INTEGER DEFAULT 0, -- 连续审计通过次数
+                audit_level TEXT DEFAULT 'NORMAL', -- NORMAL, HIGH_RISK
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )''')
 
@@ -188,6 +198,17 @@ class DBHelper:
                 panic_msg TEXT, -- 存储异常堆栈快照
                 metrics TEXT 
             )''')
+
+            # [Suggestion 2] 系统事件表
+            cursor.execute('''CREATE TABLE IF NOT EXISTS system_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT,
+                service_name TEXT,
+                message TEXT,
+                trace_id TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )''')
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_event_type ON system_events(event_type)")
 
             # 导出审计记录表
             cursor.execute('''CREATE TABLE IF NOT EXISTS export_audit (
@@ -270,14 +291,25 @@ class DBHelper:
             return None
 
     def add_transaction(self, **kwargs):
+        """
+        [Suggestion 2] 增强幂等入库逻辑，利用 trace_id 防止重复记账
+        """
         fields = ", ".join(kwargs.keys())
         placeholders = ", ".join(["?"] * len(kwargs))
         values = tuple(kwargs.values())
-        sql = f"INSERT INTO transactions ({fields}) VALUES ({placeholders})"
+        
+        # 使用 INSERT OR IGNORE 配合 trace_id 唯一约束
+        sql = f"INSERT OR IGNORE INTO transactions ({fields}) VALUES ({placeholders})"
         try:
             with self.transaction("IMMEDIATE") as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, values)
+                if cursor.rowcount == 0 and 'trace_id' in kwargs:
+                    # 检查是否因为 trace_id 重复而忽略
+                    check_sql = "SELECT id FROM transactions WHERE trace_id = ?"
+                    res = conn.execute(check_sql, (kwargs['trace_id'],)).fetchone()
+                    if res:
+                        return res['id'] # 返回已存在的 ID，实现幂等
                 return cursor.lastrowid
         except sqlite3.IntegrityError:
             return None
@@ -291,6 +323,15 @@ class DBHelper:
         except Exception:
             return []
 
+    def get_now(self):
+        """统一获取系统当前时间字符串 (F4.2)"""
+        import datetime
+        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def get_daily_token_spend(self):
+        """获取当日 Token 消耗总额"""
+        # 实际应从单独的审计表或日志分析结果中提取，此处为框架模拟
+        return 0.05 # 模拟返回当前消费
     def get_avg_daily_expenditure(self, days=30):
         """计算过去 N 天的平均日支出 (基于已审计数据)"""
         sql = """
@@ -312,6 +353,17 @@ class DBHelper:
                 INSERT OR REPLACE INTO sys_status (service_name, last_heartbeat, status, metrics)
                 VALUES (?, CURRENT_TIMESTAMP, ?, ?)
             ''', (service_name, status, metrics))
+
+    def log_system_event(self, event_type, service_name, message, trace_id=None):
+        """[Suggestion 2] 记录系统级核心事件"""
+        try:
+            with self.transaction("IMMEDIATE") as conn:
+                conn.execute('''
+                    INSERT INTO system_events (event_type, service_name, message, trace_id)
+                    VALUES (?, ?, ?, ?)
+                ''', (event_type, service_name, message, trace_id))
+        except:
+            pass
 
     def check_health(self, service_name, timeout_seconds=60):
         """检查服务心跳是否超时"""
@@ -342,4 +394,13 @@ class DBHelper:
             conn.execute("VACUUM")
             return True
         except Exception:
+            return False
+
+    def trigger_wal_checkpoint(self):
+        """[Suggestion 4] 主动触发 WAL 检查点，将日志刷回主库，防止 WAL 文件过大"""
+        try:
+            conn = self._get_conn()
+            conn.execute("PRAGMA wal_checkpoint(FULL)")
+            return True
+        except:
             return False

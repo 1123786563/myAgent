@@ -92,26 +92,36 @@ class MatchEngine:
                     
                     self.task_queue.put((s, potential_matches))
 
-                # 等待所有计算完成
-                self.task_queue.join()
+            # 等待所有计算完成
+            self.task_queue.join()
 
-                # 批量提交结果与 IM 联动 (F3.4.1)
-                matched_pairs = []
-                for s in shadows:
-                    if 'match_result' in s:
-                        cursor.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (s['match_result'],))
-                        cursor.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
-                        log.info(f"并发匹配成功: {s['vendor_keyword']} | ID:{s['match_result']}")
+            # [Suggestion 2] 细粒度原子化事务提交，减少锁定时间
+            matched_pairs = []
+            for s in shadows:
+                if 'match_result' in s:
+                    try:
+                        with self.db.transaction("IMMEDIATE") as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (s['match_result'],))
+                            cursor.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
+                            
+                            # [Suggestion 3] 消消乐成功后反馈知识库 (F3.4.2)
+                            from knowledge_bridge import KnowledgeBridge
+                            KnowledgeBridge().record_match_success(s['vendor_keyword'])
+                            
+                        log.info(f"并发匹配成功并提交: {s['vendor_keyword']} | ID:{s['match_result']}")
                         matched_pairs.append({
                             "shadow_id": s['id'],
                             "trans_id": s['match_result'],
                             "vendor": s['vendor_keyword'],
                             "amount": s['amount']
                         })
-                
-                # 优化点：推送批量消消乐卡片
-                if matched_pairs:
-                    self._push_batch_reconcile_card(matched_pairs)
+                    except Exception as e:
+                        log.error(f"对账结果提交失败: {e}")
+            
+            # 优化点：推送批量消消乐卡片
+            if matched_pairs:
+                self._push_batch_reconcile_card(matched_pairs)
 
             # 停止工作者
             for _ in range(self.worker_count):
