@@ -104,11 +104,54 @@ class InteractionHub:
         # 在真实场景中，这里会调用 IM 接口发送此 card
         return card
 
-    def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, user_role="GUEST", signature=None, extra_payload=None):
+    def render_for_platform(self, card, platform="FEISHU"):
+        """
+        [Optimization 1] IM 多渠道适配器 (Multi-Channel Adapter)
+        将标准 ActionCard 转换为特定 IM 平台的 Payload
+        """
+        if platform == "FEISHU":
+            return {
+                "msg_type": "interactive",
+                "card": {
+                    "header": {
+                        "title": {"tag": "plain_text", "content": card['header']['title']},
+                        "template": "blue" if card['header']['style'] == "primary" else "red"
+                    },
+                    "elements": [
+                        {"tag": "div", "text": {"tag": "lark_md", "content": card['body']['content']}},
+                        {"tag": "action", "actions": [
+                            {"tag": "button", "text": {"tag": "plain_text", "content": a['label']}, "value": a['value']}
+                            for a in card['actions']
+                        ]}
+                    ]
+                }
+            }
+        elif platform == "WECHAT_WORK":
+            # 模拟企业微信 Markdown 格式
+            actions_md = " | ".join([f"[{a['label']}]" for a in card['actions']])
+            return {
+                "msgtype": "markdown",
+                "markdown": {
+                    "content": f"## {card['header']['title']}\n{card['body']['content']}\n\n> 操作: {actions_md}"
+                }
+            }
+        return card
+
+    def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, user_role="GUEST", signature=None, extra_payload=None, timestamp=None):
         """
         处理回调，增加签名校验与手动修正回流 (F3.4.2)
+        [Suggestion 2] 安全强化：增加重放攻击防护 (Replay Protection)
         [Suggestion 3] 增加 RBAC 权限校验
         """
+        import time
+        
+        # 1. 重放攻击检查 (5分钟窗口)
+        if timestamp:
+            current_ts = int(time.time())
+            if abs(current_ts - int(timestamp)) > 300:
+                log.error(f"回调请求过期 (Timestamp: {timestamp})，拒绝处理以防止重放攻击。")
+                return False
+
         # 获取卡片要求的权限
         required_role = "ADMIN" # 默认
         if extra_payload and 'required_role' in extra_payload:
@@ -122,10 +165,13 @@ class InteractionHub:
             # 优化点：校验 HMAC 签名
             import hmac, hashlib
             payload_str = f"{transaction_id}:{action_value}"
+            if timestamp: payload_str += f":{timestamp}"
             if extra_payload:
                 payload_str += f":{json.dumps(extra_payload, sort_keys=True)}"
                 
-            expected_sig = hmac.new(b"secret_key", payload_str.encode(), hashlib.sha256).hexdigest()
+            # 模拟密钥获取
+            secret = "secret_key" 
+            expected_sig = hmac.new(secret.encode(), payload_str.encode(), hashlib.sha256).hexdigest()
             if not hmac.compare_digest(signature, expected_sig):
                 log.error(f"回调签名错误！可能存在篡改风险。")
                 return False
@@ -168,5 +214,12 @@ class InteractionHub:
                         conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (tid,))
                 log.info(f"批量确认成功，共处理 {len(ids)} 笔交易。")
                 return True
+
+        # [Suggestion 5] 双向反查回路 (OpenManus Ask-Back)
+        elif action_value == "PROVIDE_INFO":
+            info = extra_payload.get('user_input')
+            log.info(f"收到用户补充信息: {info}，正在通知 OpenManus 继续推理...")
+            # 这里应触发 OpenManus 恢复挂起的任务，此处仅打日志模拟
+            return True
             
         return False

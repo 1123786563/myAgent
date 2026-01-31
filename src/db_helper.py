@@ -513,7 +513,29 @@ class DBHelper:
     def add_transaction(self, **kwargs):
         """
         [Suggestion 2] 增强幂等入库逻辑，利用 trace_id 防止重复记账
+        [Suggestion 3] 集成隐私脱敏网关 (PrivacyGuard)
         """
+        from privacy_guard import PrivacyGuard
+        guard = PrivacyGuard(role="DB_WRITER")
+        
+        # 敏感字段脱敏处理
+        if 'vendor' in kwargs and kwargs['vendor']:
+            kwargs['vendor'] = guard.desensitize(kwargs['vendor'], context="GENERAL")
+            
+        if 'inference_log' in kwargs:
+            # 如果是字典，序列化前尝试脱敏其中可能包含的原始文本
+            import json
+            log_data = kwargs['inference_log']
+            if isinstance(log_data, dict):
+                 # 简单处理：仅对 cot_trace 中的 details 进行脱敏
+                 if 'cot_trace' in log_data and isinstance(log_data['cot_trace'], list):
+                     for step in log_data['cot_trace']:
+                         if 'details' in step and isinstance(step['details'], str):
+                             step['details'] = guard.desensitize(step['details'], context="GENERAL")
+                 kwargs['inference_log'] = json.dumps(log_data, ensure_ascii=False)
+            elif isinstance(log_data, str):
+                kwargs['inference_log'] = guard.desensitize(log_data, context="GENERAL")
+
         fields = ", ".join(kwargs.keys())
         placeholders = ", ".join(["?"] * len(kwargs))
         values = tuple(kwargs.values())
@@ -828,24 +850,57 @@ class DBHelper:
         """
         try:
             with self.transaction("DEFERRED") as conn:
-                sql = "SELECT COUNT(*) as cnt FROM system_events WHERE service_name = ? AND created_at > datetime('now', '-1 hour')"
-                row = conn.execute(sql, (service_name,)).fetchone()
-                return row['cnt']
-        except:
-            return 0
-
-    def verify_outbox_integrity(self, service_name):
-        """
-        [Optimization 4] Outbox 完整性校验 (Reliability Enhancement)
-        """
-        try:
-            with self.transaction("DEFERRED") as conn:
                 # 检查 InteractionHub 产生的最近 1 小时内未成功的系统事件
                 sql = "SELECT COUNT(*) as cnt FROM system_events WHERE service_name = ? AND created_at > datetime('now', '-1 hour')"
                 row = conn.execute(sql, (service_name,)).fetchone()
                 return row['cnt']
         except:
             return 0
+
+    def get_monthly_stats(self):
+        """
+        [Optimization 3] 获取本月经营数据聚合 (Sentinel Support)
+        """
+        try:
+            with self.transaction("DEFERRED") as conn:
+                # 1. 计算本月营收 (假设 revenue 表或 category='收入')
+                # 此处简化：统计所有 credit 方向的资金流入作为营收模拟
+                # 实际应基于会计科目表
+                sql_revenue = """
+                    SELECT SUM(amount) as total 
+                    FROM transactions 
+                    WHERE category LIKE '%收入%' 
+                    AND created_at >= date('now', 'start of month')
+                    AND status = 'AUDITED'
+                """
+                row_rev = conn.execute(sql_revenue).fetchone()
+                revenue = row_rev['total'] if row_rev and row_rev['total'] else 0
+
+                # 2. 计算进项税额 (Input VAT)
+                # 假设 transaction_tags 中有 'tax_amount'
+                # 或者简单按支出总额估算
+                sql_input = """
+                    SELECT SUM(amount) as total
+                    FROM transactions
+                    WHERE category NOT LIKE '%薪资%' AND category NOT LIKE '%税费%'
+                    AND created_at >= date('now', 'start of month')
+                    AND status = 'AUDITED'
+                """
+                row_input = conn.execute(sql_input).fetchone()
+                total_expense = row_input['total'] if row_input and row_input['total'] else 0
+                
+                # 简单估算：进项税 = 可抵扣支出 / 1.13 * 0.13
+                vat_in = (total_expense / 1.13) * 0.13
+
+                return {
+                    "revenue": revenue,
+                    "vat_in": vat_in,
+                    "total_expense": total_expense
+                }
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB").error(f"获取月度报表失败: {e}")
+            return {"revenue": 0, "vat_in": 0, "total_expense": 0}
 
     def perform_db_maintenance(self):
         """

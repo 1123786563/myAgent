@@ -25,7 +25,9 @@ class MasterDaemon:
         self.services = {
             "InteractionHub": get_path("src", "interaction_hub.py"),
             "Collector": get_path("src", "collector.py"),
-            "MatchEngine": get_path("src", "match_engine.py")
+            "MatchEngine": get_path("src", "match_engine.py"),
+            "Auditor": get_path("src", "auditor_agent.py"),
+            "Sentinel": get_path("src", "sentinel_agent.py")
         }
         self.processes = {}
         self.restart_counts = {}

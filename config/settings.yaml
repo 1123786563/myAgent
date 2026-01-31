@@ -44,3 +44,10 @@ tax:
 
 enterprise:
   sector: "SOFTWARE"
+
+bank_mapping:
+  default:
+    vendor_col: "对方户名"
+    amount_col: "金额"
+    date_col: "交易日期"
+    encoding: "utf-8-sig"

@@ -135,19 +135,52 @@ class CollectorWorker(threading.Thread):
     def _parse_bank_statement(self, file_path):
         try:
             import csv
+            import pandas as pd
+            
+            # [Optimization 1] Load mapping from config
+            mapping = ConfigManager.get("bank_mapping.default", {})
+            col_vendor = mapping.get("vendor_col", "对方户名")
+            col_amount = mapping.get("amount_col", "金额")
+            encoding = mapping.get("encoding", "utf-8-sig")
+
             batch = []
-            with open(file_path, mode='r', encoding='utf-8') as f:
-                reader = csv.DictReader(f)
-                for row in reader:
-                    vendor = row.get('对方户名', '未知商户')
-                    try:
-                        amount = float(row.get('金额', 0))
-                    except: continue
-                    if amount == 0: continue
-                    batch.append({"amount": abs(amount), "vendor_keyword": vendor, "source": "BANK_FLOW"})
-                    if len(batch) >= 50:
-                        self.db.add_pending_entries_batch(batch)
-                        batch = []
+            
+            # Support both CSV and Excel
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext == '.csv':
+                df = pd.read_csv(file_path, encoding=encoding)
+            else:
+                df = pd.read_excel(file_path)
+            
+            # Normalize columns
+            df.columns = [c.strip() for c in df.columns]
+            
+            if col_vendor not in df.columns or col_amount not in df.columns:
+                log.warning(f"列名不匹配 (Need: {col_vendor}, {col_amount}). Found: {df.columns.tolist()}")
+                return
+
+            for _, row in df.iterrows():
+                vendor = str(row.get(col_vendor, '未知商户')).strip()
+                try:
+                    # Clean amount string (remove currency symbols, commas)
+                    amt_str = str(row.get(col_amount, 0)).replace(',', '').replace('¥', '')
+                    amount = float(amt_str)
+                except: 
+                    continue
+                
+                if amount == 0: continue
+                
+                # Use absolute value for now, assuming bank statement mixes +/-
+                batch.append({
+                    "amount": abs(amount), 
+                    "vendor_keyword": vendor, 
+                    "source": "BANK_FLOW"
+                })
+                
+                if len(batch) >= 50:
+                    self.db.add_pending_entries_batch(batch)
+                    batch = []
+            
             if batch:
                 self.db.add_pending_entries_batch(batch)
             log.info(f"流水解析完成: {os.path.basename(file_path)}")

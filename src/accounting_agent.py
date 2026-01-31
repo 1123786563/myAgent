@@ -167,6 +167,15 @@ class AccountingAgent(AgentBase):
         if project_match:
             tags.append({"key": "project_id", "value": project_match.group(1)})
 
+        # [Optimization 2] 构建结构化思维链 (Chain of Thought)
+        inference_steps = [
+            {"step": "INPUT_ANALYSIS", "details": f"Vendor: {vendor}, Amount: {amount}, Text: {raw_text[:20]}..."},
+            {"step": "ROUTING", "result": "L1_FAST" if matched_rule_id else "L1_SEMANTIC"},
+            {"step": "RULE_MATCH", "rule_id": matched_rule_id, "match_type": "KEYWORD" if raw_text in self._keyword_map else "SEMANTIC/REGEX"},
+            {"step": "DIMENSION_EXTRACTION", "dims": semantic_dims},
+            {"step": "CONFIDENCE_SCORING", "score": confidence}
+        ]
+
         content = {
             "category": category,
             "confidence": confidence,
@@ -174,8 +183,8 @@ class AccountingAgent(AgentBase):
             "requires_shadow_audit": is_gray or (confidence < 0.9),
             "inference_log": {
                 "engine": "L1-Moltbot",
-                "rule_id": matched_rule_id,
-                "semantic_dims": semantic_dims
+                "cot_trace": inference_steps, # 完整的思维链
+                "rule_id": matched_rule_id
             }
         }
         
