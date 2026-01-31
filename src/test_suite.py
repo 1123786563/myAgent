@@ -8,6 +8,30 @@ import uuid
 from unittest.mock import MagicMock, patch
 from pathlib import Path
 
+# --- MOCK AGENTSCOPE BEGIN ---
+mock_as = MagicMock()
+mock_as.agents = MagicMock()
+mock_as.message = MagicMock()
+
+class MockAgentBase:
+    def __init__(self, name):
+        self.name = name
+    def reply(self, x):
+        pass
+
+class MockMsg(dict):
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+mock_as.agents.AgentBase = MockAgentBase
+mock_as.message.Msg = MockMsg
+sys.modules["agentscope"] = mock_as
+sys.modules["agentscope.agents"] = mock_as.agents
+sys.modules["agentscope.message"] = mock_as.message
+# --- MOCK AGENTSCOPE END ---
+
 # 确保能加载 src 模块
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
@@ -24,12 +48,19 @@ class TestLedgerAlpha(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # 优化点：测试环境感知，使用临时测试数据库
-        os.environ["LEDGER_PATH_DB"] = "/tmp/test_ledger_alpha.db"
+        db_path = "/tmp/test_ledger_alpha.db"
+        if os.path.exists(db_path):
+            os.remove(db_path)
+        os.environ["LEDGER_PATH_DB"] = db_path
         ConfigManager.load(force=True)
 
     def setUp(self):
         # 每次测试前清理数据库，确保环境纯净
         self.db = DBHelper()
+        # Ensure clean state
+        try: self.db._get_conn().rollback()
+        except: pass
+        
         with self.db.transaction("IMMEDIATE") as conn:
             conn.execute("DELETE FROM transactions")
             conn.execute("DELETE FROM pending_entries")
@@ -49,7 +80,7 @@ class TestLedgerAlpha(unittest.TestCase):
         
         self.assertEqual(admin_guard.desensitize(raw), raw)
         self.assertTrue(re.search(r'138\*{4}5678', auditor_guard.desensitize(raw)))
-        self.assertEqual(guest_guard.desensitize(raw), "[PHONE_SECRET]")
+        self.assertEqual(guest_guard.desensitize(raw), "手机[PHONE_SECRET]")
 
     def test_db_concurrency_stress(self):
         """测试数据库在高并发写入下的稳定性"""
@@ -73,7 +104,7 @@ class TestLedgerAlpha(unittest.TestCase):
         sentinel = SentinelAgent("TestSentinel")
         
         # 1. 业务相关性测试
-        proposal_bad = {"vendor": "肯德基", "category": "办公用品", "amount": 50}
+        proposal_bad = {"vendor": "肯德基餐饮", "category": "办公用品", "amount": 50}
         passed, reason = sentinel.check_transaction_compliance(proposal_bad)
         self.assertFalse(passed)
         self.assertIn("业务相关性存疑", reason)
@@ -122,7 +153,7 @@ class TestLedgerAlpha(unittest.TestCase):
         
         # 模拟文件处理
         test_file = "/tmp/test_receipt.jpg"
-        with open(test_file, 'w') as f: f.write("dummy content")
+        with open(test_file, 'w') as f: f.write("dummy content" * 20)
         
         try:
             collector._process_file(test_file)

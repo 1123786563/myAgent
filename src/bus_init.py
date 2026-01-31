@@ -6,20 +6,38 @@ import yaml
 import time
 import hmac
 import hashlib
+import threading
 from config_manager import ConfigManager
 
 # 核心安全：内部通信令牌
 SYSTEM_AUTH_TOKEN = "LA_SECURE_TOKEN_2026_XF"
 
 def init_bus():
+    import os
     # 动态加载模型配置
-    model_configs = [
-        {
-            "config_name": "accounting_model",
-            "model_type": "openai_chat",
-            "model_name": ConfigManager.get("agents.accounting.model", "gpt-4o-mini")
-        }
-    ]
+    api_key = os.environ.get("OPENAI_API_KEY")
+    
+    # 如果存在 API Key，配置真实模型；否则使用 Mock 配置或本地兜底
+    if api_key:
+        model_configs = [
+            {
+                "config_name": "accounting_model",
+                "model_type": "openai_chat",
+                "model_name": ConfigManager.get("agents.accounting.model", "gpt-4o-mini"),
+                "api_key": api_key,
+                "organization": os.environ.get("OPENAI_ORG", "")
+            }
+        ]
+    else:
+        # Mock/Fallback Configuration
+        model_configs = [
+            {
+                "config_name": "accounting_model",
+                "model_type": "openai_chat",
+                "model_name": "gpt-4o-mini",
+                # AgentScope allows mock/placeholder if not actually calling remote API in test mode
+            }
+        ]
     
     agentscope.init(
         model_configs=model_configs,

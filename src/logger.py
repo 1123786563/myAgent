@@ -23,8 +23,6 @@ class PrivacyFilter(logging.Filter):
         if isinstance(record.msg, str):
             record.msg = self.guard.desensitize(record.msg)
         return True
-            record.msg = self.guard.desensitize(record.msg)
-        return True
 
 class TraceFilter(logging.Filter):
     """

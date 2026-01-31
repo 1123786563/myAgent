@@ -215,11 +215,49 @@ class InteractionHub:
                 log.info(f"批量确认成功，共处理 {len(ids)} 笔交易。")
                 return True
 
-        # [Suggestion 5] 双向反查回路 (OpenManus Ask-Back)
-        elif action_value == "PROVIDE_INFO":
-            info = extra_payload.get('user_input')
-            log.info(f"收到用户补充信息: {info}，正在通知 OpenManus 继续推理...")
-            # 这里应触发 OpenManus 恢复挂起的任务，此处仅打日志模拟
-            return True
-            
-        return False
+import threading
+import time
+from graceful_exit import should_exit
+
+class PollingWorker(threading.Thread):
+    def __init__(self, hub):
+        super().__init__(daemon=True, name="Interaction-Poll")
+        self.hub = hub
+        self.db = hub.db
+
+    def run(self):
+        log.info("InteractionHub 轮询服务启动...")
+        while not should_exit():
+            try:
+                # 模拟处理 Outbox (System Events)
+                with self.db.transaction("DEFERRED") as conn:
+                    # 获取未处理的推送任务 (此处简化为获取最近 10 分钟的特定事件)
+                    sql = """
+                        SELECT id, event_type, message, trace_id 
+                        FROM system_events 
+                        WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') 
+                        AND created_at > datetime('now', '-10 minutes')
+                        -- 实际应有 status 字段标记是否已发送，此处省略 schema 变更
+                        ORDER BY created_at DESC LIMIT 5
+                    """
+                    events = conn.execute(sql).fetchall()
+                
+                for evt in events:
+                    # 模拟发送逻辑
+                    # log.debug(f"处理 Outbox 事件: {evt['event_type']} -> {evt['message']}")
+                    pass
+                
+                time.sleep(5)
+            except Exception as e:
+                log.error(f"Hub 轮询异常: {e}")
+                time.sleep(5)
+
+if __name__ == "__main__":
+    hub = InteractionHub()
+    worker = PollingWorker(hub)
+    worker.start()
+    
+    log.info("InteractionHub 服务已启动 (包含轮询模块)...")
+    
+    while not should_exit():
+        time.sleep(1)

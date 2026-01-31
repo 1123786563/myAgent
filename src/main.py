@@ -11,8 +11,6 @@ from config_manager import ConfigManager
 from project_paths import get_path
 from graceful_exit import should_exit, register_cleanup
 
-print("DEBUG: MAIN SCRIPT STARTED")
-
 log = get_logger("MasterDaemon")
 
 class MasterDaemon:
@@ -28,7 +26,8 @@ class MasterDaemon:
             "MatchEngine": get_path("src", "match_engine.py"),
             "AccountingAgent": get_path("src", "accounting_agent.py"),
             "Auditor": get_path("src", "auditor_agent.py"),
-            "Sentinel": get_path("src", "sentinel_agent.py")
+            "Sentinel": get_path("src", "sentinel_agent.py"),
+            "APIServer": get_path("src", "api_server.py")
         }
         self.processes = {}
         self.restart_counts = {}

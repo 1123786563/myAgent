@@ -266,6 +266,7 @@ class DBHelper:
             cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 status TEXT,
+                source_type TEXT,
                 amount DECIMAL(10, 2),
                 currency TEXT DEFAULT 'CNY',
                 vendor TEXT,

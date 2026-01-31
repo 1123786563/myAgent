@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ledger-alpha:
+    build: .
+    container_name: ledger_alpha
+    restart: always
+    environment:
+      - LEDGER_DATA_ROOT=/app
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AGENTSCOPE_LOG_LEVEL=INFO
+    volumes:
+      - ./workspace:/app/workspace
+      - ./logs:/app/logs
+      - ./config:/app/config
+      - ./ledger_alpha.db:/app/ledger_alpha.db
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,30 @@
+2026-01-31 19:54:23,265 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/accounting_rules.yaml
+2026-01-31 19:54:23,424 [Global] - MatchEngine - INFO - 执行多模态增强对账匹配任务...
+2026-01-31 19:54:23,426 [Global] - MatchEngine - INFO - 消消乐匹配成功: 模拟 <-> 模拟供应商 (ID: 101)
+2026-01-31 19:54:23,428 [Global] - SentinelAgent - INFO - SentinelAgent 初始化: 性质=SMALL_SCALE | 免税额度=100000
+2026-01-31 19:54:47,706 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/accounting_rules.yaml
+2026-01-31 19:54:47,706 [Global] - AccountingAgent - INFO - 正在尝试修复交易 102 (Vendor: 阿里云计算)...
+2026-01-31 19:54:47,707 [Global] - AccountingAgent - INFO - 交易 102 修复成功 -> 技术服务费-云资源，已重新提交审计。
+2026-01-31 19:55:18,853 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/accounting_rules.yaml
+2026-01-31 19:55:18,854 [Global] - AccountingAgent - INFO - 正在尝试修复交易 103 (Vendor: 阿里云计算)...
+2026-01-31 19:55:18,855 [Global] - AccountingAgent - INFO - 交易 103 修复成功 -> 技术服务费-云资源，已重新提交审计。
+2026-01-31 19:55:19,019 [Global] - MatchEngine - INFO - 执行多模态增强对账匹配任务...
+2026-01-31 19:55:19,020 [Global] - MatchEngine - INFO - 消消乐匹配成功: 模拟 <-> 模拟供应商 (ID: 204)
+2026-01-31 19:55:19,022 [Global] - SentinelAgent - INFO - SentinelAgent 初始化: 性质=SMALL_SCALE | 免税额度=100000
+2026-01-31 19:55:19,023 [Global] - SentinelAgent - CRITICAL - 预算熔断：R&D 余额 ￥100.00 不足支付 ￥200.00！
+2026-01-31 19:55:28,469 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/accounting_rules.yaml
+2026-01-31 19:55:28,470 [Global] - AccountingAgent - INFO - 正在尝试修复交易 1 (Vendor: 阿里云计算)...
+2026-01-31 19:55:28,470 [Global] - AccountingAgent - INFO - 交易 1 修复成功 -> 技术服务费-云资源，已重新提交审计。
+2026-01-31 19:55:28,577 [df636080-d2ae-4db7-be10-9e2e77202eca] - Collector - INFO - 单据入库成功 ID=2 | Group=None | Tags: [{'key': 'project_id', 'value': 'tmp'}]
+2026-01-31 19:55:28,621 [Global] - MatchEngine - INFO - 执行多模态增强对账匹配任务...
+2026-01-31 19:55:28,621 [Global] - MatchEngine - INFO - 消消乐匹配成功: 模拟 <-> 模拟供应商 (ID: 103)
+2026-01-31 19:55:28,623 [Global] - SentinelAgent - INFO - SentinelAgent 初始化: 性质=SMALL_SCALE | 免税额度=100000
+2026-01-31 19:55:28,623 [Global] - SentinelAgent - CRITICAL - 预算熔断：R&D 余额 ￥100.00 不足支付 ￥200.00！
+2026-01-31 20:01:45,547 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/accounting_rules.yaml
+2026-01-31 20:01:45,549 [Global] - AccountingAgent - INFO - 正在尝试修复交易 1 (Vendor: 阿里云计算)...
+2026-01-31 20:01:45,550 [Global] - AccountingAgent - INFO - 交易 1 修复成功 -> 技术服务费-云资源，已重新提交审计。
+2026-01-31 20:01:45,657 [1fc839fc-7ef2-4a8a-b7f9-dac33e721fdd] - Collector - INFO - 单据入库成功 ID=2 | Group=None | Tags: [{'key': 'project_id', 'value': 'tmp'}]
+2026-01-31 20:01:45,743 [Global] - MatchEngine - INFO - 执行多模态增强对账匹配任务...
+2026-01-31 20:01:45,744 [Global] - MatchEngine - INFO - 消消乐匹配成功: 模拟 <-> 模拟供应商 (ID: 103)
+2026-01-31 20:01:45,746 [Global] - SentinelAgent - INFO - SentinelAgent 初始化: 性质=SMALL_SCALE | 免税额度=100000
+2026-01-31 20:01:45,747 [Global] - SentinelAgent - CRITICAL - 预算熔断：R&D 余额 ￥100.00 不足支付 ￥200.00！

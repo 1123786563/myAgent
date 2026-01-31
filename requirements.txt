@@ -1,0 +1,11 @@
+agentscope
+pyyaml
+watchdog
+psutil
+pandas
+openpyxl
+fastapi
+uvicorn
+python-multipart
+requests
+openai
