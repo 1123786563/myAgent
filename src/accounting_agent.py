@@ -297,6 +297,7 @@ class RecoveryWorker(threading.Thread):
         new_category = "待人工确认"
         reason = "L2无法确定"
         confidence = 0.0
+        response = {}  # Initialize response to avoid UnboundLocalError
 
         try:
             # [Optimization] Use LLMConnector to simulate OpenManus autonomous reasoning
@@ -333,8 +334,8 @@ class RecoveryWorker(threading.Thread):
                     "l2_decision": new_category,
                     "reason": reason,
                     "confidence": confidence,
-                    "engine": "L2-OpenManus-Sim",  # Updated engine name
-                    "raw_llm_response": response if "response" in locals() else {},
+                    "engine": "L2-OpenManus-Sim",
+                    "raw_llm_response": response,
                 }
 
                 # 尝试追加日志

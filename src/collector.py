@@ -233,7 +233,8 @@ class CollectorWorker(threading.Thread):
                     "SELECT id FROM transactions WHERE file_path = ?", (file_path,)
                 ).fetchone()
                 return res is None
-        except:
+        except Exception as e:
+            log.warning(f"检查文件处理状态失败: {e}")
             return True
 
     def _process_file(self, file_path, group_id=None):

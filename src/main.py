@@ -210,26 +210,26 @@ class MasterDaemon:
                         if should_exit(): break
                         is_crashed = proc.poll() is not None
                         is_hung = False
-                        
-                    if not is_crashed:
-                        if not self.db.check_health(name, timeout_seconds=health_timeout):
-                            log.warning(f"检测到子服务 {name} 逻辑挂起 (Heartbeat Stuck)！触发强制重启...")
-                            is_hung = True
-                    
-                    if is_crashed or is_hung:
-                        if is_hung:
-                            log.info(f"发送 SIGKILL -> {name}")
-                            proc.kill()
-                            proc.wait()
+
+                        if not is_crashed:
+                            if not self.db.check_health(name, timeout_seconds=health_timeout):
+                                log.warning(f"检测到子服务 {name} 逻辑挂起 (Heartbeat Stuck)！触发强制重启...")
+                                is_hung = True
+
+                        if is_crashed or is_hung:
+                            if is_hung:
+                                log.info(f"发送 SIGKILL -> {name}")
+                                proc.kill()
+                                proc.wait()
 
                             if current_time < self.next_retry_time.get(name, 0):
                                 continue
-                                
+
                             exit_code = proc.poll()
                             self.restart_counts[name] += 1
                             wait_time = min(60, backoff_base ** (self.restart_counts[name] - 1))
                             log.warning(f"服务 {name} 异常重启 ({exit_code})，第 {self.restart_counts[name]} 次。冷却 {wait_time}s...")
-                            
+
                             self.next_retry_time[name] = current_time + wait_time
                             self.processes[name] = self.start_service(name, self.services[name])
                         else:

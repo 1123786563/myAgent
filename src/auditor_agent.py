@@ -298,10 +298,18 @@ class AuditorAgent(AgentBase):
 
     def reply(self, x: dict = None) -> dict:
         proposal = x.get("content", {})
-        # ... (保持原逻辑)
         amount = float(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         category = proposal.get("category", "")
+        trace_id = x.get("trace_id")
+        group_id = x.get("group_id")
+
+        # 初始化决策变量
+        confidence = proposal.get("confidence", 0.5)
+        rule_quality = proposal.get("inference_log", {}).get("rule_id") is not None
+        risk_score = 0.0
+        reasons = []
+        is_rejected = False
 
         # [Optimization 2] 跨供应商价格基准校验 (Sector Benchmarking)
         # 逻辑：如果本笔交易金额显著高于该科目历史中位数的 150%，提示采购风险

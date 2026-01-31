@@ -2,7 +2,9 @@ import abc
 import json
 import time
 import random
+import os
 from logger import get_logger
+from project_paths import get_path
 
 log = get_logger("LLMConnector")
 
@@ -26,10 +28,28 @@ class MockOpenManusLLM(BaseLLM):
     """
     Simulates the OpenManus Agent's L2 reasoning capability.
     In production, this would connect to an actual LLM API (OpenAI/Anthropic).
+
+    [Optimization] Now supports loading knowledge base from external YAML file.
     """
 
-    def __init__(self):
-        self.knowledge_base = {
+    def __init__(self, kb_path: str = None):
+        self.kb_path = kb_path or get_path("src", "l2_knowledge_base.yaml")
+        self.knowledge_base = self._load_knowledge_base()
+        self._kb_last_modified = self._get_file_mtime()
+
+    def _get_file_mtime(self) -> float:
+        """Get file modification time for hot-reload detection."""
+        try:
+            return os.path.getmtime(self.kb_path)
+        except OSError:
+            return 0.0
+
+    def _load_knowledge_base(self) -> dict:
+        """
+        Load knowledge base from external YAML file.
+        Falls back to default hardcoded KB if file not found.
+        """
+        default_kb = {
             "aliyun": {
                 "category": "技术服务费",
                 "reason": "Cloud computing service provider",
@@ -47,12 +67,45 @@ class MockOpenManusLLM(BaseLLM):
             },
         }
 
+        try:
+            import yaml
+            if os.path.exists(self.kb_path):
+                with open(self.kb_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                    if data and "vendors" in data:
+                        kb = {}
+                        for vendor in data["vendors"]:
+                            key = vendor.get("keyword", "").lower()
+                            if key:
+                                kb[key] = {
+                                    "category": vendor.get("category", "杂项支出"),
+                                    "reason": vendor.get("reason", "Loaded from KB"),
+                                }
+                        kb["unknown"] = default_kb["unknown"]
+                        log.info(f"已从外部知识库加载 {len(kb)-1} 条供应商映射规则")
+                        return kb
+        except Exception as e:
+            log.warning(f"加载外部知识库失败，使用默认配置: {e}")
+
+        return default_kb
+
+    def _maybe_reload_kb(self):
+        """Hot-reload knowledge base if file has changed."""
+        current_mtime = self._get_file_mtime()
+        if current_mtime > self._kb_last_modified:
+            log.info("检测到知识库文件变更，执行热重载...")
+            self.knowledge_base = self._load_knowledge_base()
+            self._kb_last_modified = current_mtime
+
     def generate_response(self, prompt: str, system_role: str = "assistant") -> dict:
         """
-        Simulate a reasoned response.
+        Simulate a reasoned response with hot-reload support.
         """
+        # Check for KB updates before processing
+        self._maybe_reload_kb()
+
         log.info(f"Simulating OpenManus reasoning for prompt: {prompt[:50]}...")
-        time.sleep(1.0)  # Simulate network latency
+        time.sleep(0.5)  # Reduced latency simulation
 
         # Simple keyword matching to simulate "reasoning"
         prompt_lower = prompt.lower()
