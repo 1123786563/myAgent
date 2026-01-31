@@ -1,0 +1,35 @@
+# LedgerAlpha 全局配置
+path:
+  base_dir: "."
+  workspace: "workspace"
+  input: "workspace/input"
+  db: "ledger_alpha.db"
+  rules: "src/accounting_rules.yaml"
+  logs: "logs"
+
+intervals:
+  daemon_poll: 10
+  collector_scan: 60
+  match_engine_loop: 30
+  retry_backoff_base: 2
+
+db:
+  retry_count: 3
+  retry_delay: 0.5
+
+threshold:
+  confidence_high: 0.95
+  confidence_low: 0.5
+  token_budget_per_task: 2.0
+
+agents:
+  accounting:
+    model: "gpt-4o-mini"
+  auditor:
+    model: "gpt-4o"
+  manus:
+    model: "gpt-4o"
+
+collector:
+  worker_threads: 3
+  initial_scan_enabled: true

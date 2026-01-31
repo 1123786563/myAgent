@@ -1,0 +1,13 @@
+# 高级会计规则：支持多重条件
+rules:
+  - keyword: "滴滴"
+    category: "管理费用-差旅费"
+    conditions:
+      - field: "amount"
+        operator: ">"
+        value: 1000
+        category: "管理费用-长途交通费" # 如果金额 > 1000，覆盖默认科目
+  - keyword: "阿里云"
+    category: "技术服务费"
+  - keyword: "玄铁重剑"
+    category: "办公费用-福利费"
