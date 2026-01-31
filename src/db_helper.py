@@ -85,9 +85,14 @@ class DBHelper:
             cursor.execute("SELECT last_run FROM sys_maintenance WHERE task_name = 'integrity_check'")
             row = cursor.fetchone()
             if not row or row['last_run'] != today:
-                print(f"[{today}] 执行数据库完整性检查...")
+                print(f"[{today}] 执行数据库完整性检查与统计信息更新...")
+                # 1. 完整性检查
                 cursor.execute("PRAGMA integrity_check")
                 res = cursor.fetchone()
+                
+                # 2. 统计信息更新 (优化查询计划)
+                cursor.execute("ANALYZE")
+                
                 if res and res[0] == "ok":
                     cursor.execute("INSERT OR REPLACE INTO sys_maintenance (task_name, last_run) VALUES ('integrity_check', ?)", (today,))
                 else:

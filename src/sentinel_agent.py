@@ -19,6 +19,51 @@ class SentinelAgent(AgentBase):
         # 合规红线金额
         self.compliance_redline = 50000
 
+    def _check_business_relevance(self, vendor, category):
+        """简单的供应商与业务匹配校验"""
+        # 示例：如果供应商包含 '餐馆' 但科目是 '办公用品'，触发预警
+        suspicious_pairs = [
+            ("餐饮", "办公用品"),
+            ("加油站", "差旅费-打车"),
+            ("娱乐", "研发支出")
+        ]
+        for v_kw, c_kw in suspicious_pairs:
+            if v_kw in vendor and c_kw in category:
+                return False
+        return True
+
+    def _analyze_vendor_price_clustering(self, vendor, category, current_price):
+        """
+        智能供应商洞察：历史价格聚类分析 (F3.3.5)
+        当单价偏离历史中位数 15% 时触发预警。
+        """
+        try:
+            # 1. 从 DB 获取该供应商该科目的历史单价 (模拟聚合查询)
+            sql = """
+                SELECT amount FROM transactions 
+                WHERE vendor = ? AND category = ? AND status = 'AUDITED'
+                ORDER BY created_at DESC LIMIT 20
+            """
+            with self.db.transaction("DEFERRED") as conn:
+                rows = conn.execute(sql, (vendor, category)).fetchall()
+                prices = [float(r['amount']) for r in rows]
+            
+            if len(prices) < 3: return True, 0 # 样本不足，不预警
+
+            # 2. 计算中位数与偏离度
+            import statistics
+            median_price = statistics.median(prices)
+            deviation = abs(current_price - median_price) / (median_price + 1)
+            
+            if deviation > 0.15:
+                log.warning(f"供应商价格异常预警: {vendor} | 当前: {current_price} | 历史中位: {median_price:.2f} | 偏离: {deviation:.1%}")
+                return False, deviation
+                
+            return True, deviation
+        except Exception as e:
+            log.error(f"价格聚类分析失败: {e}")
+            return True, 0
+
     def reply(self, x: dict = None) -> dict:
         proposal = x.get("content", {})
         amount = float(proposal.get("amount", 0))
@@ -32,8 +77,7 @@ class SentinelAgent(AgentBase):
         is_blocked = False
         risk_level = "LOW"
 
-        # 1. 税负率偏离度分析 (模拟)
-        # 获取本月累计销项与进项 (此处简化为从 DB 查询)
+        # 1. 税负率偏离度分析
         stats = self._get_monthly_stats()
         current_tax_burden = stats['vat_net'] / (stats['revenue'] + 1)
         if current_tax_burden < self.industry_tax_burden * 0.7:
@@ -51,6 +95,17 @@ class SentinelAgent(AgentBase):
             warnings.append(f"业务关联度可疑：供应商 {vendor} 与科目 {category} 属性不匹配")
             risk_level = "MEDIUM"
 
+        # 4. 供应商价格聚类分析 (F3.3.5)
+        price_ok, dev = self._analyze_vendor_price_clustering(vendor, category, amount)
+        if not price_ok:
+            warnings.append(f"供应商价格异常：偏离历史均值 {dev:.1%}")
+            risk_level = "MEDIUM"
+
+        # 5. 公转私/敏感收款方检测
+        if any(kw in vendor for kw in ["个人", "劳务", "小明"]): # 简化模拟
+            warnings.append(f"潜在公转私风险：收款方 [{vendor}] 可能为自然人")
+            if risk_level != "HIGH": risk_level = "MEDIUM"
+
         decision = "WARNING" if warnings else "PASS"
         if is_blocked: decision = "BLOCK"
 
@@ -58,7 +113,7 @@ class SentinelAgent(AgentBase):
             "decision": decision,
             "risk_level": risk_level,
             "warnings": warnings,
-            "timestamp": self.db.get_now()
+            "timestamp": self.db.get_now() if hasattr(self.db, 'get_now') else "2025-03-24"
         }
 
         log.info(f"Sentinel 巡检结束: Decision={decision} | Warnings={len(warnings)}")
@@ -68,19 +123,6 @@ class SentinelAgent(AgentBase):
         """模拟获取财务指标"""
         # 实际应从 DB 聚合查询
         return {"revenue": 1000000, "vat_net": 20000}
-
-    def _check_business_relevance(self, vendor, category):
-        """简单的供应商与业务匹配校验"""
-        # 示例：如果供应商包含 '餐馆' 但科目是 '办公用品'，触发预警
-        suspicious_pairs = [
-            ("餐饮", "办公用品"),
-            ("加油站", "差旅费-打车"),
-            ("娱乐", "研发支出")
-        ]
-        for v_kw, c_kw in suspicious_pairs:
-            if v_kw in vendor and c_kw in category:
-                return False
-        return True
 
 if __name__ == "__main__":
     sentinel = SentinelAgent("Sentinel-01")

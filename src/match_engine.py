@@ -95,12 +95,23 @@ class MatchEngine:
                 # 等待所有计算完成
                 self.task_queue.join()
 
-                # 批量提交结果
+                # 批量提交结果与 IM 联动 (F3.4.1)
+                matched_pairs = []
                 for s in shadows:
                     if 'match_result' in s:
                         cursor.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (s['match_result'],))
                         cursor.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
                         log.info(f"并发匹配成功: {s['vendor_keyword']} | ID:{s['match_result']}")
+                        matched_pairs.append({
+                            "shadow_id": s['id'],
+                            "trans_id": s['match_result'],
+                            "vendor": s['vendor_keyword'],
+                            "amount": s['amount']
+                        })
+                
+                # 优化点：推送批量消消乐卡片
+                if matched_pairs:
+                    self._push_batch_reconcile_card(matched_pairs)
 
             # 停止工作者
             for _ in range(self.worker_count):
@@ -110,6 +121,21 @@ class MatchEngine:
 
         except Exception as e:
             log.error(f"并发对账异常: {e}")
+
+    def _push_batch_reconcile_card(self, pairs):
+        """推送批量对账消消乐卡片 (F3.4.1)"""
+        try:
+            from interaction_hub import InteractionHub
+            hub = InteractionHub()
+            log.info(f"正在通过 InteractionHub 推送批量消消乐建议 ({len(pairs)} 笔)")
+            hub.push_card("BATCH_MATCH", {
+                "count": len(pairs),
+                "total_amount": sum(p['amount'] for p in pairs),
+                "items": pairs[:5], # 仅展示前5笔作为摘要
+                "action": "BATCH_CONFIRM"
+            })
+        except Exception as e:
+            log.error(f"推送批量卡片失败: {e}")
 
     def main_loop(self):
         log.info("MatchEngine 守护进程模式启动 (并发模式)...")

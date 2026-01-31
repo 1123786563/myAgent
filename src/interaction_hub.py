@@ -62,5 +62,17 @@ class InteractionHub:
                 conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (transaction_id,))
             log.info(f"交易 {transaction_id} 已确认入账。")
             return True
+        
+        # 优化点：支持批量消消乐确认 (F3.4.1)
+        elif action_value == "BATCH_CONFIRM":
+            log.info(f"收到批量消消乐确认指令: {transaction_id}")
+            # 此时 transaction_id 可能是一个标识符，真正的 ID 在 extra_payload 中
+            if extra_payload and 'item_ids' in extra_payload:
+                ids = extra_payload['item_ids']
+                with self.db.transaction("IMMEDIATE") as conn:
+                    for tid in ids:
+                        conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (tid,))
+                log.info(f"批量确认成功，共处理 {len(ids)} 笔交易。")
+                return True
             
         return False
