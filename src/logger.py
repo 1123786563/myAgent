@@ -71,10 +71,24 @@ def get_logger(name):
             encoding='utf-8'
         )
         
+        # [Suggestion 1] ERROR 级别独立存储
+        error_file_handler = TimedRotatingFileHandler(
+            os.path.join(log_dir, "ledger_alpha.error.log"),
+            when="midnight",
+            interval=1,
+            backupCount=30,
+            encoding='utf-8'
+        )
+        error_file_handler.setLevel(logging.ERROR)
+        
         formatter = logging.Formatter('%(asctime)s [%(trace_id)s] - %(name)s - %(levelname)s - %(message)s')
         file_handler.setFormatter(formatter)
+        error_file_handler.setFormatter(formatter)
+        
         file_handler.addFilter(PrivacyFilter())
         file_handler.addFilter(TraceFilter())
+        error_file_handler.addFilter(PrivacyFilter())
+        error_file_handler.addFilter(TraceFilter())
         
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(formatter)
@@ -83,8 +97,12 @@ def get_logger(name):
         
         # 2. 初始化监听器
         if _listener is None:
-            _listener = QueueListener(_log_queue, file_handler, console_handler, respect_handler_level=True)
+            # 增加 error_file_handler 到监听列表
+            _listener = QueueListener(_log_queue, file_handler, error_file_handler, console_handler, respect_handler_level=True)
             _listener.start()
+            # [Suggestion 2] 注册 atexit 钩子确保优雅退出
+            import atexit
+            atexit.register(stop_logging)
             
         # 3. 为 logger 添加 QueueHandler
         q_handler = QueueHandler(_log_queue)

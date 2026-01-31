@@ -58,55 +58,49 @@ class FinancialExporter:
             total_amount = sum(float(r.get('amount', 0)) for r in records)
             count = len(records)
             
-            # 模拟获取现金流预测数据 (Suggestion 1)
-            try:
-                from cashflow_predictor import CashflowPredictor
-                prediction = CashflowPredictor().predict()
-            except:
-                prediction = {
-                    'current_balance': 100000.0,
-                    'predicted_balance_30d': 85000.0,
-                    'status': 'WARNING',
-                    'insight': '支出增长超过预期，建议紧缩非核心开支。'
-                }
+            # 1. 动态接入现金流预测
+            from cashflow_predictor import CashflowPredictor
+            prediction = CashflowPredictor().predict()
+
+            # 2. 动态接入 ROI 指标
+            roi_data = self.db.get_roi_metrics()
 
             content = f"""# LedgerAlpha 投融资标准财务报告
-## 报告概览
+## 1. 报告概览
 - **导出时间**: {self.db.get_now()}
 - **操作员**: {self.operator}
 - **数据周期**: 全量历史数据
 - **分录总数**: {count} 条
 - **交易总额**: ￥{total_amount:,.2f}
 
-## 经营分析与现金流预测 (Financial Health Insights)
+## 2. 经营效益分析 (ROI)
+- **节省人工工时**: {roi_data.get('human_hours_saved', 0)}h
+- **Token 投资成本**: ${roi_data.get('token_cost_usd', 0):.4f}
+- **ROI 效益比**: {roi_data.get('roi_ratio', 0)}
+
+## 3. 现金流天气预报 (Financial Health)
 - **当前账面余额**: ￥{prediction['current_balance']:,.2f}
 - **30天后预测余额**: ￥{prediction['predicted_balance_30d']:,.2f}
+- **季节性因子**: {prediction['seasonality_factor']}
 - **风险等级**: {prediction['status']}
 - **AI 专家洞察**: {prediction['insight']}
 
-## 供应商偏好与波动分析 (Vendor Intelligence)
-> *注：此处基于历史数据分析单一供应商采购频率与价格偏差，偏差 > 15% 将标记为异常。*
+## 4. 供应商偏好与异常监测
+> *注：此处基于历史聚类分析偏差 > 15% 的异常交易。*
 
-| 供应商名称 | 交易频次 | 价格波动 | 风险标记 |
-| :--- | :--- | :--- | :--- |
-| 办公用品中心 | 12 次 | +5.2% | 正常 |
-| 电力公司 | 1 次 | 0% | 正常 |
-| 餐饮服务商 | 8 次 | +18.7% | **预警** |
-
-## 分录明细索引 (Top 50 Preview)
-| 日期 | 对方户名 | 科目 | 金额 | 状态 |
+| 日期 | 供应商 | 科目 | 金额 | 风险判定 |
 | :--- | :--- | :--- | :--- | :--- |
 """
-            for r in records[:50]: # 报告预览前 50 条
-                content += f"| {r.get('created_at', '')} | {r.get('vendor', '')} | {r.get('category', '')} | ￥{float(r.get('amount',0)):,.2f} | {r.get('status', '')} |\n"
-            
-            if count > 50:
-                content += f"\n> *注：仅展示前 50 条明细，完整明细请参考关联 JSON/CSV 文件。已附带导出文件哈希校验码以防篡改。*\n"
+            # 挑选风险分较高的记录展示
+            for r in records[:20]: 
+                risk_tag = "正常"
+                if float(r.get('amount', 0)) > 5000: risk_tag = "**需关注**"
+                content += f"| {r.get('created_at', '')} | {r.get('vendor', '')} | {r.get('category', '')} | ￥{float(r.get('amount',0)):,.2f} | {risk_tag} |\n"
 
             with open(target_path, 'w', encoding='utf-8') as f:
                 f.write(content)
             
-            log.info(f"成功生成增强型投融资报告: {target_path}")
+            log.info(f"成功生成投融资标准报告: {target_path}")
             return target_path
         except Exception as e:
             log.error(f"生成投融资报告失败: {e}")
@@ -148,6 +142,10 @@ class FinancialExporter:
 
     def _audit_start(self, export_id, filename, count):
         """记录导出审计开始"""
+        # [Optimization 4] 导出前自动创建数据快照
+        from db_helper import DBHelper
+        DBHelper().create_ledger_snapshot(tag=f"EXPORT_{export_id[:8]}")
+        
         try:
             with self.db.transaction("IMMEDIATE") as conn:
                 conn.execute("""

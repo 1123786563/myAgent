@@ -9,21 +9,46 @@ class InteractionHub:
         self.db = DBHelper()
         self.card_version = "v1.2"
 
-    def create_action_card(self, title, content, actions=None, images=None, payload=None):
+    def create_action_card(self, title, content, actions=None, inputs=None, images=None, charts=None, payload=None):
         """
-        [Suggestion 1] 生成标准化的 ActionCard JSON (F3.4.1)
+        [Optimization 3] 增强型多模态 ActionCard
         """
         card = {
             "version": self.card_version,
             "header": {"title": title, "style": "primary"},
-            "body": {"content": content},
+            "body": {
+                "content": content,
+                "images": images or [], # 支持 OCR 原始图片
+                "charts": charts or []  # 支持利润/偏差图表
+            },
             "actions": actions or [],
-            "images": images or [],
+            "inputs": inputs or [],
             "metadata": payload or {}
         }
         return card
 
-    def push_card(self, transaction_id, proposal_data, trace_id=None):
+    def push_context_request(self, transaction_id, vendor, amount, trace_id=None):
+        """
+        [Optimization 3] 主动向老板补充业务背景
+        """
+        content = f"大哥，这笔来自【{vendor}】的支出 (￥{amount:.2f}) 审计存疑。麻烦补充一下【业务目的】或【招待对象】。"
+        
+        inputs = [{"id": "biz_purpose", "label": "业务背景", "placeholder": "例：招待某项目重要客户"}]
+        actions = [{"label": "提交说明", "value": "SUBMIT_CONTEXT", "style": "primary"}]
+        
+        card = self.create_action_card(
+            title="🔍 业务背景补全",
+            content=content,
+            actions=actions,
+            inputs=inputs,
+            payload={"trans_id": transaction_id, "trace_id": trace_id}
+        )
+        return card
+
+    def push_card(self, transaction_id, proposal_data, trace_id=None, required_role="ADMIN"):
+        """
+        [Suggestion 3] 推送卡片并注入 RBAC 权限标识
+        """
         # 优化点：在推送前强制执行隐私脱敏
         from privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="GUEST")
@@ -43,16 +68,56 @@ class InteractionHub:
             title=f"分录审批 - {safe_data.get('vendor', '未知商户')}",
             content=f"金额: {safe_data.get('amount')}\n科目: {safe_data.get('category')}\n原因: {safe_data.get('reason')}",
             actions=actions,
-            payload={"trans_id": transaction_id, "trace_id": trace_id}
+            payload={
+                "trans_id": transaction_id, 
+                "trace_id": trace_id,
+                "required_role": required_role # [Suggestion 3]
+            }
         )
         
-        log.info(f"推送标准化交互卡片 ({self.card_version}): Transaction={transaction_id}")
+        log.info(f"推送标准化交互卡片 ({self.card_version}): Transaction={transaction_id} | Role={required_role}")
         return card
 
-    def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, signature=None, extra_payload=None):
+    def push_evidence_request(self, transaction_id, vendor, amount, trace_id=None):
+        """
+        [Optimization 3] 主动向老板索要票据证据 (F4.5)
+        """
+        content = f"老板，检测到一笔来自【{vendor}】的支出 (￥{amount:.2f})，目前缺少发票或收据证据。请拍照上传以确认为合规支出。"
+        
+        actions = [
+            {"label": "现在拍照/上传", "value": "UPLOAD_REQUEST", "style": "primary"},
+            {"label": "稍后处理", "value": "REMIND_LATER", "style": "secondary"}
+        ]
+        
+        card = self.create_action_card(
+            title="🔍 补充证据请求",
+            content=content,
+            actions=actions,
+            payload={
+                "trans_id": transaction_id,
+                "trace_id": trace_id,
+                "request_type": "EVIDENCE_MISSING"
+            }
+        )
+        
+        log.info(f"发送主动证据索要请求: Transaction={transaction_id}")
+        # 在真实场景中，这里会调用 IM 接口发送此 card
+        return card
+
+    def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, user_role="GUEST", signature=None, extra_payload=None):
         """
         处理回调，增加签名校验与手动修正回流 (F3.4.2)
+        [Suggestion 3] 增加 RBAC 权限校验
         """
+        # 获取卡片要求的权限
+        required_role = "ADMIN" # 默认
+        if extra_payload and 'required_role' in extra_payload:
+            required_role = extra_payload['required_role']
+
+        if user_role != required_role and required_role != "GUEST":
+            log.error(f"越权操作拦截: 用户角色 {user_role} 试图执行需 {required_role} 权限的任务")
+            return False
+
         if signature:
             # 优化点：校验 HMAC 签名
             import hmac, hashlib

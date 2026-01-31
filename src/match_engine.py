@@ -38,18 +38,23 @@ class MatchEngine:
             try:
                 for f in potential_matches:
                     is_match = False
-                    if not shadow['vendor_keyword']:
+                    
+                    # [Optimization 4] 语义消消乐：金额一致时增强户名语义对齐
+                    v_key = (shadow['vendor_keyword'] or "").lower()
+                    v_target = (f['vendor'] or "").lower()
+                    
+                    if not v_key:
+                        is_match = True
+                    elif v_key in v_target or v_target in v_key:
                         is_match = True
                     else:
-                        v_key = shadow['vendor_keyword'].lower()
-                        v_target = (f['vendor'] or "").lower()
-                        if v_key in v_target:
+                        # 引入模糊比例计算
+                        ratio = MatchStrategy.get_fuzzy_ratio(v_key, v_target)
+                        if ratio > self.fuzzy_threshold:
                             is_match = True
-                        elif MatchStrategy.get_fuzzy_ratio(v_key, v_target) > self.fuzzy_threshold:
-                            is_match = True
+                            log.info(f"语义匹配成功: {v_key} <-> {v_target} (Ratio: {ratio:.2f})")
                             
                     if is_match:
-                        # 注意：更新数据库仍需在主线程或加锁事务中完成，此处仅标记结果
                         shadow['match_result'] = f['id']
                         break
             except Exception as e:
@@ -59,78 +64,64 @@ class MatchEngine:
 
     def run_matching(self):
         """
-        并发化的匹配主逻辑：解耦策略与流程，利用多线程加速计算
+        [Optimization 1] 增强多模态逻辑成组匹配 (F3.1.3)
+        实现“消消乐”算法：Bank_Flow (影子) + OCR_Receipt (实体) = Audited_Transaction
+        同时聚合具有相同 group_id 的多模态实物单据。
         """
-        log.info("执行并发对账匹配任务...")
+        log.info("执行多模态增强对账匹配任务...")
         self.db.update_heartbeat("MatchEngine-Master", "ACTIVE")
         
         try:
-            orphans = self.db.fix_orphaned_transactions()
-            if orphans > 0: log.info(f"清理了 {orphans} 条残留中间态单据")
+            # 1. 逻辑聚合：相同 group_id 的单据自动提升优先级并标记 (Optimization 1)
+            with self.db.transaction("IMMEDIATE") as conn:
+                conn.execute("""
+                    UPDATE transactions 
+                    SET status = 'GROUPED' 
+                    WHERE group_id IS NOT NULL AND status = 'PENDING'
+                    AND group_id IN (SELECT group_id FROM transactions GROUP BY group_id HAVING COUNT(*) > 1)
+                """)
+                
+                # [Optimization 4] 生成多模态资产画像事件
+                sql_grouped = "SELECT group_id, COUNT(*) as cnt FROM transactions WHERE status = 'GROUPED' GROUP BY group_id"
+                groups = conn.execute(sql_grouped).fetchall()
+                for g in groups:
+                    self.db.log_system_event("ASSET_BUNDLE_DETECTED", "MatchEngine", f"Detected Asset Bundle {g['group_id']} with {g['cnt']} images.")
 
-            # 启动工作者线程
-            workers = []
-            for _ in range(self.worker_count):
-                t = threading.Thread(target=self._match_worker, daemon=True)
-                t.start()
-                workers.append(t)
-
-            with self.db.transaction("EXCLUSIVE") as conn:
-                cursor = conn.cursor()
-                cursor.execute(f"SELECT id, amount, vendor_keyword FROM pending_entries WHERE status = 'PENDING' LIMIT {self.batch_size}")
+            # 2. 查找所有 PENDING 状态的影子分录
+            with self.db.transaction("DEFERRED") as conn:
+                cursor = conn.execute("SELECT id, amount, vendor_keyword, created_at FROM pending_entries WHERE status = 'PENDING'")
                 shadows = [dict(row) for row in cursor.fetchall()]
 
-                # 预读所有可能的匹配项
-                for s in shadows:
-                    cursor.execute("""
-                        SELECT id, amount, vendor FROM transactions 
-                        WHERE status = 'PENDING' 
-                        AND amount BETWEEN ? AND ?
-                        AND (strftime('%s', 'now') - strftime('%s', created_at)) < ?
-                    """, (s['amount']-0.05, s['amount']+0.05, self.time_window_days * 86400))
-                    potential_matches = [dict(row) for row in cursor.fetchall()]
-                    
-                    self.task_queue.put((s, potential_matches))
-
-            # 等待所有计算完成
-            self.task_queue.join()
-
-            # [Suggestion 2] 细粒度原子化事务提交，减少锁定时间
-            matched_pairs = []
             for s in shadows:
-                if 'match_result' in s:
-                    try:
-                        with self.db.transaction("IMMEDIATE") as conn:
-                            cursor = conn.cursor()
-                            cursor.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (s['match_result'],))
-                            cursor.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
+                # 3. 在实体单据中搜索匹配项
+                # 逻辑：金额一致 + 时间窗口（7天内）+ 供应商语义匹配
+                with self.db.transaction("IMMEDIATE") as conn:
+                    cursor = conn.execute("""
+                        SELECT id, vendor, group_id FROM transactions 
+                        WHERE status IN ('PENDING', 'GROUPED') 
+                        AND amount = ? 
+                        AND ABS(strftime('%s', ?) - strftime('%s', created_at)) < 604800
+                    """, (s['amount'], s['created_at']))
+                    matches = [dict(row) for row in cursor.fetchall()]
+                    
+                    for m in matches:
+                        v_key = s['vendor_keyword'].lower()
+                        v_target = m['vendor'].lower()
+                        # 简单的语义匹配
+                        if v_key in v_target or v_target in v_key:
+                            log.info(f"消消乐匹配成功: {s['vendor_keyword']} <-> {m['vendor']} (ID: {m['id']})")
                             
-                            # [Suggestion 3] 消消乐成功后反馈知识库 (F3.4.2)
-                            from knowledge_bridge import KnowledgeBridge
-                            KnowledgeBridge().record_match_success(s['vendor_keyword'])
-                            
-                        log.info(f"并发匹配成功并提交: {s['vendor_keyword']} | ID:{s['match_result']}")
-                        matched_pairs.append({
-                            "shadow_id": s['id'],
-                            "trans_id": s['match_result'],
-                            "vendor": s['vendor_keyword'],
-                            "amount": s['amount']
-                        })
-                    except Exception as e:
-                        log.error(f"对账结果提交失败: {e}")
-            
-            # 优化点：推送批量消消乐卡片
-            if matched_pairs:
-                self._push_batch_reconcile_card(matched_pairs)
-
-            # 停止工作者
-            for _ in range(self.worker_count):
-                self.task_queue.put(None)
-            for t in workers:
-                t.join()
-
+                            # 如果匹配项是成组照片的一部分，执行整体聚合逻辑
+                            if m.get('group_id'):
+                                log.info(f"匹配项属于逻辑组 {m['group_id']}，执行整组消消乐...")
+                                conn.execute("UPDATE transactions SET status = 'MATCHED' WHERE group_id = ?", (m['group_id'],))
+                            else:
+                                conn.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (m['id'],))
+                                
+                            conn.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
+                            break
         except Exception as e:
-            log.error(f"并发对账异常: {e}")
+            log.error(f"影子匹配异常: {e}")
 
     def _push_batch_reconcile_card(self, pairs):
         """推送批量对账消消乐卡片 (F3.4.1)"""
@@ -147,11 +138,65 @@ class MatchEngine:
         except Exception as e:
             log.error(f"推送批量卡片失败: {e}")
 
+    def run_proactive_reminders(self):
+        """
+        [Optimization 5] 主动证据追索 (Evidence Hunter)
+        逻辑：网银流水产生 > 48h 且未对冲，推送催办卡片 (F4.5)
+        """
+        log.info("执行主动证据追索扫描 (Hunter Mode)...")
+        try:
+            with self.db.transaction("DEFERRED") as conn:
+                # 查找 48 小时前创建且仍为 PENDING 的影子分录 (Shadow Entries)
+                sql = """
+                    SELECT id, amount, vendor_keyword, created_at 
+                    FROM pending_entries 
+                    WHERE status = 'PENDING' 
+                    AND datetime(created_at) < datetime('now', '-2 days')
+                """
+                reminders = [dict(row) for row in conn.execute(sql).fetchall()]
+                
+            from interaction_hub import InteractionHub
+            hub = InteractionHub()
+            for r in reminders:
+                log.warning(f"证据链断裂！向老板追索凭证: {r['vendor_keyword']} (￥{r['amount']})")
+                hub.push_evidence_request(r['id'], r['vendor_keyword'], r['amount'])
+        except Exception as e:
+            log.error(f"证据追索任务异常: {e}")
+
     def main_loop(self):
         log.info("MatchEngine 守护进程模式启动 (并发模式)...")
         loop_interval = ConfigManager.get("intervals.match_engine_loop", 30)
+        
+        # [Optimization 2] 初始化完整性校验计数器
+        last_integrity_check = 0
+        integrity_check_interval = 3600 # 每小时一次
+        
+        # [Optimization 3] 提醒任务计数器
+        last_reminder_check = 0
+        reminder_interval = 14400 # 每 4 小时一次
+        
         while True:
             self.run_matching()
+            
+            now = time.time()
+            # 1. 周期性验证区块链证据链完整性 (Suggestion 5)
+            if now - last_integrity_check > integrity_check_interval:
+                # ... (保持原有校验逻辑)
+                log.info("启动周期性账本完整性校验...")
+                success, msg = self.db.verify_chain_integrity()
+                if success:
+                    log.info(f"账本完整性校验通过: {msg}")
+                    self.db.log_system_event("INTEGRITY_SUCCESS", "MatchEngine", msg)
+                else:
+                    log.critical(f"检测到账本异常风险: {msg}")
+                    self.db.log_system_event("INTEGRITY_FAILURE", "MatchEngine", msg)
+                last_integrity_check = now
+
+            # 2. [Optimization 3] 执行主动证据追索
+            if now - last_reminder_check > reminder_interval:
+                self.run_proactive_reminders()
+                last_reminder_check = now
+                
             time.sleep(loop_interval)
 
 if __name__ == "__main__":

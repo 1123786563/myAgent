@@ -23,6 +23,27 @@ class GracefulExit:
     def _install_handlers(self):
         signal.signal(signal.SIGINT, self._handler)
         signal.signal(signal.SIGTERM, self._handler)
+        # [Suggestion 2] 启动父进程探测器 (Watchdog)
+        threading.Thread(target=self._parent_watchdog, daemon=True).start()
+
+    def _parent_watchdog(self):
+        """如果父进程挂掉，子进程自动殉情自杀，防止僵尸进程"""
+        import os
+        parent_pid = int(os.environ.get("LEDGER_PARENT_PID", 0))
+        if parent_pid == 0:
+            return
+            
+        import psutil
+        while not self.stop_event.is_set():
+            try:
+                # 检查父进程是否仍然存活
+                if not psutil.pid_exists(parent_pid):
+                    log.error(f"父进程 {parent_pid} 已消失！子进程触发‘殉情’逻辑自动退出...")
+                    self._handler(signal.SIGTERM, None)
+                    break
+            except Exception:
+                pass
+            time.sleep(5) # 每 5 秒巡检一次
 
     def _handler(self, sig, frame):
         if self.is_shutting_down:

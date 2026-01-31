@@ -2,6 +2,7 @@ import time
 import os
 import queue
 import threading
+import hashlib
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from db_helper import DBHelper
@@ -27,6 +28,9 @@ class CollectorWorker(threading.Thread):
         self.task_queue = task_queue
         self.db = DBHelper()
         self.allowed_exts = {'.pdf', '.jpg', '.jpeg', '.png', '.csv', '.xlsx'}
+        # [Optimization 1] 时空关联缓冲区 (Temporal-Spatial Buffer)
+        self.batch_buffer = []
+        self.last_buffer_flush = time.time()
 
     def run(self):
         log.info(f"{self.name} 已启动...")
@@ -35,25 +39,43 @@ class CollectorWorker(threading.Thread):
         while not should_exit():
             try:
                 self.db.update_heartbeat(self.name, "RUNNING")
-                file_path = self.task_queue.get(timeout=5)
+                try:
+                    file_path = self.task_queue.get(timeout=2)
+                    self.batch_buffer.append(file_path)
+                except queue.Empty:
+                    pass
                 
-                # 优化点：引入超时控制逻辑 (Robustness)
-                if self._should_process(file_path):
-                    # 使用简单的线程装饰或直接执行，此处逻辑增强为内部计时
-                    start_t = time.time()
-                    self._process_file(file_path)
-                    elapsed = time.time() - start_t
-                    if elapsed > process_timeout:
-                        log.warning(f"文件处理超时 ({elapsed:.1f}s): {file_path}")
+                # 缓冲区满或超过 5 秒未刷新则处理 (F3.1.3)
+                if self.batch_buffer and (len(self.batch_buffer) >= 5 or (time.time() - self.last_buffer_flush > 5)):
+                    self._flush_buffer()
                 
-                self.task_queue.task_done()
-            except queue.Empty:
+                if self.batch_buffer: # If still has items (not flushed yet), loop back
+                    continue
+                    
                 self.db.update_heartbeat(self.name, "IDLE")
-                continue
-            except Exception as e:
-                log.error(f"{self.name} 处理异常: {e}")
-                self.db.update_heartbeat(self.name, f"ERROR: {str(e)[:50]}")
                 time.sleep(1)
+            except Exception as e:
+                log.error(f"{self.name} 主循环异常: {e}")
+                time.sleep(1)
+
+    def _flush_buffer(self):
+        if not self.batch_buffer: return
+        log.info(f"正在处理时空关联批次 (Size: {len(self.batch_buffer)})")
+        
+        # [Optimization 1] 生成组 ID (Spatial-Temporal Aggregation)
+        # 简单策略：同一个批次内的照片视为一个逻辑组
+        group_id = f"SG-{int(time.time()/300)}-{hashlib.md5(str(self.batch_buffer).encode()).hexdigest()[:6]}"
+        
+        for path in self.batch_buffer:
+            try:
+                if self._should_process(path):
+                    self._process_file(path, group_id=group_id)
+                self.task_queue.task_done()
+            except Exception as e:
+                log.error(f"处理缓冲文件失败 {path}: {e}")
+                
+        self.batch_buffer.clear()
+        self.last_buffer_flush = time.time()
 
     def _should_process(self, file_path):
         """增量扫描逻辑：检查路径是否已在 DB 中"""
@@ -64,13 +86,12 @@ class CollectorWorker(threading.Thread):
         except:
             return True
 
-    def _process_file(self, file_path):
+    def _process_file(self, file_path, group_id=None):
         time.sleep(0.1) # 降低资源占用
         if not os.path.exists(file_path): return
         
-        # [Suggestion 10] 增加文件锁定检查，防止读取不完整文件
+        # [Suggestion 10] 增加文件锁定检查
         try:
-            # 尝试以追加模式打开（但不写入），如果失败则说明文件可能被占用
             with open(file_path, 'a'):
                 pass
         except IOError:
@@ -80,96 +101,60 @@ class CollectorWorker(threading.Thread):
         ext = os.path.splitext(file_path)[1].lower()
         if ext not in self.allowed_exts: return
         
-        # 优化点：多模态资产语义聚合框架 (F3.1.3)
-        if ext in {'.jpg', '.jpeg', '.png'}:
-            if self._is_asset_photo(file_path):
-                log.info(f"检测到资产实物照片: {os.path.basename(file_path)}，启动多模态语义聚合...")
-                self._analyze_multimodal_asset(file_path)
-        
+        # [Optimization 1] 影子银企直连识别
+        if ext in {'.csv', '.xlsx'} and any(kw in file_path.lower() for kw in ["流水", "statement", "bank"]):
+            log.info(f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...")
+            self._parse_bank_statement(file_path)
+            return
+
         if os.path.getsize(file_path) < 100:
             return
 
-        # 优化点：项目维度的自动解析 (Suggestion 8: Project-based Cost Attribution)
-        # 逻辑：如果文件所在的文件夹名称包含项目关键字，自动打标签
+        # 优化点：项目维度解析
         tags = []
         parent_dir = os.path.basename(os.path.dirname(file_path))
         if parent_dir and parent_dir != "input":
             tags.append({"key": "project_id", "value": parent_dir})
-            log.info(f"自动识别项目属性: {parent_dir}")
-
-        # 优化点：银行流水识别逻辑 (F3.1.2)
-        if ext in {'.csv', '.xlsx'}:
-            if "流水" in file_path or "statement" in file_path.lower():
-                log.info(f"检测到银行流水文件: {os.path.basename(file_path)}，启动预记账转化...")
-                self._parse_bank_statement(file_path)
-                return
 
         # 混合哈希计算
         file_hash = calculate_file_hash(file_path)
         if not file_hash: return
 
-        # 优化点：使用原子化带标签入库接口
+        # 入库
         res = self.db.add_transaction_with_tags(
             status="PENDING",
             source_type="MANUAL",
             file_path=file_path,
             file_hash=file_hash,
+            group_id=group_id,
             tags=tags
         )
         if res:
-            log.info(f"单据入库成功 ID={res}: {os.path.basename(file_path)} | Tags: {tags}")
+            log.info(f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}")
 
     def _parse_bank_statement(self, file_path):
-        """
-        解析银行流水文件并生成 pending_entries (影子分录)
-        """
         try:
-            # 优化点：引入生成器模式分片解析，防止大文件导致内存溢出
             import csv
-            def row_generator(path):
-                with open(path, mode='r', encoding='utf-8') as f:
-                    reader = csv.DictReader(f)
-                    for row in reader:
-                        yield row
-
-            count = 0
-            for row in row_generator(file_path):
-                vendor = row.get('对方户名', '未知商户')
-                try:
-                    amount = float(row.get('金额', 0))
-                except:
-                    continue
-                if amount == 0: continue
-                
-                self.db.add_pending_entry(
-                    amount=abs(amount),
-                    vendor_keyword=vendor,
-                    source="BANK_STATEMENT",
-                    raw_desc=f"来自流水文件: {os.path.basename(file_path)}"
-                )
-                count += 1
-            log.info(f"流水解析完成，已转化 {count} 条影子分录。")
+            batch = []
+            with open(file_path, mode='r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    vendor = row.get('对方户名', '未知商户')
+                    try:
+                        amount = float(row.get('金额', 0))
+                    except: continue
+                    if amount == 0: continue
+                    batch.append({"amount": abs(amount), "vendor_keyword": vendor, "source": "BANK_FLOW"})
+                    if len(batch) >= 50:
+                        self.db.add_pending_entries_batch(batch)
+                        batch = []
+            if batch:
+                self.db.add_pending_entries_batch(batch)
+            log.info(f"流水解析完成: {os.path.basename(file_path)}")
         except Exception as e:
             log.error(f"解析流水失败: {e}")
 
-    def _is_asset_photo(self, file_path):
-        """基于文件名或元数据初步判定是否为资产实物照片"""
-        return "asset" in file_path.lower() or "资产" in file_path
-
-    def _analyze_multimodal_asset(self, file_path):
-        """
-        多模态资产识别框架 (F3.1.3)
-        此处为逻辑框架预留，后续对接 Gemini/OpenManus 强推理
-        """
-        # 1. 提取 EXIF 时间与地理位置
-        # 2. 检索 5 分钟内同位置的其他照片
-        # 3. 提交至 L2 推理层判定资产类型 (如：办公桌、服务器、车辆)
-        pass
-
 def scan_input_dir(input_dir, task_queue):
-    """
-    补偿性全量扫描：防止 watchdog 遗漏
-    """
     log.info(f"执行全量补偿扫描: {input_dir}")
     for root, dirs, files in os.walk(input_dir):
         for file in files:
@@ -181,10 +166,8 @@ def start_watching():
     os.makedirs(input_dir, exist_ok=True)
     
     task_queue = queue.Queue()
-    stop_event = threading.Event()
     db = DBHelper()
 
-    # 优化点：启动时执行一次全量扫描 (可配置)
     if ConfigManager.get("collector.initial_scan_enabled", True):
         scan_input_dir(input_dir, task_queue)
 
@@ -203,24 +186,13 @@ def start_watching():
     register_cleanup(observer.join)
     
     scan_interval = ConfigManager.get("intervals.collector_scan", 60)
-    log.info(f"Collector 已启动，线程数: {worker_count}，补偿扫描间隔: {scan_interval}s")
     
     try:
         while not should_exit():
             db.update_heartbeat("Collector-Master", "ACTIVE")
-            
-            # 优化点：补偿扫描频率降低，仅作为兜底
             time.sleep(scan_interval)
             if should_exit(): break
-            
             scan_input_dir(input_dir, task_queue)
-            
-            for i, w in enumerate(workers):
-                if not w.is_alive():
-                    log.warning(f"Worker-{i} 异常退出，正在重启...")
-                    new_w = CollectorWorker(task_queue, i)
-                    new_w.start()
-                    workers[i] = new_w
     except Exception as e:
         log.error(f"Collector 主循环异常: {e}")
     finally:

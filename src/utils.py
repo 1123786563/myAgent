@@ -35,6 +35,22 @@ def timeit(func):
                     log.warning(f"Sync性能警告: {func.__name__} 耗时 {duration:.4f}s")
         return sync_wrapper
 
+def trace_propagator(func):
+    """
+    [Suggestion 3] Trace ID 跨线程传递装饰器
+    """
+    import threading
+    # 注意：logger 模块可能尚未完全加载其 threading.local，此处直接引用逻辑
+    from logger import _context_data
+    trace_id = getattr(_context_data, 'trace_id', 'Global')
+    
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        from logger import log_context
+        with log_context(trace_id):
+            return func(*args, **kwargs)
+    return wrapper
+
 def singleton(cls):
     """
     单例模式装饰器

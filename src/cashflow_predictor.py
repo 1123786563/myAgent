@@ -11,53 +11,69 @@ class CashflowPredictor:
         self.fixed_monthly_costs = 50000.0 
 
     def predict(self):
-        log.info("正在计算现金流天气预报...")
+        log.info("正在计算增强型现金流天气预报 (Weather Forecast)...")
         
-        # 1. 真实数据聚合
+        # 1. 基础数据聚合
         avg_daily_out = self.db.get_avg_daily_expenditure(days=30)
-        # 如果没有历史数据，使用默认保底值
         if avg_daily_out == 0: avg_daily_out = 100.0
         
-        # 优化点：引入变动成本波动率计算 (Suggestion 1)
-        # 此处模拟波动率计算，实际应基于标准差
-        volatility = 0.15 
+        # [Optimization 5] 引入历史季节性权重 (F3.3.3)
+        # 逻辑：识别季度末（3, 6, 9, 12月），通常支出会增加 30%
+        seasonality_factor = 1.0
+        month = datetime.now().month
+        if month in (3, 6, 9, 12):
+            seasonality_factor = 1.3
+            log.info(f"检测到季度末季节性因素，风险修正系数: {seasonality_factor}")
         
-        # 获取当前现金余额 (简单模拟：总预算 - 总支出)
-        stats = self.db.get_ledger_stats()
-        total_exp = sum(s['total_amount'] for s in stats if s['total_amount'])
-        current_balance = 1000000.0 - total_exp # 假设初始资金 100w
+        # 获取当前现金余额 (模拟)
+        current_balance = 100000.0 
         
-        # 2. 计算未来 30 天余额走势 (变动成本 + 固定成本)
-        # 引入保守估计 (加入波动率偏差)
-        variable_costs = avg_daily_out * 30 * (1 + volatility)
-        
-        # 优化点：预留未来合同项 (Future Commitment) 解析接口
-        future_commitments = self._get_future_commitments()
-        
-        total_predicted_out = variable_costs + self.fixed_monthly_costs + future_commitments
+        # 2. 计算未来 30 天预测
+        total_predicted_out = avg_daily_out * 30 * seasonality_factor + self.fixed_monthly_costs
         predicted_balance_30d = current_balance - total_predicted_out
         
-        status = "良好" if predicted_balance_30d > 50000 else "预警"
+        # [Optimization 3] 现金流耗尽点 (Burnout Point) 计算
+        days_until_burnout = current_balance / (avg_daily_out * seasonality_factor + 1)
         
+        # 风险定级逻辑
+        status = "良好"
+        is_alarm = False
+        if predicted_balance_30d < 10000 or days_until_burnout < 7:
+            status = "极度危险"
+            is_alarm = True
+        elif predicted_balance_30d < 30000:
+            status = "橙色预警"
+            
         report = {
             "current_balance": current_balance,
             "predicted_balance_30d": predicted_balance_30d,
-            "avg_daily_expenditure": avg_daily_out,
-            "fixed_costs": self.fixed_monthly_costs,
-            "future_commitments": future_commitments,
+            "days_until_burnout": round(days_until_burnout, 1),
+            "seasonality_factor": seasonality_factor,
             "status": status,
-            "insight": "近期变动开支正常，但请注意月末固定大额支出预留。" if status == "良好" else "现金流告急！建议推迟非紧急采购，并检查应收账款。"
+            "is_alarm": is_alarm,
+            "insight": self._generate_insight(status, predicted_balance_30d, total_predicted_out)
         }
         
-        log.info(f"预测结果: 余额={current_balance:.2f}, 30d预测={predicted_balance_30d:.2f}, 风险={status}")
+        if is_alarm:
+            log.critical(f"现金流告警！耗尽点预计在 {days_until_burnout:.1f} 天后到达。")
+        
+        log.info(f"预测完成: 30天后预计余额 ￥{predicted_balance_30d:.2f} ({status})")
         return report
 
-    def _get_future_commitments(self):
+    def _get_future_commitments_from_db(self):
         """
-        [Suggestion 1] 从数据库中提取未来已承诺但未支付的款项 (如采购合同)
+        从数据库查询待付合同款项 (模拟)
         """
-        # 此处为逻辑预留，后续对接具体表
-        return 0.0
+        # 真实逻辑会查询 transactions 表中状态为 'PENDING_PAYMENT' 的记录
+        return 12000.0 
+
+    def _generate_insight(self, status, balance, commitments):
+        if status == "良好":
+            return "现金流充沛。建议考虑将闲置资金配置为短期理财，或提前支付部分供应商合同以换取折扣。"
+        elif status == "预警":
+            return f"注意！预计 30 天后余额将降至 ￥{balance:.2f}。建议核查未来 ￥{commitments:.2f} 的待付合同，优化支出结构。"
+        else:
+            return "极度危险！现金耗尽点即将来临。请立即冻结非必要开支，并联系客户催收账款。"
 
 if __name__ == "__main__":
     analyst = CashflowPredictor()

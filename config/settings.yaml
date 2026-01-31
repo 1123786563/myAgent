@@ -33,3 +33,14 @@ agents:
 collector:
   worker_threads: 3
   initial_scan_enabled: true
+
+audit:
+  outlier_factor: 5.0
+  force_manual_amount: 100000
+
+tax:
+  free_limit_monthly: 100000
+  target_burden: 0.03
+
+enterprise:
+  sector: "SOFTWARE"
