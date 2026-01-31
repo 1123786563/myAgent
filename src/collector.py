@@ -24,6 +24,111 @@ class ReceiptHandler(FileSystemEventHandler):
             self.task_queue.put(event.src_path)
 
 
+class BankStatementParser:
+    """
+    [Optimization 2] Strategy Pattern for Bank Statement Parsing
+    """
+
+    def parse(self, df) -> list:
+        raise NotImplementedError
+
+    @classmethod
+    def match(cls, columns) -> bool:
+        return False
+
+
+class AliPayParser(BankStatementParser):
+    @classmethod
+    def match(cls, columns):
+        return "业务流水号" in columns and "对方名称" in columns
+
+    def parse(self, df) -> list:
+        batch = []
+        for _, row in df.iterrows():
+            try:
+                # AliPay logic: check if outgoing
+                if row.get("收/支", "") == "支出":
+                    amt = float(str(row.get("金额", 0)).replace(",", ""))
+                    vendor = str(row.get("对方名称", "Unknown")).strip()
+                    batch.append(
+                        {
+                            "amount": abs(amt),
+                            "vendor_keyword": vendor,
+                            "source": "ALIPAY",
+                        }
+                    )
+            except:
+                continue
+        return batch
+
+
+class WeChatParser(BankStatementParser):
+    @classmethod
+    def match(cls, columns):
+        return "交易单号" in columns and "当前状态" in columns and "交易类型" in columns
+
+    def parse(self, df) -> list:
+        batch = []
+        for _, row in df.iterrows():
+            try:
+                if row.get("收/支", "") == "支出":
+                    # WeChat amounts often have '¥'
+                    amt_str = (
+                        str(row.get("金额(元)", 0)).replace("¥", "").replace(",", "")
+                    )
+                    amt = float(amt_str)
+                    vendor = str(row.get("交易对方", "Unknown")).strip()
+                    batch.append(
+                        {
+                            "amount": abs(amt),
+                            "vendor_keyword": vendor,
+                            "source": "WECHAT",
+                        }
+                    )
+            except:
+                continue
+        return batch
+
+
+class GenericParser(BankStatementParser):
+    """Fallback to config-based mapping"""
+
+    def __init__(self):
+        mapping = ConfigManager.get("bank_mapping.default", {})
+        self.col_vendor = mapping.get("vendor_col", "对方户名")
+        self.col_amount = mapping.get("amount_col", "金额")
+
+    @classmethod
+    def match(cls, columns):
+        return True  # Always match as fallback
+
+    def parse(self, df) -> list:
+        batch = []
+        if self.col_vendor not in df.columns or self.col_amount not in df.columns:
+            return []
+
+        for _, row in df.iterrows():
+            try:
+                vendor = str(row.get(self.col_vendor, "未知商户")).strip()
+                amt_str = (
+                    str(row.get(self.col_amount, 0)).replace(",", "").replace("¥", "")
+                )
+                amount = float(amt_str)
+                if amount == 0:
+                    continue
+
+                batch.append(
+                    {
+                        "amount": abs(amount),
+                        "vendor_keyword": vendor,
+                        "source": "BANK_FLOW",
+                    }
+                )
+            except:
+                continue
+        return batch
+
+
 class CollectorWorker(threading.Thread):
     def __init__(self, task_queue, worker_id):
         super().__init__(daemon=True, name=f"Worker-{worker_id}")
@@ -198,63 +303,47 @@ class CollectorWorker(threading.Thread):
 
     def _parse_bank_statement(self, file_path):
         try:
-            import csv
             import pandas as pd
-
-            # [Optimization 1] Load mapping from config
-            mapping = ConfigManager.get("bank_mapping.default", {})
-            col_vendor = mapping.get("vendor_col", "对方户名")
-            col_amount = mapping.get("amount_col", "金额")
-            encoding = mapping.get("encoding", "utf-8-sig")
-
-            batch = []
 
             # Support both CSV and Excel
             ext = os.path.splitext(file_path)[1].lower()
-            if ext == ".csv":
-                df = pd.read_csv(file_path, encoding=encoding)
-            else:
-                df = pd.read_excel(file_path)
-
-            # Normalize columns
-            df.columns = [c.strip() for c in df.columns]
-
-            if col_vendor not in df.columns or col_amount not in df.columns:
-                log.warning(
-                    f"列名不匹配 (Need: {col_vendor}, {col_amount}). Found: {df.columns.tolist()}"
-                )
+            try:
+                if ext == ".csv":
+                    # Try common encodings
+                    try:
+                        df = pd.read_csv(file_path, encoding="utf-8-sig")
+                    except:
+                        df = pd.read_csv(file_path, encoding="gbk")
+                else:
+                    df = pd.read_excel(file_path)
+            except Exception as read_err:
+                log.error(f"File read error: {read_err}")
                 return
 
-            for _, row in df.iterrows():
-                vendor = str(row.get(col_vendor, "未知商户")).strip()
-                try:
-                    # Clean amount string (remove currency symbols, commas)
-                    amt_str = (
-                        str(row.get(col_amount, 0)).replace(",", "").replace("¥", "")
-                    )
-                    amount = float(amt_str)
-                except:
-                    continue
+            # Normalize columns
+            df.columns = [str(c).strip() for c in df.columns]
+            columns = set(df.columns)
 
-                if amount == 0:
-                    continue
+            # [Optimization 2] Dynamic Parser Selection
+            parser = None
+            if AliPayParser.match(columns):
+                parser = AliPayParser()
+                log.info(f"Detected AliPay statement: {os.path.basename(file_path)}")
+            elif WeChatParser.match(columns):
+                parser = WeChatParser()
+                log.info(f"Detected WeChat statement: {os.path.basename(file_path)}")
+            else:
+                parser = GenericParser()
+                log.info(f"Using Generic parser for: {os.path.basename(file_path)}")
 
-                # Use absolute value for now, assuming bank statement mixes +/-
-                batch.append(
-                    {
-                        "amount": abs(amount),
-                        "vendor_keyword": vendor,
-                        "source": "BANK_FLOW",
-                    }
-                )
-
-                if len(batch) >= 50:
-                    self.db.add_pending_entries_batch(batch)
-                    batch = []
+            batch = parser.parse(df)
 
             if batch:
                 self.db.add_pending_entries_batch(batch)
-            log.info(f"流水解析完成: {os.path.basename(file_path)}")
+                log.info(f"流水解析完成: {len(batch)} entries added.")
+            else:
+                log.warning(f"No valid entries found in {file_path}")
+
         except Exception as e:
             log.error(f"解析流水失败: {e}")
 

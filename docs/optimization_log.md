@@ -80,3 +80,48 @@ Upon reviewing the "Trinity" architecture (AgentScope + Moltbot + OpenManus) and
 ## 4. Next Steps
 -   Connect `LLMConnector` to a real API (e.g., OpenAI/Anthropic).
 -   Implement the actual double-entry posting logic to update the `trial_balance` table (currently `DBHelper` creates it but logic to update it needs to be solidified in `AccountingAgent`).
+
+---
+
+# Optimization Log - Ralph Loop Iteration 3
+
+**Date:** 2026-01-31
+**Author:** Antigravity (Sisyphus)
+
+## 1. Self-Reflection
+
+### Gap Analysis
+I reviewed the system against the requirements for "Shadow Bank-Enterprise Connection" (F3.1.4) and "Data Security" (4.1).
+
+1.  **API Security Risk:** `api_server.py` was blindly trusting incoming webhooks without verifying the `X-Lark-Signature`. This is a critical security vulnerability for a financial system.
+2.  **Brittle Parsing:** `collector.py` relied on a single hardcoded column mapping for bank statements. Real-world users upload AliPay, WeChat, and various bank Excel files with different headers.
+3.  **Unsafe Knowledge Distillation:** `knowledge_bridge.py` had a logic flaw where it could delete "conflicting" rules based purely on timestamps, potentially wiping out `STABLE` (manually approved) rules in favor of newer `GRAY` (AI-guessed) ones.
+
+## 2. Optimizations Executed
+
+### A. Robust API Security (Security)
+-   **File:** `src/api_server.py`
+-   **Change:** Implemented HMAC-SHA256 signature verification.
+-   **Details:** Added `verify_feishu_signature` function. It now checks the `X-Lark-Signature` header against a computed hash using the `FEISHU_ENCRYPT_KEY` from config. Requests with invalid signatures are rejected with 403 Forbidden.
+
+### B. Pluggable Bank Statement Parsing (Extensibility)
+-   **File:** `src/collector.py`
+-   **Change:** Refactored `_parse_bank_statement` to use a **Strategy Pattern**.
+-   **Details:**
+    -   Created abstract `BankStatementParser`.
+    -   Implemented `AliPayParser` (matches "业务流水号"), `WeChatParser` (matches "交易单号"), and `GenericParser` (fallback).
+    -   The system now auto-detects the format based on CSV/Excel headers and applies the correct parsing logic.
+
+### C. Safe Knowledge Distillation (Reliability)
+-   **File:** `src/knowledge_bridge.py`
+-   **Change:** Updated `distill_knowledge` to enforce rule hierarchy.
+-   **Details:** Added a check: If a `STABLE` rule exists for an entity, it acts as the "Ground Truth". All conflicting `GRAY` rules are purged, and the `STABLE` rule is never deleted by the automated distillation process.
+
+## 3. Results
+-   **Security:** Webhook interface is now secured against spoofing.
+-   **Usability:** Users can now upload raw AliPay/WeChat export files without manual reformatting.
+-   **Stability:** Manual overrides in the knowledge base are now persistent and safe from AI over-optimization.
+
+## 4. Next Steps
+-   Implement the `BaseConnector` for real API-based bank synchronization (e.g., Plaid/Teller integration).
+-   Add unit tests for the new parsers.

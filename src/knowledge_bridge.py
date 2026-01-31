@@ -11,11 +11,13 @@ log = get_logger("KnowledgeBridge")
 
 from typing import Dict, Any
 
+
 class DTPResponse:
     """
     [Suggestion 1] 决策传输协议 (Decision Transfer Protocol)
     [Optimization 2] 增加合同条款级提取支持
     """
+
     def __init__(self, raw_data: Dict[str, Any]):
         self.entity = raw_data.get("entity")
         self.category = raw_data.get("category")
@@ -25,9 +27,11 @@ class DTPResponse:
         self.payment_milestones = raw_data.get("payment_milestones", [])
         self.contract_terms = raw_data.get("contract_terms", {})
 
+
 class KnowledgeBridge:
     def __init__(self, rules_path=None):
         from config_manager import ConfigManager
+
         self.rules_path = rules_path or ConfigManager.get("path.rules")
         self.db = DBHelper()
 
@@ -37,15 +41,15 @@ class KnowledgeBridge:
         [Optimization 3] 决策传输协议 (DTP) 逻辑自检
         """
         dtp = DTPResponse(decision)
-        
+
         # 1. 逻辑自检：基础平衡校验与科目合法性预审 (Optimization 2)
-        if dtp.category and not re.match(r'^\d{4}-\d{2}', dtp.category):
-             log.error(f"DTP拦截：非法科目编码请求 -> {dtp.category}")
-             return False
+        if dtp.category and not re.match(r"^\d{4}-\d{2}", dtp.category):
+            log.error(f"DTP拦截：非法科目编码请求 -> {dtp.category}")
+            return False
 
         if dtp.is_tax_related and dtp.confidence > 0.9:
-             log.info(f"DTP: 进行税务逻辑预审 -> {dtp.entity}")
-             
+            log.info(f"DTP: 进行税务逻辑预审 -> {dtp.entity}")
+
         if dtp.confidence > 0.85:
             log.info(f"DTP: 接收到高置信度决策 ({dtp.confidence}) -> {dtp.entity}")
             # 记录审计理由到数据库
@@ -63,24 +67,36 @@ class KnowledgeBridge:
         try:
             with self.db.transaction("IMMEDIATE") as conn:
                 # 1. 累加命中次数与连续成功数
-                conn.execute('''
+                conn.execute(
+                    """
                     UPDATE knowledge_base 
                     SET hit_count = hit_count + 1, 
                         consecutive_success = consecutive_success + 1,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE entity_name = ?
-                ''', (keyword,))
-                
+                """,
+                    (keyword,),
+                )
+
                 # 2. 检查灰度转正阈值
-                row = conn.execute('''
+                row = conn.execute(
+                    """
                     SELECT category_mapping, audit_status, consecutive_success, reject_count 
                     FROM knowledge_base WHERE entity_name = ?
-                ''', (keyword,)).fetchone()
-                
-                if row and row['audit_status'] == 'GRAY' and row['consecutive_success'] >= 3:
-                    if row['reject_count'] == 0:
-                        log.info(f"灰度规则 {keyword} 通过‘面试’(3次成功)，正在晋升为 STABLE...")
-                        self.promote_rule(keyword, row['category_mapping'])
+                """,
+                    (keyword,),
+                ).fetchone()
+
+                if (
+                    row
+                    and row["audit_status"] == "GRAY"
+                    and row["consecutive_success"] >= 3
+                ):
+                    if row["reject_count"] == 0:
+                        log.info(
+                            f"灰度规则 {keyword} 通过‘面试’(3次成功)，正在晋升为 STABLE..."
+                        )
+                        self.promote_rule(keyword, row["category_mapping"])
                         return True
         except Exception as e:
             log.error(f"规则命中记录失败: {e}")
@@ -92,21 +108,32 @@ class KnowledgeBridge:
         """
         try:
             with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute('''
+                conn.execute(
+                    """
                     UPDATE knowledge_base 
                     SET reject_count = reject_count + 1, 
                         consecutive_success = 0,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE entity_name = ?
-                ''', (keyword,))
-                
+                """,
+                    (keyword,),
+                )
+
                 # 更新评分
                 self._recalculate_quality_score(conn, keyword)
-                
-                row = conn.execute('SELECT reject_count, audit_status FROM knowledge_base WHERE entity_name = ?', (keyword,)).fetchone()
-                if row and row['audit_status'] == 'GRAY' and row['reject_count'] >= 2:
-                    log.error(f"规则 {keyword} 驳回次数过多 ({row['reject_count']})，已被标记为 BLOCKED 废弃。")
-                    conn.execute("UPDATE knowledge_base SET audit_status = 'BLOCKED', quality_score = 0.0 WHERE entity_name = ?", (keyword,))
+
+                row = conn.execute(
+                    "SELECT reject_count, audit_status FROM knowledge_base WHERE entity_name = ?",
+                    (keyword,),
+                ).fetchone()
+                if row and row["audit_status"] == "GRAY" and row["reject_count"] >= 2:
+                    log.error(
+                        f"规则 {keyword} 驳回次数过多 ({row['reject_count']})，已被标记为 BLOCKED 废弃。"
+                    )
+                    conn.execute(
+                        "UPDATE knowledge_base SET audit_status = 'BLOCKED', quality_score = 0.0 WHERE entity_name = ?",
+                        (keyword,),
+                    )
             return True
         except Exception as e:
             log.error(f"记录驳回失败: {e}")
@@ -123,7 +150,7 @@ class KnowledgeBridge:
             WHERE entity_name = ?
         """
         conn.execute(sql, (keyword,))
-        
+
         # 2. 检查冲突蒸馏 (Suggestion 1)
         conflict_sql = """
             SELECT id, quality_score FROM knowledge_base 
@@ -132,9 +159,12 @@ class KnowledgeBridge:
         """
         rows = conn.execute(conflict_sql, (keyword,)).fetchall()
         if len(rows) > 1:
-            best_id = rows[0]['id']
+            best_id = rows[0]["id"]
             log.info(f"检测到规则冲突: {keyword}, 正在执行蒸馏，保留 ID: {best_id}")
-            conn.execute("DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?", (keyword, best_id))
+            conn.execute(
+                "DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?",
+                (keyword, best_id),
+            )
 
     def promote_rule(self, keyword, category):
         """
@@ -142,12 +172,15 @@ class KnowledgeBridge:
         """
         try:
             with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute('''
+                conn.execute(
+                    """
                     UPDATE knowledge_base 
                     SET audit_status = 'STABLE' 
                     WHERE entity_name = ?
-                ''', (keyword,))
-            
+                """,
+                    (keyword,),
+                )
+
             # 同步至本地 SOP 规则库
             self._sync_to_yaml(keyword, category)
             log.info(f"规则 {keyword} 转正成功 (STABLE)！")
@@ -156,21 +189,21 @@ class KnowledgeBridge:
 
     def _sync_to_yaml(self, keyword, category):
         """同步数据库规则到 YAML 文件 (带原子写入保护)"""
-        if not re.match(r'^\d{4}-\d{2}', category):
+        if not re.match(r"^\d{4}-\d{2}", category):
             log.error(f"同步拦截：非法科目编码 {category} 拒绝写入 YAML。")
             return
 
         from yaml_utils import safe_update_yaml
-        
-        with open(self.rules_path, 'r', encoding='utf-8') as f:
+
+        with open(self.rules_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f) or {"rules": []}
-        
-        for rule in data['rules']:
-            if rule['keyword'] == keyword:
-                rule['category'] = category
+
+        for rule in data["rules"]:
+            if rule["keyword"] == keyword:
+                rule["category"] = category
                 break
         else:
-            data['rules'].append({"keyword": keyword, "category": category})
+            data["rules"].append({"keyword": keyword, "category": category})
 
         if safe_update_yaml(str(self.rules_path), data):
             log.info(f"规则库 YAML 原子更新成功: {keyword}")
@@ -184,28 +217,40 @@ class KnowledgeBridge:
         # 1. 冲突预检
         try:
             with self.db.transaction("DEFERRED") as conn:
-                existing = conn.execute("SELECT category_mapping, audit_status FROM knowledge_base WHERE entity_name = ?", (keyword,)).fetchone()
-                if existing and existing['audit_status'] == 'STABLE' and existing['category_mapping'] != category:
-                    log.warning(f"检测到新规则与稳定规则冲突: {keyword} ({existing['category_mapping']} -> {category})")
+                existing = conn.execute(
+                    "SELECT category_mapping, audit_status FROM knowledge_base WHERE entity_name = ?",
+                    (keyword,),
+                ).fetchone()
+                if (
+                    existing
+                    and existing["audit_status"] == "STABLE"
+                    and existing["category_mapping"] != category
+                ):
+                    log.warning(
+                        f"检测到新规则与稳定规则冲突: {keyword} ({existing['category_mapping']} -> {category})"
+                    )
                     # 标记为质疑状态
                     source = "CONFLICT_CHALLENGED"
-        except: pass
+        except:
+            pass
 
         backup_path = self.rules_path + ".bak"
         success = False
-        
+
         try:
             # 备份现有规则
             if os.path.exists(self.rules_path):
                 shutil.copy(self.rules_path, backup_path)
 
             # 更新数据库
-            audit_status = 'STABLE' if source == 'MANUAL' else 'GRAY'
-            if source == "CONFLICT_CHALLENGED": audit_status = 'GRAY' # Still gray but warned
+            audit_status = "STABLE" if source == "MANUAL" else "GRAY"
+            if source == "CONFLICT_CHALLENGED":
+                audit_status = "GRAY"  # Still gray but warned
 
             with self.db.transaction("IMMEDIATE") as conn:
                 cursor = conn.cursor()
-                cursor.execute('''
+                cursor.execute(
+                    """
                     INSERT INTO knowledge_base 
                     (entity_name, category_mapping, audit_status, hit_count)
                     VALUES (?, ?, ?, 1)
@@ -214,29 +259,33 @@ class KnowledgeBridge:
                         audit_status = CASE WHEN audit_status = 'BLOCKED' THEN 'GRAY' ELSE audit_status END,
                         hit_count = hit_count + 1,
                         updated_at = CURRENT_TIMESTAMP
-                ''', (keyword, category, audit_status))
+                """,
+                    (keyword, category, audit_status),
+                )
 
             # 3. 更新 YAML (仅限 STABLE)
-            if audit_status == 'STABLE':
-                with open(self.rules_path, 'r', encoding='utf-8') as f:
+            if audit_status == "STABLE":
+                with open(self.rules_path, "r", encoding="utf-8") as f:
                     data = yaml.safe_load(f) or {"rules": []}
-                
-                for rule in data['rules']:
-                    if rule['keyword'] == keyword:
-                        rule['category'] = category
+
+                for rule in data["rules"]:
+                    if rule["keyword"] == keyword:
+                        rule["category"] = category
                         break
                 else:
-                    data['rules'].append({"keyword": keyword, "category": category})
+                    data["rules"].append({"keyword": keyword, "category": category})
 
-                with open(self.rules_path, 'w', encoding='utf-8') as f:
+                with open(self.rules_path, "w", encoding="utf-8") as f:
                     yaml.safe_dump(data, f, allow_unicode=True)
-                
+
                 # 写后读校验
-                with open(self.rules_path, 'r', encoding='utf-8') as f:
+                with open(self.rules_path, "r", encoding="utf-8") as f:
                     check_data = yaml.safe_load(f)
-                    if not any(r['keyword'] == keyword for r in check_data.get('rules', [])):
+                    if not any(
+                        r["keyword"] == keyword for r in check_data.get("rules", [])
+                    ):
                         raise IOError("YAML 写入校验失败！")
-            
+
             success = True
             log.info(f"知识同步完成: {keyword} -> {category} (Status: {audit_status})")
 
@@ -253,48 +302,94 @@ class KnowledgeBridge:
     def distill_knowledge(self):
         """
         [Optimization 4] 增强型知识蒸馏与语义去重 (F2.6)
+        Safety: Protects STABLE (Manual) rules from being deleted.
         """
         log.info("启动增强型时效性语义蒸馏程序...")
         try:
             with self.db.transaction("IMMEDIATE") as conn:
                 # 1. 常规冲突裁决：利用 v_knowledge_conflicts 视图
-                conflicts = conn.execute("SELECT entity_name FROM v_knowledge_conflicts").fetchall()
+                # This view only selects entities with >1 distinct categories in GRAY status.
+                conflicts = conn.execute(
+                    "SELECT entity_name FROM v_knowledge_conflicts"
+                ).fetchall()
                 for c in conflicts:
-                    name = c['entity_name']
-                    # 策略：优先保留最近 30 天产生的且评分高的规则 (Temporal Priority)
-                    sql_best = """
-                        SELECT id FROM knowledge_base 
-                        WHERE entity_name = ? 
-                        ORDER BY (updated_at > datetime('now', '-30 days')) DESC, quality_score DESC 
-                        LIMIT 1
-                    """
-                    best_row = conn.execute(sql_best, (name,)).fetchone()
-                    if best_row:
-                        conn.execute("DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?", (name, best_row['id']))
+                    name = c["entity_name"]
+
+                    # [Safety Fix] Check if a STABLE rule exists for this entity
+                    stable_row = conn.execute(
+                        "SELECT id, category_mapping FROM knowledge_base WHERE entity_name = ? AND audit_status = 'STABLE'",
+                        (name,),
+                    ).fetchone()
+
+                    if stable_row:
+                        # If STABLE exists, purge all GRAY rules that conflict (or all GRAYs to be clean)
+                        # We trust the STABLE rule as the ground truth.
+                        conn.execute(
+                            "DELETE FROM knowledge_base WHERE entity_name = ? AND audit_status = 'GRAY'",
+                            (name,),
+                        )
+                        log.info(
+                            f"Distillation: Enforced STABLE rule for '{name}', purged conflicting GRAY rules."
+                        )
+                    else:
+                        # No STABLE rule, use temporal priority among GRAY rules
+                        # Strategy: Keep the one with highest score, tie-break with recency
+                        sql_best = """
+                            SELECT id FROM knowledge_base 
+                            WHERE entity_name = ? 
+                            ORDER BY quality_score DESC, updated_at DESC
+                            LIMIT 1
+                        """
+                        best_row = conn.execute(sql_best, (name,)).fetchone()
+                        if best_row:
+                            conn.execute(
+                                "DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?",
+                                (name, best_row["id"]),
+                            )
 
                 # 2. [Optimization 1] 语义聚类合并：相同映射但关键词相似
-                all_gray = conn.execute("SELECT id, entity_name, category_mapping, quality_score FROM knowledge_base WHERE audit_status = 'GRAY'").fetchall()
+                # Only operate on GRAY rules to avoid messing up manual configs
+                all_gray = conn.execute(
+                    "SELECT id, entity_name, category_mapping, quality_score FROM knowledge_base WHERE audit_status = 'GRAY'"
+                ).fetchall()
                 to_delete = set()
-                
+
                 for i in range(len(all_gray)):
-                    if all_gray[i]['id'] in to_delete: continue
+                    if all_gray[i]["id"] in to_delete:
+                        continue
                     for j in range(i + 1, len(all_gray)):
-                        if all_gray[j]['id'] in to_delete: continue
-                        
+                        if all_gray[j]["id"] in to_delete:
+                            continue
+
                         # [Optimization 4] 使用 SequenceMatcher 替代简单的 Jaccard 集合相似度
                         # 因为 'Apple Inc' 和 'Apple Corp' 顺序敏感
-                        ratio = difflib.SequenceMatcher(None, all_gray[i]['entity_name'], all_gray[j]['entity_name']).ratio()
-                        
-                        if ratio > 0.85 and all_gray[i]['category_mapping'] == all_gray[j]['category_mapping']:
+                        ratio = difflib.SequenceMatcher(
+                            None, all_gray[i]["entity_name"], all_gray[j]["entity_name"]
+                        ).ratio()
+
+                        if (
+                            ratio > 0.85
+                            and all_gray[i]["category_mapping"]
+                            == all_gray[j]["category_mapping"]
+                        ):
                             # 合并：保留评分高的
-                            victim = all_gray[i]['id'] if all_gray[i]['quality_score'] < all_gray[j]['quality_score'] else all_gray[j]['id']
+                            victim = (
+                                all_gray[i]["id"]
+                                if all_gray[i]["quality_score"]
+                                < all_gray[j]["quality_score"]
+                                else all_gray[j]["id"]
+                            )
                             to_delete.add(victim)
-                            log.info(f"语义合并: [{all_gray[i]['entity_name']}] <-> [{all_gray[j]['entity_name']}] (Ratio:{ratio:.2f})")
-                
+                            log.info(
+                                f"语义合并: [{all_gray[i]['entity_name']}] <-> [{all_gray[j]['entity_name']}] (Ratio:{ratio:.2f})"
+                            )
+
                 if to_delete:
-                    conn.execute(f"DELETE FROM knowledge_base WHERE id IN ({','.join(map(str, to_delete))})")
+                    conn.execute(
+                        f"DELETE FROM knowledge_base WHERE id IN ({','.join(map(str, to_delete))})"
+                    )
                     log.info(f"成功清理了 {len(to_delete)} 条冗余语义规则")
-                    
+
             log.info("知识蒸馏完成。")
             return True
         except Exception as e:
@@ -304,12 +399,15 @@ class KnowledgeBridge:
     def record_match_success(self, keyword):
         try:
             with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute('''
+                conn.execute(
+                    """
                     UPDATE knowledge_base 
                     SET hit_count = hit_count + 1,
                         updated_at = CURRENT_TIMESTAMP
                     WHERE entity_name = ?
-                ''', (keyword,))
+                """,
+                    (keyword,),
+                )
         except Exception as e:
             log.error(f"记录对账经验失败: {keyword}, {e}")
 
@@ -322,7 +420,7 @@ class KnowledgeBridge:
                     AND hit_count <= ? 
                     AND updated_at < date('now', ?)
                 """
-                cursor = conn.execute(sql, (min_hits, f'-{days_old} days'))
+                cursor = conn.execute(sql, (min_hits, f"-{days_old} days"))
                 log.info(f"清理了 {cursor.rowcount} 条过期临时规则。")
             return True
         except Exception as e:
