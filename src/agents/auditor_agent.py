@@ -1,5 +1,7 @@
+from decimal import Decimal
+from decimal_utils import to_decimal
 from bus_init import LedgerMsg
-from agentscope.agents import AgentBase
+from agentscope.agent import AgentBase
 from logger import get_logger
 from db_helper import DBHelper
 import re
@@ -50,7 +52,7 @@ class ConsensusEngine:
         return True, "Pass"
 
     def vote(self, proposal):
-        amount = float(proposal.get("amount", 0))
+        amount = to_decimal(proposal.get("amount", 0))
         category = proposal.get("category", "")
         vendor = proposal.get("vendor", "")
 
@@ -74,7 +76,8 @@ class ConsensusEngine:
 
 class AuditorAgent(AgentBase):
     def __init__(self, name):
-        super().__init__(name=name)
+        super().__init__()
+        self.name = name
         from config_manager import ConfigManager
 
         self.db = DBHelper()
@@ -91,7 +94,7 @@ class AuditorAgent(AgentBase):
         self.consensus_engine = ConsensusEngine(strategy=ConsensusStrategy.BALANCED)
 
         # [Optimization 1] 加载动态审计规则 (Red Team Rules)
-        self.rules_path = ConfigManager.get("path.audit_rules", "src/audit_rules.yaml")
+        self.rules_path = ConfigManager.get("path.audit_rules", "src/core/audit_rules.yaml")
         self._load_audit_rules()
         log.info(
             f"AuditorAgent 初始化完成: 大额风控线={self.force_manual_amount}, 规则数={len(self.audit_rules)}"
@@ -117,7 +120,7 @@ class AuditorAgent(AgentBase):
         [Optimization 1] 行业特定审计策略插件 (Sector-Aware)
         """
         content = proposal.get("content", {})
-        amount = float(content.get("amount", 0))
+        amount = to_decimal(content.get("amount", 0))
         category = content.get("category", "")
         vendor = content.get("vendor", "")
 
@@ -240,41 +243,15 @@ class AuditorAgent(AgentBase):
     def _consensus_double_check(self, proposal):
         """
         [Optimization 2] 专家级多模型共识引擎 (Expert Consensus)
-        模拟“会计、审计、法务”三方交叉校验
+        Refactored to use ConsensusEngine for consistency.
         """
         log.info(f"开启三方共识博弈: TraceID={proposal.get('trace_id')}")
-
-        # 1. 模型 A: Moltbot 基础审计
-        result_a = self._heterogeneous_double_check(proposal)
-
-        # 2. 模型 B: 行业专项审计 (SOFTWARE/RETAIL)
-        vendor = proposal.get("vendor", "")
-        sector = ConfigManager.get("enterprise.sector", "GENERAL")
-        result_b = True
-        if sector == "SOFTWARE" and any(
-            kw in vendor for kw in ["戴尔", "惠普", "服务器"]
-        ):
-            amount = float(proposal.get("amount", 0))
-            if amount > 5000:
-                result_b = False
-
-        # 3. [Optimization 2] 模拟模型 C: 法律/合规专项审计 (Compliance Check)
-        category = proposal.get("category", "")
-        result_c = True
-        if "借款" in category or "套现" in str(proposal):
-            result_c = False  # 法务拦截
-
-        votes = {
-            "Basic_Audit": result_a,
-            "Sector_Audit": result_b,
-            "Legal_Audit": result_c,
-        }
-        pass_count = sum(1 for v in votes.values() if v)
-
+        is_passed, simple_votes = self._trigger_consensus_audit(proposal)
+        
         log.info(
-            f"三方共识投票结果: {pass_count}/3 通过 -> {'批准' if pass_count >= 2 else '拦截'}"
+            f"三方共识投票结果: {sum(simple_votes.values())}/3 通过 -> {'批准' if is_passed else '拦截'}"
         )
-        return (pass_count >= 2), votes
+        return is_passed, simple_votes
 
     def _aggregate_group_context(self, group_id):
         """
@@ -286,7 +263,7 @@ class AuditorAgent(AgentBase):
                 sql = "SELECT amount, vendor, inference_log FROM transactions WHERE group_id = ?"
                 rows = conn.execute(sql, (group_id,)).fetchall()
 
-                total_amount = sum(float(r["amount"]) for r in rows)
+                total_amount = sum(to_decimal(r["amount"]) for r in rows)
                 vendors = list(set(r["vendor"] for r in rows if r["vendor"]))
                 logs = [r["inference_log"] for r in rows if r["inference_log"]]
 
@@ -300,7 +277,7 @@ class AuditorAgent(AgentBase):
 
     def reply(self, x: dict = None) -> dict:
         proposal = x.get("content", {})
-        amount = float(x.get("amount", 0))
+        amount = to_decimal(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         category = proposal.get("category", "")
         trace_id = x.get("trace_id")
@@ -427,7 +404,7 @@ class AuditorAgent(AgentBase):
 
     # ==================== [Optimization Iteration 7] 模块化审计方法 ====================
 
-    def _assess_price_benchmark_risk(self, category: str, amount: float, vendor: str) -> tuple:
+    def _assess_price_benchmark_risk(self, category: str, amount: Decimal, vendor: str) -> tuple:
         """
         [Optimization Iteration 7] 价格基准风险评估
         检查交易金额是否显著偏离该科目历史中位数
@@ -438,10 +415,11 @@ class AuditorAgent(AgentBase):
         risk_delta = 0.0
         reasons = []
 
-        avg_sector_price = self.db.get_category_median_price(category)
-        if avg_sector_price > 0 and amount > avg_sector_price * 1.5:
+        factor = ConfigManager.get_float("threshold.price_outlier_factor", 1.5)
+        avg_sector_price = to_decimal(self.db.get_category_median_price(category))
+        if avg_sector_price > 0 and amount > avg_sector_price * Decimal(str(factor)):
             log.warning(
-                f"价格偏离行业基准: {amount} > {avg_sector_price:.2f} * 1.5 | Vendor={vendor}"
+                f"价格偏离行业基准: {amount} > {avg_sector_price:.2f} * {factor} | Vendor={vendor}"
             )
             reasons.append("价格显著高于该科目历史采购基准，建议进行比价审核")
             risk_delta = 0.2
@@ -482,7 +460,7 @@ class AuditorAgent(AgentBase):
 
         return risk_delta, reasons, is_blocked
 
-    def _assess_amount_risk(self, amount: float) -> tuple:
+    def _assess_amount_risk(self, amount: Decimal) -> tuple:
         """
         [Optimization Iteration 7] 金额风险评估
 
@@ -519,7 +497,7 @@ class AuditorAgent(AgentBase):
         Returns:
             (passed, reasons, risk_delta): 是否通过、原因列表、风险分增量
         """
-        from sentinel_agent import SentinelAgent
+        from agents.sentinel_agent import SentinelAgent
 
         sentinel = SentinelAgent("Sentinel-Audit-Hook")
         compliance_passed, compliance_reason = sentinel.check_transaction_compliance(proposal)
@@ -557,11 +535,14 @@ class AuditorAgent(AgentBase):
         final_reason = "符合财务准则与历史习惯"
         adjusted_risk_score = risk_score
 
-        if is_rejected or risk_score > 0.15:
+        reject_threshold = ConfigManager.get_float("threshold.risk_score_reject", 0.15)
+        upgrade_threshold = ConfigManager.get_float("threshold.risk_score_upgrade", 0.4)
+
+        if is_rejected or risk_score > reject_threshold:
             decision = "REJECT"
 
             # 异构逻辑补救
-            if 0.15 < risk_score < 0.4 and not is_rejected:
+            if reject_threshold < risk_score < upgrade_threshold and not is_rejected:
                 log.info(f"触发异构逻辑补救: {trace_id}")
                 if self._trigger_l2_heterogeneous_audit(proposal):
                     decision = "APPROVED"
@@ -580,7 +561,7 @@ class AuditorAgent(AgentBase):
         通过博弈论逻辑进行反向校验
         """
         category = proposal.get("category", "")
-        amount = float(proposal.get("amount", 0))
+        amount = to_decimal(proposal.get("amount", 0))
 
         # 逻辑：如果科目中包含“招待”且金额 < 1000，则 L2 倾向于放行
         if "招待" in category and amount < 1000:

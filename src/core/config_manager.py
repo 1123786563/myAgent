@@ -32,6 +32,13 @@ class ConfigSchema:
         "threshold.confidence_high": float,
         "threshold.confidence_low": float,
         "threshold.token_budget_per_task": float,
+        "threshold.semantic_match_min": float,
+        "threshold.semantic_match_high": float,
+        "threshold.capex_amount": (int, float),
+        "threshold.micro_payment_waiver": (int, float),
+        "threshold.risk_score_reject": float,
+        "threshold.risk_score_upgrade": float,
+        "threshold.price_outlier_factor": float,
 
         # 数据库配置
         "db.retry_count": int,

@@ -7,7 +7,7 @@ import threading
 import time
 from pathlib import Path
 from bus_init import LedgerMsg
-from agentscope.agents import AgentBase
+from agentscope.agent import AgentBase
 from logger import get_logger
 from project_paths import get_path
 from config_manager import ConfigManager
@@ -15,13 +15,16 @@ from db_helper import DBHelper
 
 from llm_connector import LLMFactory
 
+from decimal_utils import to_decimal
+
 log = get_logger("AccountingAgent")
 
 
 class AccountingAgent(AgentBase):
     def __init__(self, name, rules_path=None):
-        super().__init__(name=name)
-        self.rules_path = Path(rules_path or get_path("src", "accounting_rules.yaml"))
+        super().__init__()
+        self.name = name
+        self.rules_path = Path(rules_path or get_path("src", "core", "accounting_rules.yaml"))
         self.rules = []
         self._rules_hash = None
         self.db = None  # Will be initialized or accessed via DBHelper singleton
@@ -154,7 +157,7 @@ class AccountingAgent(AgentBase):
         clean_text = re.sub(r'[#\*_]{2,}', '', clean_text)
         normalized_text = re.sub(r'\s+', ' ', clean_text.strip())
         
-        amount = float(x.get("amount", 0))
+        amount = to_decimal(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         trace_id = x.get("trace_id")
 
@@ -173,7 +176,7 @@ class AccountingAgent(AgentBase):
         }
         
         # 1. 动态路由预检 (Expert Routing)
-        from routing_registry import RoutingRegistry
+        from core.routing_registry import RoutingRegistry
 
         registry = RoutingRegistry()
         route = registry.get_route(normalized_text, vendor=vendor)
@@ -308,6 +311,7 @@ class RecoveryWorker(threading.Thread):
 
     def run(self):
         """[Iteration 8] 使用可配置的扫描间隔"""
+        from agents.accounting_agent import AccountingAgent
         recovery_interval = ConfigManager.get_int("intervals.recovery_scan", 60)
         log.info(f"RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: {recovery_interval}s)...")
         while True:
@@ -335,7 +339,7 @@ class RecoveryWorker(threading.Thread):
     def _attempt_recovery(self, task):
         tid = task["id"]
         vendor = task["vendor"] or ""
-        amount = float(task["amount"])
+        amount = to_decimal(task["amount"])
         old_category = task.get("category", "未知")
         log.info(f"正在尝试修复交易 {tid} (Vendor: {vendor})...")
 
@@ -346,7 +350,7 @@ class RecoveryWorker(threading.Thread):
 
         try:
             # [Optimization Round 2] 使用 OpenManus ReAct 循环进行深度推理
-            from manus_wrapper import OpenManusAnalyst
+            from infra.manus_wrapper import OpenManusAnalyst
             analyst = OpenManusAnalyst()
             
             task_desc = f"Analyze accounting category for vendor '{vendor}' with amount {amount}. Previous rejected category was '{old_category}'."

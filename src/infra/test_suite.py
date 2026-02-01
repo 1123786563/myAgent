@@ -28,7 +28,7 @@ class MockMsg(dict):
 mock_as.agents.AgentBase = MockAgentBase
 mock_as.message.Msg = MockMsg
 sys.modules["agentscope"] = mock_as
-sys.modules["agentscope.agents"] = mock_as.agents
+sys.modules["agentscope.agent"] = mock_as.agents
 sys.modules["agentscope.message"] = mock_as.message
 # --- MOCK AGENTSCOPE END ---
 

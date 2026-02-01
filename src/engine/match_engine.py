@@ -2,7 +2,9 @@ import time
 import threading
 import queue
 from difflib import SequenceMatcher
+from decimal import Decimal
 from db_helper import DBHelper
+from decimal_utils import to_decimal
 from logger import get_logger
 from config_manager import ConfigManager
 
@@ -125,7 +127,7 @@ class MatchEngine:
     def _push_batch_reconcile_card(self, pairs):
         """推送批量对账消消乐卡片 (F3.4.1)"""
         try:
-            from interaction_hub import InteractionHub
+            from api.interaction_hub import InteractionHub
             hub = InteractionHub()
             log.info(f"正在通过 InteractionHub 推送批量消消乐建议 ({len(pairs)} 笔)")
             hub.push_card("BATCH_MATCH", {
@@ -154,7 +156,7 @@ class MatchEngine:
                 """
                 reminders = [dict(row) for row in conn.execute(sql).fetchall()]
                 
-            from interaction_hub import InteractionHub
+            from api.interaction_hub import InteractionHub
             hub = InteractionHub()
             for r in reminders:
                 log.warning(f"证据链断裂！向老板追索凭证: {r['vendor_keyword']} (￥{r['amount']})")

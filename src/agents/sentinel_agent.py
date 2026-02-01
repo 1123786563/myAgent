@@ -1,5 +1,5 @@
 from bus_init import LedgerMsg
-from agentscope.agents import AgentBase
+from agentscope.agent import AgentBase
 from logger import get_logger
 from db_helper import DBHelper
 import json
@@ -14,7 +14,8 @@ class SentinelAgent(AgentBase):
     """
 
     def __init__(self, name):
-        super().__init__(name=name)
+        super().__init__()
+        self.name = name
         from config_manager import ConfigManager
 
         self.db = DBHelper()

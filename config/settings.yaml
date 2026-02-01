@@ -4,7 +4,8 @@ path:
   workspace: "workspace"
   input: "workspace/input"
   db: "ledger_alpha.db"
-  rules: "src/accounting_rules.yaml"
+  rules: "src/core/accounting_rules.yaml"
+  audit_rules: "src/core/audit_rules.yaml"
   logs: "logs"
 
 intervals:
@@ -30,6 +31,9 @@ threshold:
   semantic_match_high: 0.8       # [Iteration 8] 语义高置信度阈值
   capex_amount: 5000             # [Iteration 8] 资本支出金额分界线
   micro_payment_waiver: 50       # [Iteration 8] 微额支付豁免阈值
+  risk_score_reject: 0.15        # [Cycle 2] 审计直接驳回阈值
+  risk_score_upgrade: 0.4        # [Cycle 2] 审计强制升级阈值
+  price_outlier_factor: 1.5      # [Cycle 2] 价格偏离基准系数
 
 # [Optimization Iteration 2] LLM 配置
 llm:

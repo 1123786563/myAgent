@@ -1,11 +1,22 @@
 import sqlite3
 import threading
 import time
+from decimal import Decimal
 from contextlib import contextmanager
 from typing import Dict, Any, Optional
 from config_manager import ConfigManager
 from project_paths import get_path
+from logger import get_logger
 
+# [Cycle 4] SQLite Decimal Adapters
+def adapt_decimal(d):
+    return str(d)
+
+def convert_decimal(s):
+    return Decimal(s.decode('utf-8'))
+
+sqlite3.register_adapter(Decimal, adapt_decimal)
+sqlite3.register_converter("DECIMAL", convert_decimal)
 
 class DBMetrics:
     """
@@ -96,7 +107,12 @@ class DBHelper:
             busy_timeout = ConfigManager.get_int("db.busy_timeout", 30000)
             journal_mode = ConfigManager.get_str("db.journal_mode", "WAL")
 
-            conn = sqlite3.connect(self.db_path, check_same_thread=False, timeout=busy_timeout/1000)
+            conn = sqlite3.connect(
+                self.db_path, 
+                check_same_thread=False, 
+                timeout=busy_timeout/1000,
+                detect_types=sqlite3.PARSE_DECLTYPES
+            )
             conn.row_factory = sqlite3.Row
 
             # [Optimization 6] High Concurrency Pragmas
@@ -256,7 +272,7 @@ class DBHelper:
         CURRENT_SCHEMA_VERSION = 10
         
         # 直接获取原始连接进行初始化，避免 transaction() 导致的潜在递归
-        conn = sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
@@ -606,7 +622,7 @@ class DBHelper:
             kwargs['trace_id'] = str(uuid.uuid4())
             
         # 2. 隐私脱敏 (Re-using logic from add_transaction)
-        from privacy_guard import PrivacyGuard
+        from infra.privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="DB_WRITER")
         if 'vendor' in kwargs and kwargs['vendor']:
             kwargs['vendor'] = guard.desensitize(kwargs['vendor'], context="GENERAL")
@@ -696,7 +712,7 @@ class DBHelper:
         if 'trace_id' not in kwargs or not kwargs['trace_id']:
             kwargs['trace_id'] = str(uuid.uuid4())
 
-        from privacy_guard import PrivacyGuard
+        from infra.privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="DB_WRITER")
         
         # 敏感字段脱敏处理
@@ -859,7 +875,7 @@ class DBHelper:
                 processed_count = row['cnt'] if row else 0
                 total_amount = row['total'] if row and row['total'] else 0.0
                 
-                from config_manager import ConfigManager
+                from core.config_manager import ConfigManager
                 sector = ConfigManager.get("enterprise.sector", "GENERAL")
                 minutes_per_tx = ConfigManager.get_int("roi.minutes_per_tx", 5 if sector == "GENERAL" else 2)
                 
@@ -868,7 +884,7 @@ class DBHelper:
                 # [Round 50] 使用 Try-Import 隔离 LLM 成本模块
                 token_cost = 0.0
                 try:
-                    from llm_connector import TokenBudgetManager
+                    from infra.llm_connector import TokenBudgetManager
                     token_stats = TokenBudgetManager().get_stats()
                     token_cost = token_stats.get("daily_cost_usd", 0.0)
                 except (ImportError, AttributeError, Exception):
@@ -1186,11 +1202,11 @@ class DBHelper:
         try:
             conn = self._get_conn()
             conn.execute("PRAGMA wal_checkpoint(FULL)")
-            log = get_logger("DB")
-            log.debug("WAL 检查点执行成功 (FULL)")
+            # [Round 51] 修复局部变量覆盖
+            _log = get_logger("DB")
+            _log.debug("WAL 检查点执行成功 (FULL)")
             return True
         except Exception as e:
-            from logger import get_logger
             get_logger("DB").error(f"WAL 检查点执行失败: {e}")
             return False
 
@@ -1200,8 +1216,9 @@ class DBHelper:
         任务：刷回 WAL、优化查询计划、清理碎片
         """
         try:
-            log = get_logger("DB-Maintenance")
-            log.info("启动数据库定期自愈维护任务...")
+            # [Round 51] 修复局部变量覆盖全局导入
+            _log = get_logger("DB-Maintenance")
+            _log.info("启动数据库定期自愈维护任务...")
             
             # 1. 刷回所有未完成的 WAL 日志 (Round 16: 确保实时性)
             self.trigger_wal_checkpoint()
@@ -1210,10 +1227,10 @@ class DBHelper:
             with self.transaction("DEFERRED") as conn:
                 conn.execute("ANALYZE")
             
-            log.info("数据库维护完成：WAL 已刷回，统计信息已更新。")
+            _log.info("数据库维护完成：WAL 已刷回，统计信息已更新。")
             return True
         except Exception as e:
-            from logger import get_logger
+            # 同样修复这里的 logger 引用
             get_logger("DB").error(f"维护任务失败: {e}")
             return False
 

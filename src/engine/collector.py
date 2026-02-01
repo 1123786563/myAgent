@@ -9,6 +9,7 @@ from db_helper import DBHelper
 from logger import get_logger
 from config_manager import ConfigManager
 from utils import calculate_file_hash
+from decimal_utils import to_decimal
 
 from graceful_exit import should_exit, register_cleanup
 
@@ -48,7 +49,7 @@ class AliPayParser(BankStatementParser):
             try:
                 # AliPay logic: check if outgoing
                 if row.get("收/支", "") == "支出":
-                    amt = float(str(row.get("金额", 0)).replace(",", ""))
+                    amt = to_decimal(str(row.get("金额", 0)).replace(",", ""))
                     vendor = str(row.get("对方名称", "Unknown")).strip()
                     batch.append(
                         {
@@ -77,7 +78,7 @@ class WeChatParser(BankStatementParser):
                     amt_str = (
                         str(row.get("金额(元)", 0)).replace("¥", "").replace(",", "")
                     )
-                    amt = float(amt_str)
+                    amt = to_decimal(amt_str)
                     vendor = str(row.get("交易对方", "Unknown")).strip()
                     batch.append(
                         {
@@ -115,7 +116,7 @@ class GenericParser(BankStatementParser):
                 amt_str = (
                     str(row.get(self.col_amount, 0)).replace(",", "").replace("¥", "")
                 )
-                amount = float(amt_str)
+                amount = to_decimal(amt_str)
                 if amount == 0:
                     continue
 

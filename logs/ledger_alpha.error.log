@@ -7717,3 +7717,25 @@ sqlite3.OperationalError: disk I/O error
 2026-02-01 14:08:02,970 [Global] - MasterDaemon - ERROR - 预检失败: 数据库连接或自愈异常: disk I/O error
 2026-02-01 14:08:02,970 [Global] - MasterDaemon - ERROR - 系统预检失败，程序退出。
 2026-02-01 14:08:10,356 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:09:10,847 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:10:10,976 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:11:11,035 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:12:06,256 [Global] - MasterDaemon - ERROR - 系统已在运行 (PID: 12589)，请勿重复启动！
+2026-02-01 14:12:11,093 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:13:11,156 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:13:42,081 [Global] - MasterDaemon - ERROR - 系统已在运行 (PID: 12589)，请勿重复启动！
+2026-02-01 14:14:11,287 [Global] - DB - ERROR - 维护任务失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:14:31,611 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:15:32,050 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:16:32,176 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:17:32,312 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:18:32,642 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:19:32,777 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:20:32,971 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:21:33,045 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:22:33,250 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:23:33,906 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:24:33,978 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:25:34,029 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:26:34,095 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:27:34,256 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value

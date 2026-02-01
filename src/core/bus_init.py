@@ -1,5 +1,5 @@
 import agentscope
-from agentscope.agents import AgentBase
+from agentscope.agent import AgentBase
 from agentscope.message import Msg
 import uuid
 import yaml

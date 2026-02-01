@@ -1,3 +1,4 @@
+import path_init
 import subprocess
 import time
 import sys
@@ -21,13 +22,13 @@ class MasterDaemon:
         register_cleanup(self.cleanup_processes)
         
         self.services = {
-            "InteractionHub": get_path("src", "interaction_hub.py"),
-            "Collector": get_path("src", "collector.py"),
-            "MatchEngine": get_path("src", "match_engine.py"),
-            "AccountingAgent": get_path("src", "accounting_agent.py"),
-            "Auditor": get_path("src", "auditor_agent.py"),
-            "Sentinel": get_path("src", "sentinel_agent.py"),
-            "APIServer": get_path("src", "api_server.py")
+            "InteractionHub": get_path("src", "api", "interaction_hub.py"),
+            "Collector": get_path("src", "engine", "collector.py"),
+            "MatchEngine": get_path("src", "engine", "match_engine.py"),
+            "AccountingAgent": get_path("src", "agents", "accounting_agent.py"),
+            "Auditor": get_path("src", "agents", "auditor_agent.py"),
+            "Sentinel": get_path("src", "agents", "sentinel_agent.py"),
+            "APIServer": get_path("src", "api", "api_server.py")
         }
         self.processes = {}
         self.restart_counts = {}
@@ -109,9 +110,10 @@ class MasterDaemon:
         log.info(f"正在启动子服务: {name}")
         env = os.environ.copy()
         env["LEDGER_PARENT_PID"] = str(os.getpid())
-        # 确保 PYTHONPATH 包含 src
+        # 确保 PYTHONPATH 包含 src 及其子目录
         env["PYTHONPATH"] = os.path.join(os.getcwd(), 'src') + os.pathsep + env.get("PYTHONPATH", "")
-        return subprocess.Popen([sys.executable, script_path], env=env)
+        # 子服务执行时需要自动加载 path_init
+        return subprocess.Popen([sys.executable, "-c", f"import sys; import os; sys.path.insert(0, os.getcwd()); from src import path_init; exec(open('{script_path}').read())"], env=env)
 
     def shutdown(self, signum, frame):
         log.info("接收到退出信号，正在安全关闭所有子服务...")
@@ -197,7 +199,7 @@ class MasterDaemon:
                     # 每 60 秒更新一次业务指标
                     if current_time - last_metrics_update > 60:
                         try:
-                            from knowledge_bridge import KnowledgeBridge
+                            from core.knowledge_bridge import KnowledgeBridge
                             kb_bridge = KnowledgeBridge()
                             kb_bridge.cleanup_stale_rules(min_hits=1, days_old=7)
                             kb_bridge.distill_knowledge()
@@ -209,7 +211,7 @@ class MasterDaemon:
                                 log.info(f"系统效益快报: 已节省 {roi_data.get('human_hours_saved', 0)} 小时")
 
                             try:
-                                from cashflow_predictor import CashflowPredictor
+                                from engine.cashflow_predictor import CashflowPredictor
                                 predictor = CashflowPredictor()
                                 cf_report = predictor.predict()
                                 if cf_report.get("is_alarm"):
