@@ -35,6 +35,15 @@ threshold:
   risk_score_upgrade: 0.4        # [Cycle 2] 审计强制升级阈值
   price_outlier_factor: 1.5      # [Cycle 2] 价格偏离基准系数
 
+# Celery Configuration
+celery:
+  broker_url: "${CELERY_BROKER_URL}"
+  result_backend: "${CELERY_RESULT_BACKEND}"
+  timezone: "UTC"
+  enable_utc: true
+  task_track_started: true
+  task_time_limit: 300
+
 # [Optimization Iteration 2] LLM 配置
 llm:
   type: "OPENAI"                                    # OPENAI | MOCK

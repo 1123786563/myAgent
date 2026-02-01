@@ -1,64 +1,121 @@
 import json
-import time
-import hmac
-import hashlib
-import base64
-import requests
+import os
+from typing import Optional, Dict, Any
 from infra.logger import get_logger
 from core.config_manager import ConfigManager
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
+
+try:
+    import lark_oapi as lark
+    from lark_oapi.api.im.v1 import *
+    SDK_AVAILABLE = True
+except ImportError:
+    SDK_AVAILABLE = False
 
 log = get_logger("FeishuConnector")
 
 
 class FeishuConnector:
+    """
+    飞书连接器 - 使用lark_oapi SDK实现
+    """
+    
     def __init__(self):
-        self.webhook_url = ConfigManager.get("im.feishu.webhook_url")
-        self.secret = ConfigManager.get("im.feishu.secret")
+        # SDK配置
+        self.app_id = ConfigManager.get("feishu.app_id") or os.getenv("FEISHU_APP_ID")
+        self.app_secret = ConfigManager.get("feishu.app_secret") or os.getenv("FEISHU_APP_SECRET")
+        self.app_ticket = ConfigManager.get("feishu.app_ticket") or os.getenv("FEISHU_APP_TICKET")
+        
+        # 初始化SDK客户端
+        self._client = None
+        self._init_sdk_client()
+        
+        # 调试信息
+        log.info(f"Feishu SDK available: {SDK_AVAILABLE}")
+        log.info(f"Feishu SDK configured: {bool(self.app_id and self.app_secret)}")
 
-    def _generate_signature(self, timestamp: str) -> str:
-        if not self.secret:
-            return ""
-        string_to_sign = f"{timestamp}\n{self.secret}"
-        hmac_code = hmac.new(
-            string_to_sign.encode("utf-8"), digestmod=hashlib.sha256
-        ).digest()
-        return base64.b64encode(hmac_code).decode("utf-8")
-
-    def send_card(self, card_content: dict) -> bool:
-        if not self.webhook_url:
-            log.warning("未配置 Feishu Webhook URL，跳过发送")
-            return False
-
-        timestamp = str(int(time.time()))
-        payload = {
-            "timestamp": timestamp,
-            "msg_type": "interactive",
-            "card": card_content,
-        }
-
-        if self.secret:
-            payload["sign"] = self._generate_signature(timestamp)
-
+    def _init_sdk_client(self):
+        """初始化飞书SDK客户端"""
+        if not SDK_AVAILABLE:
+            log.error("lark_oapi SDK not installed")
+            return
+            
+        if not self.app_id or not self.app_secret:
+            log.error("Feishu SDK credentials not configured")
+            return
+            
         try:
-            response = requests.post(
-                self.webhook_url,
-                headers={"Content-Type": "application/json"},
-                data=json.dumps(payload),
-                timeout=10,
-            )
-            response.raise_for_status()
-            resp_json = response.json()
-            if resp_json.get("code") == 0:
-                log.info("Feishu 消息卡片发送成功")
+            # 根据示例代码构建客户端
+            self._client = lark.Client.builder() \
+                .app_id(self.app_id) \
+                .app_secret(self.app_secret) \
+                .domain(lark.FEISHU_DOMAIN) \
+                .timeout(3) \
+                .app_type(lark.AppType.ISV) \
+                .app_ticket(self.app_ticket or "") \
+                .enable_set_token(False) \
+                .log_level(lark.LogLevel.DEBUG) \
+                .build()
+                
+            log.info("Feishu SDK client initialized successfully")
+        except Exception as e:
+            log.error(f"Failed to initialize Feishu SDK client: {e}")
+            self._client = None
+            
+        # 添加调试信息
+        log.debug(f"SDK Available: {SDK_AVAILABLE}")
+        log.debug(f"App ID configured: {bool(self.app_id)}")
+        log.debug(f"App Secret configured: {bool(self.app_secret)}")
+        log.debug(f"App Ticket configured: {bool(self.app_ticket)}")
+        log.debug(f"Client initialized: {self._client is not None}")
+
+    def send_card(self, card_content: dict, receive_id: str, receive_id_type: str = "open_id") -> bool:
+        """
+        使用SDK发送消息卡片
+        
+        Args:
+            card_content: 卡片内容
+            receive_id: 接收者ID
+            receive_id_type: 接收者ID类型 (open_id, user_id, union_id, email)
+        """
+        if not self._client:
+            log.error("SDK client not initialized, cannot send card")
+            return False
+            
+        if not receive_id:
+            log.error("receive_id is required for SDK sending")
+            return False
+            
+        try:
+            # 构建请求
+            request = CreateMessageRequest.builder() \
+                .receive_id_type(receive_id_type) \
+                .request_body(CreateMessageRequestBody.builder()
+                    .receive_id(receive_id)
+                    .msg_type("interactive")
+                    .content(json.dumps({"card": card_content}))
+                    .build()) \
+                .build()
+                
+            # 发送消息
+            response = self._client.im.v1.message.create(request)
+            
+            if response.success():
+                log.info(f"Card sent successfully via SDK, message_id: {response.data.message_id}")
                 return True
             else:
-                log.error(f"Feishu 发送失败: {resp_json}")
+                log.error(f"Failed to send card via SDK: {response.msg}")
                 return False
+                
         except Exception as e:
-            log.error(f"Feishu 连接异常: {e}")
+            log.error(f"Exception when sending card via SDK: {e}")
             return False
 
     def transform_internal_to_feishu(self, internal_card: dict) -> dict:
+        """将内部卡片格式转换为飞书卡片格式"""
         header = internal_card.get("header", {})
         body = internal_card.get("body", {})
         actions = internal_card.get("actions", [])

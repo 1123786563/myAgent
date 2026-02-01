@@ -28,6 +28,7 @@ class DBInitializer:
                 get_logger("DB-Init").info("PostgreSQL vector extension enabled.")
         except Exception as e:
             get_logger("DB-Init").warning(f"Failed to enable vector extension: {e}")
+            get_logger("DB-Init").info("Vector operations will be disabled. Text-based similarity will be used instead.")
 
     @staticmethod
     def _ensure_db_exists():
@@ -59,6 +60,25 @@ class DBInitializer:
     @staticmethod
     def _init_tables():
         try:
+            # 检查 vector 扩展是否可用
+            vector_available = False
+            try:
+                with engine.connect() as conn:
+                    conn.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'"))
+                    result = conn.fetchone()
+                    if result:
+                        vector_available = True
+            except Exception:
+                pass
+            
+            if not vector_available:
+                # 如果没有 vector 扩展，临时修改表定义
+                from core.db_models import AccountingCategoryEmbedding
+                from sqlalchemy import Text
+                
+                # 修改 embedding 列类型为 Text
+                AccountingCategoryEmbedding.__table__.c.embedding.type = Text()
+            
             Base.metadata.create_all(bind=engine)
             get_logger("DB-Init").info("SQLAlchemy 表结构初始化完成。")
         except Exception as e:

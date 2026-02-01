@@ -1,5 +1,6 @@
 import yaml
 import os
+import re
 import threading
 from typing import Any, Dict, Optional, Type, TypeVar, Union
 from utils.project_paths import get_path
@@ -69,6 +70,14 @@ class ConfigSchema:
 
         # 企业配置
         "enterprise.sector": str,
+
+        # Celery Configuration
+        "celery.broker_url": str,
+        "celery.result_backend": str,
+        "celery.timezone": str,
+        "celery.enable_utc": bool,
+        "celery.task_track_started": bool,
+        "celery.task_time_limit": int,
     }
 
     @classmethod
@@ -99,6 +108,25 @@ class ConfigManager:
     _last_loaded = 0
     _lock = threading.Lock()
     _access_stats: Dict[str, int] = {}  # 配置访问统计
+
+    @classmethod
+    def _resolve_env_vars(cls, obj):
+        """递归解析对象中的环境变量占位符，如 ${VAR_NAME}"""
+        if isinstance(obj, dict):
+            return {k: cls._resolve_env_vars(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [cls._resolve_env_vars(item) for item in obj]
+        elif isinstance(obj, str):
+            # 使用正则表达式查找 ${VAR_NAME} 格式的占位符
+            pattern = r'\$\{([^}]+)\}'
+            
+            def replace_var(match):
+                var_name = match.group(1)
+                return os.environ.get(var_name, match.group(0))  # 如果环境变量不存在，保留原占位符
+            
+            return re.sub(pattern, replace_var, obj)
+        else:
+            return obj
 
     @classmethod
     def load(cls, force=False):
@@ -143,6 +171,9 @@ class ConfigManager:
 
             # 4. 深度合并默认配置与用户配置
             final_config = cls._deep_merge(defaults, user_config)
+            
+            # 4.5. 解析环境变量占位符
+            final_config = cls._resolve_env_vars(final_config)
 
             # 5. 环境变量覆盖
             for env_key, env_val in os.environ.items():
@@ -169,6 +200,27 @@ class ConfigManager:
         # LEDGER_PATH_DB -> path.db
         parts = env_key[7:].lower().split('_')
         curr = config
+        
+        # 特殊处理 IM_FEISHU_WEBHOOK_URL 这样的配置
+        if len(parts) >= 3 and parts[0] == 'im' and parts[1] == 'feishu':
+            # 处理 im.feishu.webhook_url
+            if len(parts) >= 4 and '_'.join(parts[2:]) == 'webhook_url':
+                if 'im' not in curr:
+                    curr['im'] = {}
+                if 'feishu' not in curr['im']:
+                    curr['im']['feishu'] = {}
+                curr['im']['feishu']['webhook_url'] = env_val
+                return
+            # 处理 im.feishu.secret
+            elif len(parts) >= 3 and parts[2] == 'secret':
+                if 'im' not in curr:
+                    curr['im'] = {}
+                if 'feishu' not in curr['im']:
+                    curr['im']['feishu'] = {}
+                curr['im']['feishu']['secret'] = env_val
+                return
+        
+        # 常规处理
         for part in parts[:-1]:
             if part not in curr: curr[part] = {}
             curr = curr[part]

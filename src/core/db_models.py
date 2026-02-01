@@ -15,7 +15,15 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 import os
 from dotenv import load_dotenv
-from pgvector.sqlalchemy import Vector
+
+# 尝试导入 pgvector，如果失败则使用替代方案
+try:
+    from pgvector.sqlalchemy import Vector
+    VECTOR_AVAILABLE = True
+except ImportError:
+    VECTOR_AVAILABLE = False
+    # 如果 pgvector 不可用，使用 Text 作为替代
+    Vector = Text
 
 load_dotenv()
 
@@ -36,6 +44,13 @@ class AccountingCategoryEmbedding(Base):
     embedding = Column(Vector(1536))  # OpenAI text-embedding-3-small dimension
     source = Column(String, default="SYSTEM")  # SYSTEM, MANUAL, LEARNING
     created_at = Column(DateTime, server_default=func.now())
+
+
+# 如果没有 vector 扩展，动态修改表定义
+if not VECTOR_AVAILABLE:
+    # 将 embedding 列类型改为 Text
+    AccountingCategoryEmbedding.embedding.type = Text()
+    AccountingCategoryEmbedding.__table__.columns.embedding.type = Text()
 
 
 class SysConfig(Base):
