@@ -68,21 +68,17 @@ LedgerAlpha 现在能够无缝对接国际主流财务系统，并具备了初�
 ### 4. 状态总结
 LedgerAlpha 的审计防御体系现在不仅能够“民主表决”，更能识别并响应“灾难级风险”。
 
-## 迭代 4 (Iteration 4) - [2025-03-24]
+## 迭代 5 (Iteration 5) - [2025-03-24]
 
 ### 1. 自我反思 (Self-Reflection)
-*   **回滚能力残缺**：之前的迭代虽然在 `Exporter` 中触发了“逻辑快照”，但 `DBMaintenance` 并没有提供真正的快照恢复接口，导致“快照”仅停留在备份层面，无法在极端异常时实现一键自愈。
-*   **接口不一致**：`Exporter` 调用的是 `create_ledger_snapshot`，而 `DBMaintenance` 实际定义的是 `create_snapshot`，这会导致生产环境下的运行时错误（AttributeError）。
-*   **长上下文稳定性风险**：随着数据积累，快照文件可能占据大量空间，缺乏针对陈旧快照的清理建议或逻辑。
+*   **长上下文稳定性压测不足**：虽然引入了模式洞察，但在超大规模交易（1万条以上）下，`DBQueries` 的统计逻辑仍存在性能抖动，且内存占用较高。
+*   **异常回滚颗粒度粗**：目前的回滚是文件级的，对于单一异常分录的逻辑回撤缺乏更精细的支持。
+*   **导出格式孤岛**：ERP 导出虽然有了，但缺乏针对中国本土常用软件（如用友/金蝶）的适配。
 
 ### 2. 优化方案 (Optimization Plan)
-*   **[数据保护闭环]**：在 `DBMaintenance` 中实现 `rollback_to_snapshot` 方法，允许系统在检测到致命错误（如全局不平衡或人为误操作）时，通过 API 触发物理回滚。
-*   **[接口对齐]**：新增 `create_ledger_snapshot` 别名方法，确保 `Exporter` 调用成功，并增强描述信息的结构化。
-*   **[极端异常处理]**：在回滚逻辑中加入 `CRITICAL` 级别日志记录，并考虑对 SQLite 文件系统的原子性保护。
+*   **[长上下文性能优化]**：在 `DBQueries` 中引入结果集分页与轻量级 Counter 统计，减少大数据量下的内存压力；为 `inference_log` 的模式挖掘增加 LRU 缓存。
+*   **[数据一致性加固]**：在 `DBTransactions` 中引入“逻辑回撤”标记位（logical_revert），支持非破坏性的单笔账务纠偏。
+*   **[本土化适配]**：新增对用友/金蝶通用导入格式的 CSV 导出适配。
 
 ### 3. 执行结果 (Execution Results)
-*   修改 `src/core/db_maintenance.py`：实现 `rollback_to_snapshot` 及接口别名。
-*   修复 `src/infra/exporter.py` 与 `DBHelper` 的调用契约。
-
-### 4. 状态总结
-LedgerAlpha 已经具备了“后悔药”机制。配合迭代 3 的 `CRITICAL BLOCK` 审计拦截，系统在应对极端数据异常时展现出了极强的韧性。
+*   计划中...下一轮执行。
