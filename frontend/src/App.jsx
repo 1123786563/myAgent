@@ -16,9 +16,10 @@ import Reconciliation from './pages/Reconciliation';
 import Workflow from './pages/Workflow';
 import AccountChart from './pages/accounting/AccountChart';
 import VoucherEntry from './pages/accounting/VoucherEntry';
-
-const Dashboard = () => <div>Dashboard Content (TODO)</div>;
-const Settings = () => <div>System Settings (TODO)</div>;
+import Reports from './pages/accounting/Reports';
+import InvoiceWorkbench from './pages/invoice/InvoiceWorkbench';
+import Dashboard from './pages/dashboard/Dashboard';
+import Settings from './pages/Settings';
 
 const Layout = ({ children }) => {
   const location = useLocation();
@@ -58,7 +59,16 @@ const Layout = ({ children }) => {
                   path: '/accounting/voucher',
                   name: '凭证录入',
                 },
+                {
+                  path: '/accounting/reports',
+                  name: '财务报表',
+                },
               ],
+            },
+            {
+              path: '/invoice',
+              name: '发票管理',
+              icon: <FileSearchOutlined />,
             },
             {
               path: '/reconciliation',
@@ -128,6 +138,8 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/accounting/chart" element={<AccountChart />} />
             <Route path="/accounting/voucher" element={<VoucherEntry />} />
+            <Route path="/accounting/reports" element={<Reports />} />
+            <Route path="/invoice" element={<InvoiceWorkbench />} />
             <Route path="/reconciliation" element={<Reconciliation />} />
             <Route path="/workflow" element={<Workflow />} />
             <Route path="/settings" element={<Settings />} />
