@@ -104,9 +104,9 @@ class DBQueries(DBBase):
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def get_historical_trend(self, vendor, months=12):
-        # [Iteration 6/7/8] 动态调整挖掘窗口以优化超长上下文，并引入时序与年度分析
+        # [Iteration 6/7/8/10] 动态挖掘窗口 + 时序分析 + 关联性分析
         sql = """
-            SELECT category, amount, created_at, inference_log 
+            SELECT category, amount, created_at, inference_log, group_id 
             FROM transactions 
             WHERE vendor = ? AND status IN ('AUDITED', 'POSTED', 'MATCHED')
             AND logical_revert = 0
@@ -118,6 +118,16 @@ class DBQueries(DBBase):
                 rows = [dict(row) for row in conn.execute(sql, (vendor, f'-{months} months')).fetchall()]
                 if not rows: return {}
                 
+                # [Iteration 10] 关联供应商挖掘 (Identify dependencies)
+                group_ids = [r['group_id'] for r in rows if r['group_id']]
+                correlation_summary = ""
+                if group_ids:
+                    placeholders = ",".join(["?"]*len(group_ids))
+                    corr_sql = f"SELECT vendor, COUNT(*) as cnt FROM transactions WHERE group_id IN ({placeholders}) AND vendor != ? GROUP BY vendor ORDER BY cnt DESC LIMIT 1"
+                    corr_row = conn.execute(corr_sql, (*group_ids, vendor)).fetchone()
+                    if corr_row:
+                        correlation_summary = f"常与 {corr_row['vendor']} 成组出现"
+
                 categories = [r['category'] for r in rows]
                 amounts = [float(r['amount']) for r in rows]
                 
@@ -138,12 +148,15 @@ class DBQueries(DBBase):
                     if dow_stats[top_dow] / len(rows) > 0.6:
                         pattern_summary = f"规律: 周内{top_dow}"
                     
-                    # [Iteration 8] 年度/月度重复特征
                     top_mon = max(month_stats, key=month_stats.get)
                     if month_stats[top_mon] / len(rows) > 0.4 and len(rows) > 5:
                         mon_str = f"规律: 年度第{top_mon}月高频"
                         pattern_summary = f"{pattern_summary} | {mon_str}" if pattern_summary else mon_str
                 except: pass
+
+                # 拼接关联性
+                if correlation_summary:
+                    pattern_summary = f"{pattern_summary} | {correlation_summary}" if pattern_summary else correlation_summary
 
                 # [Iteration 3/7] 提取长上下文中的行为模式（标签级）
                 recurrent_tags = []

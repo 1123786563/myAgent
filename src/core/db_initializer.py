@@ -31,6 +31,17 @@ class DBInitializer:
                 cursor.execute("ALTER TABLE transactions ADD COLUMN logical_revert INTEGER DEFAULT 0")
             except sqlite3.OperationalError: pass
 
+            # [Iteration 10] 禁止更新已回撤数据的触发器
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS trg_prevent_update_reverted
+                BEFORE UPDATE ON transactions
+                FOR EACH ROW
+                WHEN OLD.logical_revert = 1
+                BEGIN
+                    SELECT RAISE(ABORT, 'Cannot update a logically reverted transaction');
+                END;
+            ''')
+
             # [Optimization 1] 全局试算平衡表 (Trial Balance)
             cursor.execute('''CREATE TABLE IF NOT EXISTS trial_balance (
                 account_code TEXT PRIMARY KEY,
