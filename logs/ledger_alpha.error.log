@@ -7967,3 +7967,6 @@ TypeError: 'datetime.date' object is not subscriptable
 2026-02-01 15:37:27,258 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
 2026-02-01 15:37:37,289 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
 2026-02-01 15:37:47,375 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 15:37:57,386 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 15:38:07,395 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 15:38:17,477 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'

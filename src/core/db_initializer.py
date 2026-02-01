@@ -42,6 +42,18 @@ class DBInitializer:
                 END;
             ''')
 
+            # [Iteration 11] 禁止删除记录的触发器（证据持久化保护）
+            cursor.execute('''
+                CREATE TRIGGER IF NOT EXISTS trg_prevent_delete_transactions
+                BEFORE DELETE ON transactions
+                BEGIN
+                    SELECT RAISE(ABORT, 'Physical deletion is prohibited. Use logical_revert instead.');
+                END;
+            ''')
+
+            # [Iteration 11] 为 group_id 增加索引以提升关联性分析性能
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_trans_group ON transactions(group_id)")
+
             # [Optimization 1] 全局试算平衡表 (Trial Balance)
             cursor.execute('''CREATE TABLE IF NOT EXISTS trial_balance (
                 account_code TEXT PRIMARY KEY,
