@@ -70,3 +70,27 @@ class QB_SAP_Exporter:
         except Exception as e:
             log.error(f"SAP 导出失败: {e}")
             return None
+
+    def to_kingdee_csv(self, records, filename="kingdee_import.csv"):
+        """
+        导出为金蝶标准导入格式 (精简版)
+        """
+        target_path = get_path("workspace", filename)
+        try:
+            kd_data = []
+            for r in records:
+                kd_data.append({
+                    '业务日期': r.get('created_at', '').split(' ')[0],
+                    '凭证字': '记',
+                    '科目': r.get('category', ''),
+                    '币别': '人民币',
+                    '借方金额': r.get('amount', 0),
+                    '贷方金额': 0,
+                    '摘要': f"{r.get('vendor', '')} AI审计确认"
+                })
+            pd.DataFrame(kd_data).to_csv(target_path, index=False, encoding='gbk')
+            log.info(f"金蝶格式导出成功: {target_path}")
+            return target_path
+        except Exception as e:
+            log.error(f"金蝶导出失败: {e}")
+            return None

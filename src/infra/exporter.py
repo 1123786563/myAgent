@@ -44,6 +44,9 @@ class FinancialExporter:
             elif file_format == "sap":
                 from infra.export_compatibility import QB_SAP_Exporter
                 target_path = QB_SAP_Exporter(self.db).to_sap_concur_xml(records, filename if filename.endswith('.xml') else filename + ".xml")
+            elif file_format == "kingdee":
+                from infra.export_compatibility import QB_SAP_Exporter
+                target_path = QB_SAP_Exporter(self.db).to_kingdee_csv(records, filename if filename.endswith('.csv') else filename + ".csv")
             
             if target_path:
                 self._audit_complete(export_id, "COMPLETED")
