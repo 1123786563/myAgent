@@ -84,21 +84,52 @@ class PollingWorker(threading.Thread):
         self.db = hub.db
 
     def run(self):
-        log.info("InteractionHub 轮询服务启动 (Proactive Mode)...")
+        log.info("InteractionHub 轮询服务启动 (Event-Driven Mode)...")
         last_proactive_check = 0
         while not should_exit():
             try:
                 now = time.time()
-                with self.db.transaction("DEFERRED") as conn:
-                    sql = "SELECT id, event_type, message, trace_id FROM system_events WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') AND created_at > datetime('now', '-5 minutes') ORDER BY created_at DESC LIMIT 5"
+                # 1. 处理系统事件 (PUSH_CARD, EVIDENCE_REQUEST)
+                with self.db.transaction("IMMEDIATE") as conn:
+                    sql = """
+                        SELECT id, event_type, message, trace_id 
+                        FROM system_events 
+                        WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') 
+                        AND created_at > datetime('now', '-30 seconds')
+                        ORDER BY created_at ASC
+                    """
                     events = conn.execute(sql).fetchall()
-                if now - last_proactive_check > 30:
+                    
+                    for event in events:
+                        self._dispatch_event(event)
+                        conn.execute("UPDATE system_events SET event_type = 'HANDLED_' || event_type WHERE id = ?", (event['id'],))
+
+                # 2. 定期执行主动任务扫描
+                if now - last_proactive_check > 60:
                     self._check_proactive_tasks()
                     last_proactive_check = now
+                
                 time.sleep(5)
             except Exception as e:
                 log.error(f"Hub 轮询异常: {e}")
                 time.sleep(5)
+
+    def _dispatch_event(self, event):
+        etype = event['event_type']
+        try:
+            payload = json.loads(event['message'])
+            data = payload.get('data', {})
+            
+            if etype == 'PUSH_CARD':
+                self.hub.push_card(data.get('trans_id'), data, trace_id=event['trace_id'])
+                log.info(f"【通知发送】已推送审批卡片: {payload.get('type')} | TraceID: {event['trace_id']}")
+            
+            elif etype == 'EVIDENCE_REQUEST':
+                self.hub.push_evidence_request(data.get('trans_id'), data.get('vendor'), data.get('amount'), trace_id=event['trace_id'])
+                log.info(f"【通知发送】已推送证据追索: {data.get('vendor')} | TraceID: {event['trace_id']}")
+                
+        except Exception as e:
+            log.error(f"分发事件失败: {e} | EventID: {event['id']}")
 
     def _check_proactive_tasks(self):
         try:

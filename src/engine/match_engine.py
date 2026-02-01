@@ -1,6 +1,7 @@
 import time
 import threading
 import queue
+import json
 from difflib import SequenceMatcher
 from decimal import Decimal
 from core.db_helper import DBHelper
@@ -127,17 +128,19 @@ class MatchEngine:
     def _push_batch_reconcile_card(self, pairs):
         """推送批量对账消消乐卡片 (F3.4.1)"""
         try:
-            from api.interaction_hub import InteractionHub
-            hub = InteractionHub()
-            log.info(f"正在通过 InteractionHub 推送批量消消乐建议 ({len(pairs)} 笔)")
-            hub.push_card("BATCH_MATCH", {
-                "count": len(pairs),
-                "total_amount": sum(p['amount'] for p in pairs),
-                "items": pairs[:5], # 仅展示前5笔作为摘要
-                "action": "BATCH_CONFIRM"
-            })
+            log.info(f"正在异步记录批量消消乐建议 ({len(pairs)} 笔)")
+            payload = {
+                "type": "BATCH_MATCH",
+                "data": {
+                    "count": len(pairs),
+                    "total_amount": float(sum(p['amount'] for p in pairs)),
+                    "items": pairs[:5],
+                    "action": "BATCH_CONFIRM"
+                }
+            }
+            self.db.log_system_event("PUSH_CARD", "MatchEngine", json.dumps(payload, ensure_ascii=False))
         except Exception as e:
-            log.error(f"推送批量卡片失败: {e}")
+            log.error(f"发送批量卡片事件失败: {e}")
 
     def run_proactive_reminders(self):
         """
@@ -156,11 +159,17 @@ class MatchEngine:
                 """
                 reminders = [dict(row) for row in conn.execute(sql).fetchall()]
                 
-            from api.interaction_hub import InteractionHub
-            hub = InteractionHub()
             for r in reminders:
                 log.warning(f"证据链断裂！向老板追索凭证: {r['vendor_keyword']} (￥{r['amount']})")
-                hub.push_evidence_request(r['id'], r['vendor_keyword'], r['amount'])
+                payload = {
+                    "type": "EVIDENCE_REQUEST",
+                    "data": {
+                        "trans_id": r['id'],
+                        "vendor": r['vendor_keyword'],
+                        "amount": float(r['amount'])
+                    }
+                }
+                self.db.log_system_event("EVIDENCE_REQUEST", "MatchEngine", json.dumps(payload, ensure_ascii=False))
         except Exception as e:
             log.error(f"证据追索任务异常: {e}")
 

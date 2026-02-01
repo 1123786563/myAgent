@@ -111,6 +111,14 @@ class SentinelAgent(AgentBase):
             log.error(f"Price analysis failed: {e}")
             return True, 0
 
+    def _get_tax_policy(self, key, default):
+        try:
+            with self.db.transaction("DEFERRED") as conn:
+                row = conn.execute("SELECT policy_value FROM tax_policies WHERE policy_key = ?", (key,)).fetchone()
+                return row["policy_value"] if row else default
+        except:
+            return default
+
     def _calculate_projected_tax(self):
         """
         [Optimization 3] 税务筹划预警逻辑 (Proactive Tax Advisor)
@@ -120,12 +128,18 @@ class SentinelAgent(AgentBase):
         revenue = stats.get("revenue", 0)
         vat_in_actual = stats.get("vat_in", 0)
 
+        # 动态读取税率
+        rate_key = "vat_rate_general" if self.taxpayer_type == "GENERAL" else "vat_rate_small"
+        rate_default = 0.13 if self.taxpayer_type == "GENERAL" else 0.03
+        vat_rate = self._get_tax_policy(rate_key, rate_default)
+        
         # 预估销项税 (Output VAT)
-        vat_out_est = revenue * (0.13 if self.taxpayer_type == "GENERAL" else 0.03)
+        vat_out_est = revenue * vat_rate
 
         # [Optimization 3] 策略建议逻辑
         strategy_tips = []
-        limit = self.free_limit
+        limit = self._get_tax_policy("tax_free_limit", self.free_limit)
+        
         if self.taxpayer_type == "SMALL_SCALE":
             if limit * 0.85 < revenue < limit:
                 msg = f"【筹划预警】当前营收 ￥{revenue:,.2f} 已逼近月度免税红线 (￥{limit:,.2f})。建议控制月底开票节奏，或提前确认合规进项。"
