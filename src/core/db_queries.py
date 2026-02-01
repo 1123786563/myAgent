@@ -104,7 +104,7 @@ class DBQueries(DBBase):
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def get_historical_trend(self, vendor, months=12):
-        # [Iteration 6] 动态调整挖掘窗口以优化超长上下文
+        # [Iteration 6/7] 动态调整挖掘窗口以优化超长上下文，并引入时序分析
         sql = """
             SELECT category, amount, created_at, inference_log 
             FROM transactions 
@@ -115,14 +115,29 @@ class DBQueries(DBBase):
         """
         try:
             with self.transaction("DEFERRED") as conn:
-                # [Iteration 6] 增加对 logical_revert 的支持
                 rows = [dict(row) for row in conn.execute(sql, (vendor, f'-{months} months')).fetchall()]
                 if not rows: return {}
                 
                 categories = [r['category'] for r in rows]
                 amounts = [float(r['amount']) for r in rows]
                 
-                # [Iteration 3] 提取长上下文中的行为模式
+                # [Iteration 7] 时序特征提取：识别周期性模式
+                try:
+                    from datetime import datetime
+                    dow_stats = {} # Day of Week
+                    for r in rows:
+                        dt = datetime.strptime(r['created_at'], "%Y-%m-%d %H:%M:%S")
+                        dow = dt.strftime("%A")
+                        dow_stats[dow] = dow_stats.get(dow, 0) + 1
+                    
+                    top_dow = max(dow_stats, key=dow_stats.get)
+                    if dow_stats[top_dow] / len(rows) > 0.6:
+                        pattern_summary = f"常在 {top_dow} 发生 ({dow_stats[top_dow]}次)"
+                    else:
+                        pattern_summary = ""
+                except: pattern_summary = ""
+
+                # [Iteration 3/7] 提取长上下文中的行为模式（标签级）
                 recurrent_tags = []
                 for r in rows:
                     if r.get('inference_log'):
@@ -133,11 +148,12 @@ class DBQueries(DBBase):
                         except: pass
                 
                 import statistics
-                pattern_summary = ""
                 if recurrent_tags:
                     from collections import Counter
-                    common_tags = Counter(recurrent_tags).most_common(2)
-                    pattern_summary = ", ".join([f"{t[0]} ({t[1]}次)" for t in common_tags])
+                    common_tags = Counter(recurrent_tags).most_common(1)
+                    if common_tags:
+                        tag_str = f"高频标签: {common_tags[0][0]}"
+                        pattern_summary = f"{pattern_summary} | {tag_str}" if pattern_summary else tag_str
 
                 return {
                     "count": len(rows),
