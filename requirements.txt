@@ -1,4 +1,5 @@
 psycopg2-binary
+pgvector
 agentscope
 pyyaml
 watchdog
@@ -10,3 +11,10 @@ uvicorn
 python-multipart
 requests
 openai
+sqlalchemy>=2.0.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+PyJWT>=2.8.0
+bcrypt>=4.1.0
+passlib[bcrypt]>=1.7.4

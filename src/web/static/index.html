@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LedgerAlpha 智能控制台</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div class="flex items-center space-x-4">
+                <div class="bg-blue-600 text-white p-3 rounded-lg">
+                    <i class="fas fa-robot text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">LedgerAlpha</h1>
+                    <p class="text-sm text-gray-500">智能会计代理系统</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm">
+                    <i class="fas fa-check-circle mr-1"></i>System Online
+                </span>
+                <button @click="fetchCards" class="bg-white p-2 rounded-full shadow hover:bg-gray-50">
+                    <i class="fas fa-sync-alt" :class="{'animate-spin': loading}"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Pending Tasks Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <h2 class="text-xl font-semibold text-gray-700 flex items-center">
+                    <i class="fas fa-tasks mr-2"></i> 待处理事项
+                    <span v-if="pendingCards.length > 0" class="ml-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">{{ pendingCards.length }}</span>
+                </h2>
+
+                <div v-if="pendingCards.length === 0" class="bg-white rounded-xl shadow p-8 text-center text-gray-500">
+                    <i class="fas fa-coffee text-4xl mb-4 text-gray-300"></i>
+                    <p>目前没有需要人工介入的事项</p>
+                </div>
+
+                <!-- Card Item -->
+                <div v-for="card in pendingCards" :key="card.event_id" class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <!-- Card Header -->
+                    <div class="px-6 py-4 border-b border-gray-50 flex justify-between items-center" 
+                         :class="headerClass(card.header.style)">
+                        <h3 class="font-bold text-lg">{{ card.header.title }}</h3>
+                        <span class="text-xs opacity-75">{{ formatTime(card.created_at) }}</span>
+                    </div>
+
+                    <!-- Card Body -->
+                    <div class="px-6 py-4">
+                        <div class="prose prose-sm max-w-none text-gray-600 whitespace-pre-wrap mb-4">
+                            {{ card.body.content }}
+                        </div>
+
+                        <!-- Data Fields Preview -->
+                        <div v-if="card.metadata" class="bg-gray-50 rounded p-3 mb-4 text-sm">
+                            <div v-for="(val, key) in card.metadata" :key="key" class="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                                <span class="text-gray-500 capitalize">{{ key }}</span>
+                                <span class="font-mono text-gray-700">{{ val }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Inputs -->
+                        <div v-if="card.inputs && card.inputs.length > 0" class="mb-4 space-y-3">
+                            <div v-for="input in card.inputs" :key="input.id">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">{{ input.label }}</label>
+                                <input type="text" 
+                                       v-model="inputValues[card.event_id][input.id]"
+                                       :placeholder="input.placeholder"
+                                       class="w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm p-2 border">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Actions -->
+                    <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                        <button v-for="action in card.actions" 
+                                :key="action.value"
+                                @click="submitAction(card, action)"
+                                class="px-4 py-2 rounded shadow-sm text-sm font-medium transition-colors"
+                                :class="btnClass(action.style)">
+                            {{ action.label }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats/Logs Column -->
+            <div class="space-y-6">
+                <div class="bg-white rounded-xl shadow p-6">
+                    <h3 class="font-semibold text-gray-800 mb-4">系统状态</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Database</span>
+                            <span class="text-green-500"><i class="fas fa-circle text-xs mr-1"></i>Connected</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">Vector Engine</span>
+                            <span class="text-green-500"><i class="fas fa-circle text-xs mr-1"></i>Active</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600">LLM Budget</span>
+                            <div class="w-24 bg-gray-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 45%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, onMounted, computed } = Vue
+
+        createApp({
+            setup() {
+                const pendingCards = ref([])
+                const loading = ref(false)
+                const inputValues = ref({})
+
+                const fetchCards = async () => {
+                    loading.value = true
+                    try {
+                        const res = await fetch('/api/v1/ui/cards/pending')
+                        const json = await res.json()
+                        pendingCards.value = json.data.filter(c => c.status !== 'COMPLETED')
+                        
+                        // Initialize inputs
+                        pendingCards.value.forEach(card => {
+                            if (!inputValues.value[card.event_id]) {
+                                inputValues.value[card.event_id] = {}
+                            }
+                        })
+                    } catch (e) {
+                        console.error(e)
+                        alert('Failed to load cards')
+                    } finally {
+                        loading.value = false
+                    }
+                }
+
+                const submitAction = async (card, action) => {
+                    if (!confirm(`Confirm action: ${action.label}?`)) return
+
+                    const payload = {
+                        action_value: action.value,
+                        payload: {
+                            ...card.metadata,
+                            ...inputValues.value[card.event_id]
+                        }
+                    }
+
+                    try {
+                        const res = await fetch(`/api/v1/ui/cards/${card.event_id}/action`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        })
+                        if (res.ok) {
+                            // Optimistic remove
+                            pendingCards.value = pendingCards.value.filter(c => c.event_id !== card.event_id)
+                        } else {
+                            alert('Action failed')
+                        }
+                    } catch (e) {
+                        alert('Network error')
+                    }
+                }
+
+                const headerClass = (style) => {
+                    const map = {
+                        'primary': 'bg-blue-50 text-blue-800',
+                        'success': 'bg-green-50 text-green-800', 
+                        'warning': 'bg-yellow-50 text-yellow-800',
+                        'danger': 'bg-red-50 text-red-800'
+                    }
+                    return map[style] || map['primary']
+                }
+
+                const btnClass = (style) => {
+                    const map = {
+                        'primary': 'bg-blue-600 text-white hover:bg-blue-700',
+                        'success': 'bg-green-600 text-white hover:bg-green-700',
+                        'warning': 'bg-yellow-500 text-white hover:bg-yellow-600',
+                        'danger': 'bg-red-600 text-white hover:bg-red-700',
+                        'secondary': 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }
+                    return map[style] || map['secondary']
+                }
+
+                const formatTime = (iso) => {
+                    return new Date(iso).toLocaleString()
+                }
+
+                onMounted(() => {
+                    fetchCards()
+                    // Poll every 10s
+                    setInterval(fetchCards, 10000)
+                })
+
+                return {
+                    pendingCards,
+                    loading,
+                    inputValues,
+                    fetchCards,
+                    submitAction,
+                    headerClass,
+                    btnClass,
+                    formatTime
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>

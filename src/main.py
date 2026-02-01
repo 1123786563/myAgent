@@ -199,6 +199,15 @@ class MasterDaemon:
                     # 每 60 秒更新一次业务指标
                     if current_time - last_metrics_update > 60:
                         try:
+                            # 预算检查与模型热切换逻辑 (Optimization Round 4)
+                            from infra.llm_budget import TokenBudgetManager
+                            budget_mgr = TokenBudgetManager()
+                            allowed, reason = budget_mgr.check_budget()
+                            if not allowed:
+                                log.warning(f"主模型预算已超支 ({reason})。正在执行模型故障转移/降级策略。")
+                                # 此处可通过配置中心或进程信号通知各 Agent
+                                # 本系统中 LLMFactory 会在 LLM 内部自动按需切换备用模型
+
                             from core.knowledge_bridge import KnowledgeBridge
                             kb_bridge = KnowledgeBridge()
                             kb_bridge.cleanup_stale_rules(min_hits=1, days_old=7)

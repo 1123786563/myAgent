@@ -58,12 +58,16 @@ class TokenBudgetManager:
             return False, f"月预算已用尽 (${self.monthly_cost_usd:.2f} >= ${self.monthly_budget_usd:.2f})"
         return True, "OK"
 
-    def record_usage(self, input_tokens: int, output_tokens: int):
+    def record_usage(self, input_tokens: int, output_tokens: int, model_name: str = None):
         self._maybe_reset_counters()
         total_tokens = input_tokens + output_tokens
         try:
-            if not hasattr(self, '_last_rate') or random.random() < 0.01:
+            if model_name is None:
                 model_name = str(ConfigManager.get("llm.model", "default")).lower()
+            else:
+                model_name = model_name.lower()
+
+            if not hasattr(self, '_last_rate') or random.random() < 0.05 or (model_name != getattr(self, '_current_model', '')):
                 price_map = {
                     "gpt-4o-mini": {"in": 0.00015, "out": 0.0006},
                     "gpt-4o": {"in": 0.005, "out": 0.015},

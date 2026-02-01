@@ -77,6 +77,28 @@ enterprise:
 # [Iteration 8] API 服务配置
 api:
   expose_errors: false           # 是否在响应中暴露详细错误信息
+  rate_limit_window: 60          # 限流时间窗口 (秒)
+  rate_limit_max: 100            # 普通端点最大请求数
+  auth_rate_limit_max: 10        # 认证端点最大请求数
+
+# 认证与授权配置
+auth:
+  jwt_secret_key: "${LEDGER_AUTH_JWT_SECRET}"  # JWT 密钥 (生产环境必须通过环境变量设置)
+  jwt_algorithm: "HS256"
+  jwt_issuer: "ledger-alpha"
+  access_token_expire_minutes: 15    # 访问令牌有效期 (分钟)
+  refresh_token_expire_days: 7       # 刷新令牌有效期 (天)
+
+  # 密码策略
+  password_min_length: 8
+  password_require_uppercase: true
+  password_require_number: true
+  password_require_special: false
+  bcrypt_rounds: 12
+
+  # 账户安全
+  max_failed_login_attempts: 5       # 最大登录失败次数
+  account_lockout_minutes: 30        # 账户锁定时间 (分钟)
 
 bank_mapping:
   default:

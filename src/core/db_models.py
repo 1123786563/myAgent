@@ -1,29 +1,60 @@
-from sqlalchemy import create_engine, Column, Integer, String, Numeric, DateTime, JSON, Text, Date, ForeignKey
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    Numeric,
+    DateTime,
+    JSON,
+    Text,
+    Date,
+    ForeignKey,
+)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 import os
 from dotenv import load_dotenv
+from pgvector.sqlalchemy import Vector
 
 load_dotenv()
 
 Base = declarative_base()
 
+
+class AccountingCategoryEmbedding(Base):
+    """
+    [Optimization] Vector store for semantic accounting classification
+    """
+
+    __tablename__ = "accounting_category_embeddings"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    category = Column(String, nullable=False)
+    description = Column(
+        Text, nullable=False
+    )  # The text used to generate embedding (e.g., "Taxi receipt for travel")
+    embedding = Column(Vector(1536))  # OpenAI text-embedding-3-small dimension
+    source = Column(String, default="SYSTEM")  # SYSTEM, MANUAL, LEARNING
+    created_at = Column(DateTime, server_default=func.now())
+
+
 class SysConfig(Base):
-    __tablename__ = 'sys_config'
+    __tablename__ = "sys_config"
     key = Column(String, primary_key=True)
     value = Column(String)
 
+
 class SysStatus(Base):
-    __tablename__ = 'sys_status'
+    __tablename__ = "sys_status"
     service_name = Column(String, primary_key=True)
     last_heartbeat = Column(DateTime)
     status = Column(String)
     metrics = Column(JSON)
     lock_owner = Column(String)
 
+
 class SystemEvent(Base):
-    __tablename__ = 'system_events'
+    __tablename__ = "system_events"
     id = Column(Integer, primary_key=True, autoincrement=True)
     event_type = Column(String)
     service_name = Column(String)
@@ -31,8 +62,9 @@ class SystemEvent(Base):
     trace_id = Column(String)
     created_at = Column(DateTime, server_default=func.now())
 
+
 class Transaction(Base):
-    __tablename__ = 'transactions'
+    __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, autoincrement=True)
     status = Column(String)
     amount = Column(Numeric(10, 2))
@@ -46,50 +78,58 @@ class Transaction(Base):
     inference_log = Column(JSON)
     group_id = Column(String)
     file_path = Column(Text)
+    file_hash = Column(String, index=True)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
     tags = relationship("TransactionTag", back_populates="transaction")
 
+
 class TransactionTag(Base):
-    __tablename__ = 'transaction_tags'
+    __tablename__ = "transaction_tags"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    transaction_id = Column(Integer, ForeignKey('transactions.id'))
+    transaction_id = Column(Integer, ForeignKey("transactions.id"))
     tag_key = Column(String)
     tag_value = Column(String)
     transaction = relationship("Transaction", back_populates="tags")
 
+
 class PendingEntry(Base):
-    __tablename__ = 'pending_entries'
+    __tablename__ = "pending_entries"
     id = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Numeric(10, 2))
     vendor_keyword = Column(String)
-    status = Column(String, default='PENDING')
+    status = Column(String, default="PENDING")
     created_at = Column(DateTime, server_default=func.now())
 
+
 class TrialBalance(Base):
-    __tablename__ = 'trial_balance'
+    __tablename__ = "trial_balance"
     account_code = Column(String, primary_key=True)
     debit_total = Column(Numeric(15, 2), default=0)
     credit_total = Column(Numeric(15, 2), default=0)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+
 class ROIMetricsHistory(Base):
-    __tablename__ = 'roi_metrics_history'
+    __tablename__ = "roi_metrics_history"
     report_date = Column(Date, primary_key=True)
     human_hours_saved = Column(Numeric(10, 2))
     token_spend_usd = Column(Numeric(10, 4))
     roi_ratio = Column(Numeric(10, 2))
 
+
 class KnowledgeBase(Base):
-    __tablename__ = 'knowledge_base'
+    __tablename__ = "knowledge_base"
     id = Column(Integer, primary_key=True, autoincrement=True)
     entity_name = Column(String, unique=True)
     category_mapping = Column(String)
-    audit_status = Column(String, default='GRAY')
+    audit_status = Column(String, default="GRAY")
     consecutive_success = Column(Integer, default=0)
     reject_count = Column(Integer, default=0)
     hit_count = Column(Integer, default=0)
     quality_score = Column(Numeric(3, 2), default=1.0)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
 
 # Database configuration
 POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")

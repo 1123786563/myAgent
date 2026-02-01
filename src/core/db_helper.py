@@ -9,29 +9,34 @@ import datetime
 
 log = get_logger("DBHelper")
 
+
 class DBHelper(DBTransactions, DBQueries, DBMaintenance):
     """
     [Optimization SQLAlchemy] 增强型数据库助手
     """
+
     def __init__(self):
         super().__init__()
         DBInitializer.init_db()
 
     def update_heartbeat(self, service_name, status="OK", owner_id=None, metrics=None):
         with self.transaction() as session:
-            record = session.query(SysStatus).filter_by(service_name=service_name).first()
+            record = (
+                session.query(SysStatus).filter_by(service_name=service_name).first()
+            )
             if record:
                 record.last_heartbeat = func.now()
                 record.status = status
                 record.metrics = metrics
-                if owner_id: record.lock_owner = owner_id
+                if owner_id:
+                    record.lock_owner = owner_id
             else:
                 new_status = SysStatus(
                     service_name=service_name,
                     last_heartbeat=func.now(),
                     status=status,
                     metrics=metrics,
-                    lock_owner=owner_id
+                    lock_owner=owner_id,
                 )
                 session.add(new_status)
 
@@ -42,7 +47,7 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
                     event_type=event_type,
                     service_name=service_name,
                     message=message,
-                    trace_id=trace_id
+                    trace_id=trace_id,
                 )
                 session.add(event)
         except:
@@ -51,10 +56,14 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
     def check_health(self, service_name, timeout_seconds=60):
         try:
             with self.transaction() as session:
-                record = session.query(SysStatus).filter_by(service_name=service_name).first()
+                record = (
+                    session.query(SysStatus)
+                    .filter_by(service_name=service_name)
+                    .first()
+                )
                 if not record or not record.last_heartbeat:
                     return False
-                
+
                 # 计算差值
                 diff = datetime.datetime.now() - record.last_heartbeat
                 return diff.total_seconds() < timeout_seconds
@@ -65,10 +74,15 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
         try:
             with self.transaction() as session:
                 from core.db_models import SystemEvent
-                count = session.query(SystemEvent).filter(
-                    SystemEvent.service_name == service_name,
-                    SystemEvent.created_at > func.now() - text("interval '1 hour'")
-                ).count()
+
+                count = (
+                    session.query(SystemEvent)
+                    .filter(
+                        SystemEvent.service_name == service_name,
+                        SystemEvent.created_at > func.now() - text("interval '1 hour'"),
+                    )
+                    .count()
+                )
                 return count
         except Exception as e:
             get_logger("DB-Outbox").error(f"验证 Outbox 完整性失败: {e}")
@@ -78,10 +92,16 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
         try:
             with self.transaction() as session:
                 from core.db_models import Transaction
-                updated = session.query(Transaction).filter(
-                    Transaction.status == 'PROCESSING',
-                    Transaction.created_at < func.now() - text("interval '10 minutes'")
-                ).update({"status": "PENDING"}, synchronize_session=False)
+
+                updated = (
+                    session.query(Transaction)
+                    .filter(
+                        Transaction.status == "PROCESSING",
+                        Transaction.created_at
+                        < func.now() - text("interval '10 minutes'"),
+                    )
+                    .update({"status": "PENDING"}, synchronize_session=False)
+                )
                 return updated
         except Exception as e:
             get_logger("DB-Fix").error(f"修复孤儿事务失败: {e}")
@@ -115,3 +135,38 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
 
     def get_roi_weekly_trend(self):
         return []
+
+    def search_similar_categories(self, embedding_vector, limit=3):
+        """
+        [Optimization] Search for similar accounting categories using pgvector
+        """
+        try:
+            from core.db_models import AccountingCategoryEmbedding
+
+            with self.transaction() as session:
+                # Use L2 distance (cosine distance is also popular, depends on embedding model normalization)
+                # OpenAI embeddings are normalized, so cosine distance <=> euclidean distance ranking
+                results = (
+                    session.query(
+                        AccountingCategoryEmbedding,
+                        AccountingCategoryEmbedding.embedding.l2_distance(
+                            embedding_vector
+                        ).label("distance"),
+                    )
+                    .order_by(text("distance"))
+                    .limit(limit)
+                    .all()
+                )
+
+                return [
+                    {
+                        "category": r.category,
+                        "description": r.description,
+                        "distance": float(distance),
+                        "source": r.source,
+                    }
+                    for r, distance in results
+                ]
+        except Exception as e:
+            log.error(f"Vector search failed: {e}")
+            return []

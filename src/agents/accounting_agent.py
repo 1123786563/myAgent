@@ -25,16 +25,20 @@ class AccountingAgent(AgentBase):
     def __init__(self, name, rules_path=None):
         super().__init__()
         self.name = name
-        self.rules_path = Path(rules_path or get_path("src", "core", "accounting_rules.yaml"))
+        self.rules_path = Path(
+            rules_path or get_path("src", "core", "accounting_rules.yaml")
+        )
         self.rules = []
         self._rules_hash = None
         # [Optimization Round 1] 持久化连接以提高性能
         from core.db_helper import DBHelper
         from core.routing_registry import RoutingRegistry
+
         self.db = DBHelper()
         self.registry = RoutingRegistry()
-        
+
         self._load_rules()
+        self._init_vector_store()
 
         # 逻辑运算符映射
         self.ops = {
@@ -45,6 +49,57 @@ class AccountingAgent(AgentBase):
             "<=": operator.le,
             "in": lambda x, y: x in y if isinstance(y, (list, str)) else False,
         }
+
+    def _init_vector_store(self):
+        """Initialize vector embeddings from rules if DB is empty"""
+        try:
+            from core.db_models import AccountingCategoryEmbedding
+
+            with self.db.transaction() as session:
+                count = session.query(
+                    func.count(AccountingCategoryEmbedding.id)
+                ).scalar()
+                if count > 0:
+                    return
+
+            log.info("Initializing vector store from accounting rules...")
+            llm = LLMFactory.get_llm()
+
+            new_embeddings = []
+            seen_descriptions = set()
+
+            for rule in self.rules:
+                # Use keyword as description source
+                text_to_embed = rule.get("keyword")
+                if not text_to_embed or text_to_embed in seen_descriptions:
+                    continue
+
+                # Skip regex rules for embedding init as they aren't semantic examples
+                if rule.get("use_regex"):
+                    continue
+
+                embedding = llm.generate_embedding(text_to_embed)
+                if not embedding:
+                    continue
+
+                new_embeddings.append(
+                    AccountingCategoryEmbedding(
+                        category=rule["category"],
+                        description=text_to_embed,
+                        embedding=embedding,
+                        source="SYSTEM_INIT",
+                    )
+                )
+                seen_descriptions.add(text_to_embed)
+
+            if new_embeddings:
+                with self.db.transaction() as session:
+                    session.add_all(new_embeddings)
+                log.info(
+                    f"Vector store initialized with {len(new_embeddings)} entries."
+                )
+        except Exception as e:
+            log.error(f"Vector store initialization failed: {e}")
 
     def _get_file_hash(self):
         """[Iteration 8] 增强错误处理"""
@@ -87,7 +142,9 @@ class AccountingAgent(AgentBase):
                         rule["_regex"] = re.compile(rule["keyword"], re.IGNORECASE)
 
                 self._rules_hash = current_hash
-                log.info(f"规则库已更新: {self.rules_path} (共 {len(self.rules)} 条规则)")
+                log.info(
+                    f"规则库已更新: {self.rules_path} (共 {len(self.rules)} 条规则)"
+                )
         except FileNotFoundError:
             log.error(f"规则文件不存在: {self.rules_path}")
             if not self.rules:
@@ -114,20 +171,35 @@ class AccountingAgent(AgentBase):
         return True
 
     def _semantic_match(self, text):
-        """[Iteration 8] 语义相似度探测 - 使用可配置阈值"""
-        semantic_min = ConfigManager.get_float("threshold.semantic_match_min", 0.7)
-        text_set = set(re.findall(r"\w+", text.lower()))
-        best_rule, max_overlap = None, 0
-        for rule in self.rules:
-            kw = rule.get("keyword", "").lower()
-            kw_set = set(re.findall(r"\w+", kw))
-            if not kw_set:
-                continue
-            overlap = len(text_set & kw_set) / (len(kw_set) + 1e-9)
-            if overlap > semantic_min and overlap > max_overlap:
-                max_overlap = overlap
-                best_rule = rule
-        return best_rule, max_overlap
+        """
+        [Iteration 9] Vector-based semantic search
+        Replaces Jaccard similarity with pgvector cosine similarity
+        """
+        try:
+            llm = LLMFactory.get_llm()
+            embedding = llm.generate_embedding(text)
+            if not embedding:
+                return None, 0.0
+
+            candidates = self.db.search_similar_categories(embedding, limit=1)
+            if not candidates:
+                return None, 0.0
+
+            best = candidates[0]
+            # Convert L2 distance to similarity score
+            # For normalized vectors, Euclidean distance d related to cosine similarity s by d^2 = 2(1-s)
+            # So s = 1 - d^2/2. Or just heuristic 1 / (1 + d)
+            # OpenAI L2 distance is usually between 0 and 1.414
+            score = 1.0 / (1.0 + best["distance"])
+
+            return {
+                "category": best["category"],
+                "id": "VECTOR_MATCH",
+                "keyword": best["description"],
+            }, score
+        except Exception as e:
+            log.error(f"Semantic match error: {e}")
+            return None, 0.0
 
     def _extract_semantic_dimensions(self, text, amount):
         """[Iteration 8] 语义维度结构化提取 - 使用可配置阈值"""
@@ -135,7 +207,9 @@ class AccountingAgent(AgentBase):
         dimensions = {}
         if any(k in text for k in ["研发", "项目", "迭代"]):
             dimensions["accounting_type"] = (
-                "CAPITAL_EXPENDITURE" if amount > capex_threshold else "OPERATING_EXPENSE"
+                "CAPITAL_EXPENDITURE"
+                if amount > capex_threshold
+                else "OPERATING_EXPENSE"
             )
 
         dept_rules = {
@@ -154,30 +228,31 @@ class AccountingAgent(AgentBase):
         from infra.privacy_guard import PrivacyGuard
 
         self._load_rules()
-        
+
         # [Optimization Round 1] 集成隐私保护网关
         guard = PrivacyGuard(role="ACCOUNTANT")
-        
+
         # [Optimization Round 8/40/43/47/50] 输入文本归一化处理
         raw_text = str(x.get("content", ""))
-        
+
         # 在处理前进行脱敏
         sanitized_text, was_masked = guard.sanitize_for_llm(raw_text)
         if was_masked:
             log.info(f"TraceID={x.get('trace_id')}: 输入内容已通过隐私网关脱敏")
 
         # [Round 43/47/50] 移除 URL、流水 ID 及 Markdown 装饰符
-        clean_text = re.sub(r'https?://\S+|www\.\S+', '', sanitized_text)
-        clean_text = re.sub(r'NO\.\d+|ID[:：]?\d+', '', clean_text)
-        clean_text = re.sub(r'[#\*_]{2,}', '', clean_text)
-        normalized_text = re.sub(r'\s+', ' ', clean_text.strip())
-        
+        clean_text = re.sub(r"https?://\S+|www\.\S+", "", sanitized_text)
+        clean_text = re.sub(r"NO\.\d+|ID[:：]?\d+", "", clean_text)
+        clean_text = re.sub(r"[#\*_]{2,}", "", clean_text)
+        normalized_text = re.sub(r"\s+", " ", clean_text.strip())
+
         amount = to_decimal(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         trace_id = x.get("trace_id")
 
         # [Round 40] 注入系统运行时间
-        if not hasattr(self, '_start_t'): self._start_t = time.time()
+        if not hasattr(self, "_start_t"):
+            self._start_t = time.time()
         system_uptime = time.time() - self._start_t
 
         # 1. 动态路由预检 (Expert Routing)
@@ -199,7 +274,9 @@ class AccountingAgent(AgentBase):
             x["historical_context"] = history_summary
             # [Iteration 3] 如果历史模式洞察提示高频特征，注入 normalized_text
             if history_summary.get("pattern_insight"):
-                log.info(f"TraceID={trace_id}: 发现历史行为模式: {history_summary['pattern_insight']}")
+                log.info(
+                    f"TraceID={trace_id}: 发现历史行为模式: {history_summary['pattern_insight']}"
+                )
 
         # 3. 分类逻辑 (L1)
         category, confidence = "待核定", 0.3
@@ -217,8 +294,12 @@ class AccountingAgent(AgentBase):
             )
         else:
             # 语义匹配
-            semantic_high = ConfigManager.get_float("threshold.semantic_match_high", 0.8)
-            default_confidence = ConfigManager.get_float("agents.accounting.default_confidence", 0.95)
+            semantic_high = ConfigManager.get_float(
+                "threshold.semantic_match_high", 0.8
+            )
+            default_confidence = ConfigManager.get_float(
+                "agents.accounting.default_confidence", 0.95
+            )
             rule, score = self._semantic_match(normalized_text)
             if rule and score > semantic_high:
                 category, confidence = rule["category"], score * default_confidence
@@ -323,7 +404,9 @@ class RecoveryWorker(threading.Thread):
     def run(self):
         """[Iteration 8] 使用可配置的扫描间隔"""
         recovery_interval = ConfigManager.get_int("intervals.recovery_scan", 60)
-        log.info(f"RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: {recovery_interval}s)...")
+        log.info(
+            f"RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: {recovery_interval}s)..."
+        )
         while True:
             try:
                 # 1. 扫描被驳回的交易
@@ -337,7 +420,9 @@ class RecoveryWorker(threading.Thread):
                         AND created_at > CURRENT_TIMESTAMP - interval '1 day'
                         AND (inference_log::text NOT LIKE :recovery_tag OR inference_log IS NULL)
                     """)
-                    tasks_rows = session.execute(sql, {"recovery_tag": '%RECOVERY_ATTEMPT%'}).fetchall()
+                    tasks_rows = session.execute(
+                        sql, {"recovery_tag": "%RECOVERY_ATTEMPT%"}
+                    ).fetchall()
 
                 for task in tasks_rows:
                     self._attempt_recovery(dict(task._mapping))
@@ -349,16 +434,17 @@ class RecoveryWorker(threading.Thread):
 
     def _attempt_recovery(self, task):
         from infra.privacy_guard import PrivacyGuard
+
         guard = PrivacyGuard(role="RECOVERY_AGENT")
-        
+
         tid = task["id"]
         vendor = task["vendor"] or ""
         amount = to_decimal(task["amount"])
         old_category = task.get("category", "未知")
-        
+
         # [Optimization Round 1] 脱敏处理
         safe_vendor, _ = guard.sanitize_for_llm(vendor)
-        
+
         log.info(f"正在尝试修复交易 {tid} (Vendor: {safe_vendor})...")
 
         new_category = "待人工确认"
@@ -370,39 +456,52 @@ class RecoveryWorker(threading.Thread):
             # [Optimization Round 2] 使用 OpenManus ReAct 循环进行深度推理
             from infra.manus_wrapper import OpenManusAnalyst
             from core.knowledge_bridge import KnowledgeBridge
-            
+
             analyst = OpenManusAnalyst()
             kb = KnowledgeBridge()
-            
+
             task_desc = f"Analyze accounting category for vendor '{safe_vendor}' with amount {amount}. Previous rejected category was '{old_category}'."
-            context = {"vendor": safe_vendor, "amount": amount, "tid": tid, "old_category": old_category}
-            
+            context = {
+                "vendor": safe_vendor,
+                "amount": amount,
+                "tid": tid,
+                "old_category": old_category,
+            }
+
             # 启动 ReAct 循环
             result = analyst.investigate(task_desc, context_data=context)
-            
+
             new_category = result.get("category", "待人工确认")
             reason = result.get("reason", "L2 ReAct Conclusion")
             confidence = float(result.get("confidence", 0.0))
-            response = result # 保存完整的推理图
+            response = result  # 保存完整的推理图
 
             log.info(f"L2 ReAct reasoning result: {new_category} (Conf: {confidence})")
-            
+
             # [Optimization Round 2] 知识回流 (Knowledge Backflow)
             if confidence > 0.8:
-                log.info(f"Triggering knowledge backflow for: {safe_vendor} -> {new_category}")
-                kb.handle_manus_decision({
-                    "entity": vendor, 
-                    "category": new_category,
-                    "confidence": confidence,
-                    "reasoning": reason
-                })
+                log.info(
+                    f"Triggering knowledge backflow for: {safe_vendor} -> {new_category}"
+                )
+                kb.handle_manus_decision(
+                    {
+                        "entity": vendor,
+                        "category": new_category,
+                        "confidence": confidence,
+                        "reasoning": reason,
+                    }
+                )
 
         except Exception as e:
             log.error(f"L2 ReAct Error: {e}", exc_info=True)
 
-        # [Iteration 8] Fallback logic 
-        micro_payment_threshold = ConfigManager.get_float("threshold.micro_payment_waiver", 50)
-        fallback_confidence = ConfigManager.get_float("agents.accounting.fallback_confidence", 0.7)
+        # [Iteration 8] Fallback logic
+        micro_payment_threshold = ConfigManager.get_float(
+            "threshold.micro_payment_waiver", 50
+        )
+        fallback_confidence = ConfigManager.get_float(
+            "agents.accounting.fallback_confidence", 0.7
+        )
         if confidence == 0.0 and amount < micro_payment_threshold:
             new_category = "杂项费用"
             reason = "L2 Micro-Payment Waiver"
@@ -412,14 +511,17 @@ class RecoveryWorker(threading.Thread):
         try:
             with self.db.transaction() as session:
                 trans = session.query(Transaction).get(tid)
-                if not trans: return
+                if not trans:
+                    return
 
                 old_log = trans.inference_log
                 new_log_entry = {
                     "step": "RECOVERY_ATTEMPT",
                     "old_category": old_category,
                     "new_category": new_category,
-                    "diff": f"{old_category} -> {new_category}" if old_category != new_category else "No Change",
+                    "diff": f"{old_category} -> {new_category}"
+                    if old_category != new_category
+                    else "No Change",
                     "reason": reason,
                     "confidence": confidence,
                     "engine": "L2-OpenManus-Sim",
@@ -430,12 +532,14 @@ class RecoveryWorker(threading.Thread):
                 if "recovery_trace" not in log_obj:
                     log_obj["recovery_trace"] = []
                 log_obj["recovery_trace"].append(new_log_entry)
-                
+
                 trans.category = new_category
-                trans.status = 'PENDING_AUDIT'
+                trans.status = "PENDING_AUDIT"
                 trans.inference_log = log_obj
 
-            log.info(f"交易 {tid} 修复成功 -> {new_category} (Reason: {reason})，已重新提交审计。")
+            log.info(
+                f"交易 {tid} 修复成功 -> {new_category} (Reason: {reason})，已重新提交审计。"
+            )
         except Exception as e:
             log.error(f"交易 {tid} 修复失败: {e}")
 

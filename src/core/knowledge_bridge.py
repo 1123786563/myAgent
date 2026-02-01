@@ -324,6 +324,7 @@ class KnowledgeBridge:
 
     def cleanup_stale_rules(self, min_hits=0, days_old=30):
         try:
+            import datetime
             with self.db.transaction() as session:
                 cutoff = datetime.datetime.now() - datetime.timedelta(days=days_old)
                 deleted = session.query(KnowledgeBase).filter(

@@ -34,7 +34,7 @@ services:
       retries: 3
 
   db:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     container_name: ledger_alpha_db
     restart: always
     environment:
