@@ -104,16 +104,16 @@ class DBQueries(DBBase):
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def get_historical_trend(self, vendor, months=12):
-        # [Iteration 11] 增加查询缓存，防止频繁扫描大数据量
+        # [Iteration 11/12] 增加查询缓存，防止频繁扫描大数据量
         cache_key = f"trend:{vendor}:{months}"
         now = time.time()
         if hasattr(self, '_trend_cache') and cache_key in self._trend_cache:
             data, expiry = self._trend_cache[cache_key]
             if now < expiry: return data
 
-        # [Iteration 6/7/8/10] 动态挖掘窗口 + 时序分析 + 关联性分析
+        # [Iteration 6/7/8/10/12] 动态挖掘窗口 + 时序分析 + 关联性分析 + 概率建模
         sql = """
-            SELECT category, amount, created_at, inference_log, group_id 
+            SELECT id, category, amount, created_at, inference_log, group_id 
             FROM transactions 
             WHERE vendor = ? AND status IN ('AUDITED', 'POSTED', 'MATCHED')
             AND logical_revert = 0
@@ -125,17 +125,24 @@ class DBQueries(DBBase):
                 rows = [dict(row) for row in conn.execute(sql, (vendor, f'-{months} months')).fetchall()]
                 if not rows: return {}
                 
-                # [Iteration 10] 关联供应商挖掘 (Identify dependencies)
+                # [Iteration 10/12] 关联供应商挖掘 (Conditional Probability)
                 group_ids = [r['group_id'] for r in rows if r['group_id']]
                 correlation_summary = ""
                 if group_ids:
-                    # 限制 group_id 数量以防 SQL 过长
                     sub_groups = group_ids[:50]
                     placeholders = ",".join(["?"]*len(sub_groups))
-                    corr_sql = f"SELECT vendor, COUNT(*) as cnt FROM transactions WHERE group_id IN ({placeholders}) AND vendor != ? GROUP BY vendor ORDER BY cnt DESC LIMIT 1"
+                    # 查找在这些 group_id 中出现的其他供应商
+                    corr_sql = f"""
+                        SELECT vendor, COUNT(*) as cnt 
+                        FROM transactions 
+                        WHERE group_id IN ({placeholders}) AND vendor != ? 
+                        GROUP BY vendor ORDER BY cnt DESC LIMIT 1
+                    """
                     corr_row = conn.execute(corr_sql, (*sub_groups, vendor)).fetchone()
                     if corr_row:
-                        correlation_summary = f"常与 {corr_row['vendor']} 成组出现"
+                        # 计算条件概率 P(Other|Vendor)
+                        prob = corr_row['cnt'] / len(rows)
+                        correlation_summary = f"关联: {corr_row['vendor']} (置信度 {prob:.1%})"
 
                 categories = [r['category'] for r in rows]
                 amounts = [float(r['amount']) for r in rows]

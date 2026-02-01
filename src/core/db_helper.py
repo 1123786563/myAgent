@@ -5,39 +5,65 @@ from core.db_initializer import DBInitializer
 
 class DBHelper(DBTransactions, DBQueries, DBMaintenance):
     """
-    [Optimization Iteration 4] 增强型数据库助手 (聚合类)
+    [Optimization Iteration PG] 增强型数据库助手 (聚合类)
     """
     def __init__(self):
         super().__init__()
-        # Initializing the database if not already done
-        DBInitializer.init_db(self.db_path)
+        DBInitializer.init_db()
+
+    def _execute(self, sql, params=()):
+        with self.transaction() as conn:
+            if self.db_type == "postgres":
+                with conn.cursor() as cur:
+                    cur.execute(sql, params)
+                    return cur
+            else:
+                return conn.execute(sql, params)
 
     def update_heartbeat(self, service_name, status="OK", owner_id=None, metrics=None):
-        with self.transaction("IMMEDIATE") as conn:
-            conn.execute('''
+        p = self._get_placeholder()
+        if self.db_type == "postgres":
+            sql = f'''
+                INSERT INTO sys_status (service_name, last_heartbeat, status, metrics)
+                VALUES ({p}, CURRENT_TIMESTAMP, {p}, {p})
+                ON CONFLICT (service_name) DO UPDATE SET
+                    last_heartbeat = EXCLUDED.last_heartbeat,
+                    status = EXCLUDED.status,
+                    metrics = EXCLUDED.metrics
+            '''
+        else:
+            sql = f'''
                 INSERT OR REPLACE INTO sys_status (service_name, last_heartbeat, status, metrics)
-                VALUES (?, CURRENT_TIMESTAMP, ?, ?)
-            ''', (service_name, status, metrics))
+                VALUES ({p}, CURRENT_TIMESTAMP, {p}, {p})
+            '''
+        self._execute(sql, (service_name, status, metrics))
 
     def log_system_event(self, event_type, service_name, message, trace_id=None):
+        p = self._get_placeholder()
+        sql = f'''
+            INSERT INTO system_events (event_type, service_name, message, trace_id)
+            VALUES ({p}, {p}, {p}, {p})
+        '''
         try:
-            with self.transaction("IMMEDIATE") as conn:
-                conn.execute('''
-                    INSERT INTO system_events (event_type, service_name, message, trace_id)
-                    VALUES (?, ?, ?, ?)
-                ''', (event_type, service_name, message, trace_id))
+            self._execute(sql, (event_type, service_name, message, trace_id))
         except:
             pass
 
     def check_health(self, service_name, timeout_seconds=60):
-        sql = """
-            SELECT (strftime('%s','now') - strftime('%s', last_heartbeat)) < ? as healthy
-            FROM sys_status WHERE service_name = ?
-        """
+        p = self._get_placeholder()
+        if self.db_type == "postgres":
+            sql = f"SELECT (extract(epoch from now()) - extract(epoch from last_heartbeat)) < {p} FROM sys_status WHERE service_name = {p}"
+        else:
+            sql = f"SELECT (strftime('%s','now') - strftime('%s', last_heartbeat)) < {p} FROM sys_status WHERE service_name = {p}"
+        
         try:
-            with self.transaction("DEFERRED") as conn:
-                res = conn.execute(sql, (timeout_seconds, service_name)).fetchone()
-                return bool(res['healthy']) if res else False
+            res = self._execute(sql, (timeout_seconds, service_name))
+            if self.db_type == "postgres":
+                row = res.fetchone()
+                return bool(row[0]) if row else False
+            else:
+                row = res.fetchone()
+                return bool(row[0]) if row else False
         except:
             return False
 
@@ -46,22 +72,11 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
         return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def acquire_business_lock(self, service_name, owner_id):
-        with self.transaction("IMMEDIATE") as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE sys_status 
-                SET lock_owner = ?, last_heartbeat = CURRENT_TIMESTAMP
-                WHERE service_name = ? AND (lock_owner IS NULL OR lock_owner = ?)
-            ''', (owner_id, service_name, owner_id))
-            return cursor.rowcount > 0
-    
-    # Legacy support / convenience aliases
-    def add_transaction_with_tags(self, tags=None, **kwargs):
-        return self.add_transaction_with_chain(tags=tags, **kwargs)
-
-    def verify_ledger_chain(self):
-        success, msg = self.verify_chain_integrity()
-        if not success:
-            self.log_system_event("CHAIN_CORRUPT", "DB", f"检测到账本哈希链中断: {msg}")
-            return False, msg
-        return True, "Verified"
+        p = self._get_placeholder()
+        sql = f'''
+            UPDATE sys_status 
+            SET lock_owner = {p}, last_heartbeat = CURRENT_TIMESTAMP
+            WHERE service_name = {p} AND (lock_owner IS NULL OR lock_owner = {p})
+        '''
+        res = self._execute(sql, (owner_id, service_name, owner_id))
+        return res.rowcount > 0
