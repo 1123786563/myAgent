@@ -27,7 +27,12 @@ class AccountingAgent(AgentBase):
         self.rules_path = Path(rules_path or get_path("src", "core", "accounting_rules.yaml"))
         self.rules = []
         self._rules_hash = None
-        self.db = None  # Will be initialized or accessed via DBHelper singleton
+        # [Optimization Round 1] 持久化连接以提高性能
+        from core.db_helper import DBHelper
+        from core.routing_registry import RoutingRegistry
+        self.db = DBHelper()
+        self.registry = RoutingRegistry()
+        
         self._load_rules()
 
         # 逻辑运算符映射
@@ -144,16 +149,24 @@ class AccountingAgent(AgentBase):
         return dimensions
 
     def reply(self, x: dict = None) -> dict:
-        from core.db_helper import DBHelper
         from core.config_manager import ConfigManager
+        from infra.privacy_guard import PrivacyGuard
 
-        self.db = DBHelper()
         self._load_rules()
+        
+        # [Optimization Round 1] 集成隐私保护网关
+        guard = PrivacyGuard(role="ACCOUNTANT")
         
         # [Optimization Round 8/40/43/47/50] 输入文本归一化处理
         raw_text = str(x.get("content", ""))
+        
+        # 在处理前进行脱敏
+        sanitized_text, was_masked = guard.sanitize_for_llm(raw_text)
+        if was_masked:
+            log.info(f"TraceID={x.get('trace_id')}: 输入内容已通过隐私网关脱敏")
+
         # [Round 43/47/50] 移除 URL、流水 ID 及 Markdown 装饰符
-        clean_text = re.sub(r'https?://\S+|www\.\S+', '', raw_text)
+        clean_text = re.sub(r'https?://\S+|www\.\S+', '', sanitized_text)
         clean_text = re.sub(r'NO\.\d+|ID[:：]?\d+', '', clean_text)
         clean_text = re.sub(r'[#\*_]{2,}', '', clean_text)
         normalized_text = re.sub(r'\s+', ' ', clean_text.strip())
@@ -166,24 +179,18 @@ class AccountingAgent(AgentBase):
         if not hasattr(self, '_start_t'): self._start_t = time.time()
         system_uptime = time.time() - self._start_t
 
-        # [Optimization Round 11/40] L2 级别动态提示词渲染 (Whitepaper 2.5)
-        # 逻辑：对于特定的高风险供应商，注入定制化上下文
-        context_params = {
-            "vendor": vendor,
-            "amount": amount,
-            "text": normalized_text[:50],
-            "trace_id": trace_id,
-            "uptime": round(system_uptime, 1)
-        }
-        
         # 1. 动态路由预检 (Expert Routing)
-        from core.routing_registry import RoutingRegistry
-
-        registry = RoutingRegistry()
-        route = registry.get_route(normalized_text, vendor=vendor)
+        route = self.registry.get_route(normalized_text, vendor=vendor)
         if "L2" in route:
             log.info(f"动态路由拦截 -> 强制升级 L2 | TraceID={trace_id}")
-            x["requires_upgrade"] = True
+            # [Optimization Round 1] 强制升级时，返回特殊状态
+            return LedgerMsg.create(
+                self.name,
+                {"requires_upgrade": True, "reason": "Expert Routing"},
+                action="UPGRADE_REQUIRED",
+                trace_id=trace_id,
+                sender_role="ACCOUNTANT",
+            )
 
         # 2. 注入历史画像 Context (Long-Context Injection)
         history_summary = self.db.get_historical_trend(vendor)
@@ -337,11 +344,18 @@ class RecoveryWorker(threading.Thread):
                 time.sleep(recovery_interval)
 
     def _attempt_recovery(self, task):
+        from infra.privacy_guard import PrivacyGuard
+        guard = PrivacyGuard(role="RECOVERY_AGENT")
+        
         tid = task["id"]
         vendor = task["vendor"] or ""
         amount = to_decimal(task["amount"])
         old_category = task.get("category", "未知")
-        log.info(f"正在尝试修复交易 {tid} (Vendor: {vendor})...")
+        
+        # [Optimization Round 1] 脱敏处理
+        safe_vendor, _ = guard.sanitize_for_llm(vendor)
+        
+        log.info(f"正在尝试修复交易 {tid} (Vendor: {safe_vendor})...")
 
         new_category = "待人工确认"
         reason = "L2无法确定"
@@ -351,10 +365,13 @@ class RecoveryWorker(threading.Thread):
         try:
             # [Optimization Round 2] 使用 OpenManus ReAct 循环进行深度推理
             from infra.manus_wrapper import OpenManusAnalyst
-            analyst = OpenManusAnalyst()
+            from core.knowledge_bridge import KnowledgeBridge
             
-            task_desc = f"Analyze accounting category for vendor '{vendor}' with amount {amount}. Previous rejected category was '{old_category}'."
-            context = {"vendor": vendor, "amount": amount, "tid": tid, "old_category": old_category}
+            analyst = OpenManusAnalyst()
+            kb = KnowledgeBridge()
+            
+            task_desc = f"Analyze accounting category for vendor '{safe_vendor}' with amount {amount}. Previous rejected category was '{old_category}'."
+            context = {"vendor": safe_vendor, "amount": amount, "tid": tid, "old_category": old_category}
             
             # 启动 ReAct 循环
             result = analyst.investigate(task_desc, context_data=context)
@@ -365,6 +382,17 @@ class RecoveryWorker(threading.Thread):
             response = result # 保存完整的推理图
 
             log.info(f"L2 ReAct reasoning result: {new_category} (Conf: {confidence})")
+            
+            # [Optimization Round 2] 知识回流 (Knowledge Backflow)
+            # 将 L2 处理结果沉淀为 L1 规则
+            if confidence > 0.8:
+                log.info(f"Triggering knowledge backflow for: {safe_vendor} -> {new_category}")
+                kb.handle_manus_decision({
+                    "entity": vendor, # 使用原始脱敏前的名称作为 Key
+                    "category": new_category,
+                    "confidence": confidence,
+                    "reasoning": reason
+                })
 
         except Exception as e:
             log.error(f"L2 ReAct Error: {e}", exc_info=True)

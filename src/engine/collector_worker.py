@@ -46,25 +46,50 @@ class CollectorWorker(threading.Thread):
         for path in self.batch_buffer:
             try:
                 stats = os.stat(path)
+                # [Optimization Round 2] 提取更多元数据用于空间聚合
                 fp = "".join(re.findall(r'\d+', os.path.basename(path)))
-                file_meta.append({"path": path, "mtime": stats.st_mtime, "fingerprint": fp})
-            except: file_meta.append({"path": path, "mtime": time.time(), "fingerprint": ""})
+                size = stats.st_size
+                file_meta.append({
+                    "path": path, 
+                    "mtime": stats.st_mtime, 
+                    "fingerprint": fp,
+                    "size": size,
+                    "name": os.path.basename(path)
+                })
+            except: file_meta.append({"path": path, "mtime": time.time(), "fingerprint": "", "size": 0, "name": ""})
+        
         file_meta.sort(key=lambda x: x["mtime"])
+        
+        # [Optimization Round 2] 多模态空间语义聚合 (Multimodal Spatial Aggregation)
+        # 识别时间接近、大小相近或名称模式一致的单据
         groups = []
         if file_meta:
             curr_g = [file_meta[0]]
             for i in range(1, len(file_meta)):
-                if (file_meta[i]["mtime"] - curr_g[-1]["mtime"]) < 30 or (len(file_meta[i]["fingerprint"]) > 3 and file_meta[i]["fingerprint"][:4] == curr_g[-1]["fingerprint"][:4]):
-                    curr_g.append(file_meta[i])
+                item = file_meta[i]
+                prev = curr_g[-1]
+                
+                time_diff = item["mtime"] - prev["mtime"]
+                name_similarity = (item["name"][:5] == prev["name"][:5])
+                
+                # 聚合逻辑：30秒内，或者文件名开头相同且10分钟内
+                is_related = (time_diff < 30) or (name_similarity and time_diff < 600)
+                
+                if is_related:
+                    curr_g.append(item)
                 else:
                     groups.append(curr_g)
-                    curr_g = [file_meta[i]]
+                    curr_g = [item]
             groups.append(curr_g)
+        
         for group in groups:
+            # 为聚合组生成唯一 ID
             group_id = f"SG-{int(group[0]['mtime'])}-{hashlib.md5(group[0]['path'].encode()).hexdigest()[:4]}"
+            log.info(f"Detected document group {group_id} with {len(group)} files")
             for item in group:
                 self._process_file(item["path"], group_id)
                 self.task_queue.task_done()
+        
         self.batch_buffer.clear()
         self.last_buffer_flush = time.time()
 

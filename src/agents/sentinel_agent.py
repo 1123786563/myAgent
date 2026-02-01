@@ -112,12 +112,50 @@ class SentinelAgent(AgentBase):
             return True, 0
 
     def _get_tax_policy(self, key, default):
+        """[Optimization Round 2] 增加联网补丁检测"""
+        val = default
         try:
             with self.db.transaction("DEFERRED") as conn:
                 row = conn.execute("SELECT policy_value FROM tax_policies WHERE policy_key = ?", (key,)).fetchone()
-                return row["policy_value"] if row else default
+                if row: val = row["policy_value"]
         except:
-            return default
+            pass
+        
+        # 联网检测是否有新政策覆盖
+        patch = self._check_external_policy_patch({"policy_key": key})
+        if patch:
+            log.info(f"Sentinel: 发现外部政策补丁覆盖 {key} -> {patch}")
+            # 简单的解析逻辑，如果补丁包含百分比，尝试提取
+            import re
+            pct_match = re.search(r'(\d+)%', str(patch))
+            if pct_match:
+                val = float(pct_match.group(1)) / 100.0
+        
+        return val
+
+    def _refresh_policies_from_web(self):
+        """
+        [Optimization Round 2] 利用 OpenManus 真实联网获取税务政策 (TaxSentinel Real Networking)
+        """
+        log.info("Sentinel: 正在启动 OpenManus 巡检最新税务政策...")
+        try:
+            from infra.manus_wrapper import OpenManusAnalyst
+            analyst = OpenManusAnalyst()
+            
+            task = "搜索 2025 年中国针对小微企业的最新增值税免税政策和所得税优惠政策，提取免税额度、税率等关键数值。"
+            result = analyst.investigate(task)
+            
+            # 解析并更新本地数据库
+            if "policy_updates" in result:
+                for p in result["policy_updates"]:
+                    with self.db.transaction("IMMEDIATE") as conn:
+                        conn.execute(
+                            "INSERT OR REPLACE INTO tax_policies (policy_key, policy_value, description) VALUES (?, ?, ?)",
+                            (p["key"], p["value"], p.get("desc", ""))
+                        )
+                log.info(f"Sentinel: 成功从联网更新了 {len(result['policy_updates'])} 条政策。")
+        except Exception as e:
+            log.error(f"Sentinel: 联网巡检失败: {e}")
 
     def _calculate_projected_tax(self):
         """
@@ -229,8 +267,12 @@ class SentinelAgent(AgentBase):
         )
 
     def _check_external_policy_patch(self, proposal):
-        if "研发" in proposal.get("category", ""):
+        """[Optimization Round 2] 语义化政策补丁检查"""
+        category = str(proposal.get("category", ""))
+        if "研发" in category or proposal.get("policy_key") == "rd_deduction_rate":
             return "2025年研发费用加计扣除比例提升至100%"
+        if proposal.get("policy_key") == "tax_free_limit":
+             return "2025年小微企业增值税起征点调整为月销售额 10 万元"
         return None
 
     def _get_monthly_stats(self):

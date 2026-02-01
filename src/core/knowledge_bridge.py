@@ -38,7 +38,7 @@ class KnowledgeBridge:
     def handle_manus_decision(self, decision: Dict[str, Any]):
         """
         [Suggestion 1] 处理 OpenManus 的决策并尝试固化
-        [Optimization 3] 决策传输协议 (DTP) 逻辑自检
+        [Optimization Round 2] 支持多实体证据链学习 (Evidence-Link Learning)
         """
         dtp = DTPResponse(decision)
 
@@ -52,8 +52,12 @@ class KnowledgeBridge:
 
         if dtp.confidence > 0.85:
             log.info(f"DTP: 接收到高置信度决策 ({dtp.confidence}) -> {dtp.entity}")
-            # 记录审计理由到数据库
-            self.learn_new_rule(dtp.entity, dtp.category, source="OPENMANUS")
+            
+            # [Optimization Round 2] 处理多实体证据
+            entities = dtp.entity if isinstance(dtp.entity, list) else [dtp.entity]
+            for ent in entities:
+                if ent:
+                    self.learn_new_rule(ent, dtp.category, source="OPENMANUS")
             return True
         else:
             log.warning(f"DTP: 决策置信度过低 ({dtp.confidence})，转入人工复核。")
