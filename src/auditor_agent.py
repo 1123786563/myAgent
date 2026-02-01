@@ -18,54 +18,46 @@ class ConsensusStrategy:
 
 class ConsensusEngine:
     """
-    [Optimization 3] Dynamic Consensus Engine
-    Simulates multi-persona voting based on transaction context.
+    [Optimization 3/19] Dynamic Consensus Engine
+    [Round 19] Persona-based rule engine.
     """
 
     def __init__(self, strategy=ConsensusStrategy.BALANCED):
         self.strategy = strategy
+        # [Round 19] 定义专家人格
+        self.personas = {
+            "COMPLIANCE": self._vote_compliance,
+            "FINANCE": self._vote_finance,
+            "TAX": self._vote_tax
+        }
+
+    def _vote_compliance(self, amount, category, vendor):
+        if amount > 50000:
+            return False, "Large amount requires contract"
+        if any(x in category for x in ["赠送", "礼品", "回扣"]):
+            return False, "Prohibited category"
+        return True, "Pass"
+
+    def _vote_finance(self, amount, category, vendor):
+        # 模拟预算限制
+        if amount > 10000 and "研发" not in category:
+            return False, "Budget restriction for non-R&D"
+        return True, "Pass"
+
+    def _vote_tax(self, amount, category, vendor):
+        if "个人" in vendor and amount > 500:
+            return False, "High individual payment risk"
+        return True, "Pass"
 
     def vote(self, proposal):
         amount = float(proposal.get("amount", 0))
         category = proposal.get("category", "")
         vendor = proposal.get("vendor", "")
 
-        # 1. Compliance Officer (Rules & Policy)
-        # Rejects if amount > 50k without contract or sensitive keywords
-        vote_compliance = True
-        reason_compliance = "Pass"
-        if amount > 50000:
-            vote_compliance = False
-            reason_compliance = "Large amount requires manual contract review"
-        if any(x in category for x in ["赠送", "礼品", "回扣"]):
-            vote_compliance = False
-            reason_compliance = "Sensitive category detected"
-
-        # 2. Financial Controller (Budget & Cashflow)
-        # Rejects if amount > 10k (placeholder for budget check)
-        vote_finance = True
-        reason_finance = "Pass"
-        if amount > 10000:
-            # Simulation: 20% chance to reject purely on "Tight Budget" simulation
-            import random
-
-            if random.random() < 0.2:
-                vote_finance = False
-                reason_finance = "Budget tightening active"
-
-        # 3. Tax Specialist (Deductibility)
-        # Rejects if vendor/category mismatch risk is high
-        vote_tax = True
-        reason_tax = "Pass"
-        if "餐饮" in category and "技术" in vendor:
-            vote_tax = False
-            reason_tax = "Tax risk: Tech vendor issuing food invoice"
-
-        votes = {
-            "Compliance": {"pass": vote_compliance, "reason": reason_compliance},
-            "Finance": {"pass": vote_finance, "reason": reason_finance},
-            "Tax": {"pass": vote_tax, "reason": reason_tax},
-        }
+        votes = {}
+        for name, func in self.personas.items():
+            passed, reason = func(amount, category, vendor)
+            votes[name] = {"pass": passed, "reason": reason}
         return votes
 
     def decide(self, votes):
@@ -171,14 +163,14 @@ class AuditorAgent(AgentBase):
 
         return True
 
-    def _update_audit_result(self, vendor, is_success):
+    def _update_audit_result(self, vendor, is_success, risk_score=0.0, trace_id=None):
         """
-        更新知识库中的审计统计并处理灰度期晋升逻辑 (F3.4.2)
+        [Round 22] 更新审计统计并持久化风险证据，处理灰度晋升逻辑
         """
         try:
             with self.db.transaction("IMMEDIATE") as conn:
+                # 1. 核心状态机更新 (包含 F3.4.2 逻辑)
                 if is_success:
-                    # 连续成功次数 +1，如果达到 3 次且当前为 GRAY，晋升为 STABLE
                     sql = """
                         UPDATE knowledge_base 
                         SET hit_count = hit_count + 1,
@@ -191,7 +183,6 @@ class AuditorAgent(AgentBase):
                         WHERE entity_name = ?
                     """
                 else:
-                    # 失败则重置连续成功数，增加驳回数
                     sql = """
                         UPDATE knowledge_base 
                         SET reject_count = reject_count + 1,
@@ -205,8 +196,19 @@ class AuditorAgent(AgentBase):
                         WHERE entity_name = ?
                     """
                 conn.execute(sql, (vendor,))
+
+                # 2. [Round 22] 持久化审计证据 (evidence_chain_index)
+                if trace_id:
+                    row = conn.execute("SELECT id FROM transactions WHERE trace_id = ?", (trace_id,)).fetchone()
+                    if row:
+                        trans_id = row["id"]
+                        evidence_data = {"risk_score": round(risk_score, 4), "timestamp": self.db.get_now()}
+                        conn.execute(
+                            "INSERT INTO evidence_chain_index (transaction_id, step_name, evidence_type, evidence_data) VALUES (?, ?, ?, ?)",
+                            (trans_id, "FINAL_AUDIT", "RISK_METRICS", json.dumps(evidence_data))
+                        )
         except Exception as e:
-            log.error(f"更新审计状态失败: {e}")
+            log.error(f"审计结果更新失败: {e}")
 
     def _trigger_consensus_audit(self, proposal):
         """
@@ -380,7 +382,7 @@ class AuditorAgent(AgentBase):
         )
 
         # 5. 结果持久化与反馈
-        self._update_audit_result(vendor, is_success=(decision == "APPROVED"))
+        self._update_audit_result(vendor, is_success=(decision == "APPROVED"), risk_score=final_risk, trace_id=trace_id)
 
         result = {
             "decision": decision,

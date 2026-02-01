@@ -177,13 +177,18 @@ class MasterDaemon:
 
             while self.is_running and not should_exit():
                 try:
-                    import psutil
-                    process = psutil.Process(os.getpid())
+                    # [Optimization Round 14] 鲁棒的 psutil 指标获取
+                    process = None
+                    try:
+                        import psutil
+                        process = psutil.Process(os.getpid())
+                    except ImportError:
+                        pass
                     
                     current_time = time.time()
                     metrics = {
-                        "cpu_percent": process.cpu_percent(),
-                        "memory_mb": process.memory_info().rss / 1024 / 1024,
+                        "cpu_percent": process.cpu_percent() if process else 0.0,
+                        "memory_mb": (process.memory_info().rss / 1024 / 1024) if process else 0.0,
                         "threads": threading.active_count()
                     }
 
@@ -193,13 +198,31 @@ class MasterDaemon:
                             # [Optimization 4] 动态 Token 配额与风险感知配额管理
                             # 逻辑：检测单笔平均金额，自动锁定/解锁高阶模型
                             
+                            # [Optimization Round 15] 执行定期知识维护任务 (Knowledge Cleanup)
+                            KnowledgeBridge().cleanup_stale_rules(min_hits=1, days_old=7)
+                            
                             # 执行定期的知识蒸馏自愈任务
-                            from knowledge_bridge import KnowledgeBridge
                             KnowledgeBridge().distill_knowledge()
                             
                             # [Optimization 5] 执行数据库定期自愈维护 (DB Maintenance)
                             self.db.perform_db_maintenance()
                             
+                            # [Optimization Round 11] 实时 ROI 指标持久化与偏差分析 (SRS 4.2)
+                            roi_data = self.db.get_roi_metrics()
+                            if roi_data:
+                                log.info(f"系统效益快报: 已节省 {roi_data.get('human_hours_saved', 0)} 小时 | ROI: {roi_data.get('roi_ratio', 0)}")
+
+                            # [Optimization Round 23] 现金流健康哨兵 (SRS 3.3.3)
+                            try:
+                                from cashflow_predictor import CashflowPredictor
+                                predictor = CashflowPredictor()
+                                cf_report = predictor.predict()
+                                if cf_report.get("is_alarm"):
+                                    log.critical(f"系统主动防御：现金流风险预警！{cf_report.get('status')} | 耗尽点：{cf_report.get('days_until_burnout')}天")
+                                    self.db.log_system_event("CASHFLOW_ALARM", "MasterDaemon", cf_report.get('insight'))
+                            except Exception as ce:
+                                log.error(f"现金流预测失败: {ce}")
+
                             # [Optimization 4] 通知确认重传巡检
                             # 此处为逻辑预留：self.db.retry_pending_notifications()
 

@@ -154,6 +154,15 @@ class AccountingAgent(AgentBase):
         vendor = x.get("vendor", "Unknown")
         trace_id = x.get("trace_id")
 
+        # [Optimization Round 11] L2 级别动态提示词渲染 (Whitepaper 2.5)
+        # 逻辑：对于特定的高风险供应商，注入定制化上下文
+        context_params = {
+            "vendor": vendor,
+            "amount": amount,
+            "text": normalized_text[:50],
+            "trace_id": trace_id
+        }
+        
         # 1. 动态路由预检 (Expert Routing)
         from routing_registry import RoutingRegistry
 

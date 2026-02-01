@@ -29,7 +29,9 @@ class CashflowPredictor:
         current_balance = 100000.0 
         
         # 2. 计算未来 30 天预测
-        total_predicted_out = avg_daily_out * 30 * seasonality_factor + self.fixed_monthly_costs
+        # [Round 23] 考虑待付合同金额
+        future_commitments = self._get_future_commitments_from_db()
+        total_predicted_out = avg_daily_out * 30 * seasonality_factor + self.fixed_monthly_costs + future_commitments
         predicted_balance_30d = current_balance - total_predicted_out
         
         # [Optimization 3] 现金流耗尽点 (Burnout Point) 计算

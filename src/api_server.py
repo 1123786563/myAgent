@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header, status, Depends
 from fastapi.security import APIKeyHeader
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 import uvicorn
@@ -334,6 +334,50 @@ async def feishu_webhook(
 
     return APIResponse(code=0, msg="No action required", trace_id=trace_id)
 
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def get_dashboard(api_key: str = Depends(get_api_key)):
+    """
+    [Optimization Round 10/12/20/21] 增强型可视化仪表盘 (带 ROI 趋势与鉴权)
+    """
+    db = DBHelper()
+    stats = db.get_ledger_stats()
+    roi = db.get_roi_metrics()
+    trend = db.get_roi_weekly_trend()
+    
+    # 格式化 7 天趋势
+    trend_html = " | ".join([f"{t['report_date'][-2:]}日:{t['human_hours_saved']}h" for t in reversed(trend)])
+    
+    rows_html = "".join([
+        f"<tr><td>{s['status']}</td><td>{s['count']}</td><td>￥{s['total_amount'] or 0:,.2f}</td></tr>" 
+        for s in stats
+    ])
+    
+    roi_html = f"""
+    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">💰 效益快报 (ROI)</h2>
+        <p>累计节省人工: <b>{roi.get('human_hours_saved', 0)}</b> 小时</p>
+        <p>今日 Token 支出: <b>${roi.get('token_cost_usd', 0):.4f}</b></p>
+        <p>当前 ROI 系数: <b>{roi.get('roi_ratio', 0)}</b> (1h/$)</p>
+        <p style="font-size: 0.9em; color: #555;"><b>最近 7 天趋势:</b> {trend_html}</p>
+    </div>
+    """
+    
+    html_content = f"""
+    <html>
+        <head><title>LedgerAlpha Dashboard</title></head>
+        <body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+            <h1>🐶 LedgerAlpha 运行看板</h1>
+            {roi_html}
+            <table border="1" style="width: 100%; text-align: left; border-collapse: collapse;">
+                <tr style="background: #f2f2f2;"><th>状态</th><th>笔数</th><th>合计金额</th></tr>
+                {rows_html}
+            </table>
+            <p style="color: #666;">系统版本: v1.3.1 | 最后更新: {datetime.now().strftime('%H:%M:%S')}</p>
+        </body>
+    </html>
+    """
+    return html_content
 
 def start_server(host="0.0.0.0", port=8000):
     log.info(f"启动 API Server @ {host}:{port}")

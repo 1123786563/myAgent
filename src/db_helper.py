@@ -525,12 +525,20 @@ class DBHelper:
         except Exception:
             return 0
 
-    def update_trial_balance(self, category, amount, direction="DEBIT"):
+    def update_trial_balance(self, category, amount, direction=None):
         """
-        [Optimization Round 3] 更新全局试算平衡表
-        direction: DEBIT (借) 或 CREDIT (贷)
+        [Optimization Round 3/16] 更新全局试算平衡表
+        自动识别科目性质并决定借贷方向
         """
         try:
+            # [Round 16] 简单的科目性质映射
+            # 1开头: 资产(借增); 2开头: 负债(贷增); 5开头: 成本(借增); 6开头: 损益(借增费用/贷增收入)
+            if direction is None:
+                if category.startswith("1") or category.startswith("5") or "费用" in category:
+                    direction = "DEBIT"
+                else:
+                    direction = "CREDIT"
+
             with self.transaction("IMMEDIATE") as conn:
                 field = "debit_total" if direction == "DEBIT" else "credit_total"
                 sql = f"""
@@ -572,40 +580,53 @@ class DBHelper:
     def add_transaction_with_chain(self, tags=None, **kwargs):
         """
         [Suggestion 5] 增强区块链式证据链入库
-        逻辑：获取最后一条记录的 chain_hash 作为当前记录的 prev_hash，并计算新的 chain_hash
+        [Optimization Round 12] 集成隐私脱敏与语义去重
         """
         import hashlib
         import json
+        import uuid
+        
+        # 1. 幂等与追踪处理
+        if 'trace_id' not in kwargs or not kwargs['trace_id']:
+            kwargs['trace_id'] = str(uuid.uuid4())
+            
+        # 2. 隐私脱敏 (Re-using logic from add_transaction)
+        from privacy_guard import PrivacyGuard
+        guard = PrivacyGuard(role="DB_WRITER")
+        if 'vendor' in kwargs and kwargs['vendor']:
+            kwargs['vendor'] = guard.desensitize(kwargs['vendor'], context="GENERAL")
         
         try:
             with self.transaction("IMMEDIATE") as conn:
-                # 1. 获取最后一条有效记录的哈希
+                # [Round 7] 语义查重
+                if kwargs.get("amount") and kwargs.get("vendor"):
+                    dup = conn.execute("SELECT id FROM transactions WHERE vendor = ? AND amount = ? AND created_at > datetime('now', '-5 minutes') LIMIT 1", (kwargs["vendor"], kwargs["amount"])).fetchone()
+                    if dup: return None
+
+                # 3. 计算区块链哈希
                 last_row = conn.execute("SELECT chain_hash FROM transactions ORDER BY id DESC LIMIT 1").fetchone()
                 prev_hash = last_row['chain_hash'] if last_row else "0" * 64
-                
-                # 2. 准备基础数据
                 kwargs['prev_hash'] = prev_hash
-                data_to_hash = {
-                    "trace_id": kwargs.get('trace_id'),
-                    "amount": str(kwargs.get('amount')),
-                    "vendor": kwargs.get('vendor'),
-                    "prev_hash": prev_hash
-                }
                 
-                # 3. 计算当前哈希
-                hash_payload = json.dumps(data_to_hash, sort_keys=True).encode()
-                kwargs['chain_hash'] = hashlib.sha256(hash_payload).hexdigest()
+                data_to_hash = {"trace_id": kwargs.get('trace_id'), "amount": str(kwargs.get('amount')), "vendor": kwargs.get('vendor'), "prev_hash": prev_hash}
+                kwargs['chain_hash'] = hashlib.sha256(json.dumps(data_to_hash, sort_keys=True).encode()).hexdigest()
                 
-            # 4. 执行常规入库
-                res = self.add_transaction(**kwargs)
-                if res and tags:
+                # 4. 执行入库
+                fields = ", ".join(kwargs.keys())
+                placeholders = ", ".join(["?"] * len(kwargs))
+                values = tuple(kwargs.values())
+                sql = f"INSERT OR IGNORE INTO transactions ({fields}) VALUES ({placeholders})"
+                cursor = conn.execute(sql, values)
+                trans_id = cursor.lastrowid
+
+                if trans_id and tags:
                     tag_sql = "INSERT INTO transaction_tags (transaction_id, tag_key, tag_value) VALUES (?, ?, ?)"
                     for tag in tags:
-                        conn.execute(tag_sql, (res, tag['key'], tag['value']))
-                return res
+                        conn.execute(tag_sql, (trans_id, tag['key'], tag['value']))
+                return trans_id
         except Exception as e:
             from logger import get_logger
-            get_logger("DB-Chain").error(f"区块链式入库失败: {e}")
+            get_logger("DB-Chain").error(f"链式入库失败: {e}")
             return None
 
     def verify_chain_integrity(self):
@@ -647,48 +668,9 @@ class DBHelper:
         """
         带标签原子化入库 (F3.2.3)
         [Optimization Round 7] 增加语义去重校验 (Semantic Deduplication)
+        [Optimization Round 12] 默认启用区块链哈希链 (SRS 3.2.4)
         """
-        try:
-            import json
-            # 处理 inference_log 序列化
-            if 'inference_log' in kwargs and isinstance(kwargs['inference_log'], dict):
-                kwargs['inference_log'] = json.dumps(kwargs['inference_log'], ensure_ascii=False)
-
-            with self.transaction("IMMEDIATE") as conn:
-                # 语义查重：检查相同商户、金额在最近 5 分钟内是否有记录
-                if kwargs.get("amount") and kwargs.get("vendor"):
-                    check_sql = """
-                        SELECT id FROM transactions 
-                        WHERE vendor = ? AND amount = ? 
-                        AND created_at > datetime('now', '-5 minutes')
-                        LIMIT 1
-                    """
-                    dup = conn.execute(check_sql, (kwargs["vendor"], kwargs["amount"])).fetchone()
-                    if dup:
-                        from logger import get_logger
-                        get_logger("DB").warning(f"检测到语义重复单据，跳过入库: {kwargs['vendor']} - {kwargs['amount']}")
-                        return None
-
-                # 1. 插入主表
-                fields = ", ".join(kwargs.keys())
-                placeholders = ", ".join(["?"] * len(kwargs))
-                values = tuple(kwargs.values())
-                sql = f"INSERT INTO transactions ({fields}) VALUES ({placeholders})"
-                cursor = conn.execute(sql, values)
-                trans_id = cursor.lastrowid
-
-                # 2. 插入标签表
-                if tags and trans_id:
-                    tag_sql = "INSERT INTO transaction_tags (transaction_id, tag_key, tag_value) VALUES (?, ?, ?)"
-                    for tag in tags:
-                        conn.execute(tag_sql, (trans_id, tag['key'], tag['value']))
-                
-                return trans_id
-        except sqlite3.IntegrityError:
-            return None
-        except Exception as e:
-            print(f"入库失败: {e}")
-            return None
+        return self.add_transaction_with_chain(tags=tags, **kwargs)
 
     def add_transaction(self, **kwargs):
         """
@@ -821,9 +803,19 @@ class DBHelper:
             log.error(f"回滚失败: {e}")
             return False
 
-    def get_roi_metrics(self):
+    def get_roi_weekly_trend(self):
         """
-        [Optimization 5] 获取投资回报率指标 (F4.2)
+        [Optimization Round 21] 获取过去 7 天的效益趋势
+        """
+        try:
+            with self.transaction("DEFERRED") as conn:
+                sql = "SELECT report_date, human_hours_saved FROM roi_metrics_history ORDER BY report_date DESC LIMIT 7"
+                rows = conn.execute(sql).fetchall()
+                return [dict(r) for r in rows]
+        except:
+            return []
+        """
+        [Optimization Round 11] 获取投资回报率指标 (F4.2) - 增强持久化逻辑
         """
         try:
             with self.transaction("DEFERRED") as conn:
@@ -832,26 +824,33 @@ class DBHelper:
                 processed_count = row['cnt']
                 
                 # 假设每单节省 5 分钟人工
-                hours_saved = (processed_count * 5) / 60.0
-                token_cost = self.get_daily_token_spend()
+                hours_saved = round((processed_count * 5) / 60.0, 2)
+                
+                # 获取 LLM 实际消耗 (从 TokenBudgetManager 获取，此处为 DB Helper 接口，需通过 Singleton 或注入)
+                from llm_connector import TokenBudgetManager
+                token_stats = TokenBudgetManager().get_stats()
+                token_cost = token_stats.get("daily_cost_usd", 0.0)
+                
                 roi_ratio = round(hours_saved / (token_cost + 0.01), 2)
                 
-                # [Optimization 4] 持久化每日 ROI
+                # 持久化每日 ROI
                 conn.execute('''
-                    INSERT INTO roi_history (metric_date, human_hours_saved, token_cost_usd, roi_ratio)
+                    INSERT INTO roi_metrics_history (report_date, human_hours_saved, token_spend_usd, roi_ratio)
                     VALUES (DATE('now'), ?, ?, ?)
-                    ON CONFLICT(metric_date) DO UPDATE SET
+                    ON CONFLICT(report_date) DO UPDATE SET
                         human_hours_saved = excluded.human_hours_saved,
-                        token_cost_usd = excluded.token_cost_usd,
+                        token_spend_usd = excluded.token_spend_usd,
                         roi_ratio = excluded.roi_ratio
                 ''', (hours_saved, token_cost, roi_ratio))
                 
                 return {
-                    "human_hours_saved": round(hours_saved, 2),
+                    "human_hours_saved": hours_saved,
                     "token_cost_usd": token_cost,
                     "roi_ratio": roi_ratio
                 }
-        except:
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB-ROI").error(f"ROI 计算失败: {e}")
             return {}
 
     def lock_transaction(self, trans_id, owner="GENERIC"):
@@ -905,7 +904,7 @@ class DBHelper:
         sql = """
             SELECT SUM(amount) / ? as avg_out
             FROM transactions 
-            WHERE status = 'AUDITED' 
+            WHERE status IN ('AUDITED', 'POSTED', 'COMPLETED') 
             AND created_at >= date('now', ?)
         """
         try:
@@ -1103,22 +1102,19 @@ class DBHelper:
 
     def perform_db_maintenance(self):
         """
-        [Optimization 5] 数据库定期自愈保养 (DB Maintenance)
+        [Optimization 5/16] 数据库定期自愈保养 (DB Maintenance)
         任务：刷回 WAL、优化查询计划、清理碎片
         """
         try:
-            conn = self._get_conn()
             log = get_logger("DB-Maintenance")
             log.info("启动数据库定期自愈维护任务...")
             
-            # 1. 刷回所有未完成的 WAL 日志
-            conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            # 1. 刷回所有未完成的 WAL 日志 (Round 16: 确保实时性)
+            self.trigger_wal_checkpoint()
             
             # 2. 更新统计信息，优化查询计划
-            conn.execute("ANALYZE")
-            
-            # 3. 在线碎片整理 (建议频率不宜过高)
-            # conn.execute("VACUUM") 
+            with self.transaction("DEFERRED") as conn:
+                conn.execute("ANALYZE")
             
             log.info("数据库维护完成：WAL 已刷回，统计信息已更新。")
             return True

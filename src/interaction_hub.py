@@ -199,6 +199,19 @@ class InteractionHub:
                 from knowledge_bridge import KnowledgeBridge
                 KnowledgeBridge().learn_new_rule(vendor, new_cat, source="MANUAL")
 
+                # [Optimization Round 15/21] 联想修正与自动重审 (HITL Propagation & Re-Audit)
+                with self.db.transaction("IMMEDIATE") as conn:
+                    # 1. 更新所有相同商户的待定记录
+                    prop_sql = "UPDATE transactions SET category = ?, status = 'PENDING_AUDIT' WHERE vendor = ? AND status = 'PENDING'"
+                    res = conn.execute(prop_sql, (new_cat, vendor))
+                    if res.rowcount > 0:
+                        log.info(f"联想修正成功：已同步更新 {res.rowcount} 笔来自 {vendor} 的交易并自动触发重审。")
+                        
+                        # 2. [Round 21] 自动触发这些记录的审计 (模拟内部 Bus 触发)
+                        # 在真实分布式环境中，这里会发送一个 PENDING_AUDIT 消息
+                        # 此处通过日志记录审计介入点
+                        self.db.log_system_event("BATCH_REAUDIT_TRIGGERED", "InteractionHub", f"Triggered re-audit for {res.rowcount} items of {vendor}")
+
             # [Optimization Round 3] 执行入账并更新试算平衡
             with self.db.transaction("IMMEDIATE") as conn:
                 # 获取金额和科目
@@ -207,8 +220,8 @@ class InteractionHub:
                     amt = float(row["amount"])
                     cat = row["category"]
                     conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (transaction_id,))
-                    # 更新全局试算平衡 (简单逻辑：支出增加借方)
-                    self.db.update_trial_balance(cat, amt, direction="DEBIT")
+                    # [Round 16] 自动判定借贷方向
+                    self.db.update_trial_balance(cat, amt)
                     
             log.info(f"交易 {transaction_id} 已确认入账并更新试算平衡表。")
             return True

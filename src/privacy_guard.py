@@ -9,26 +9,22 @@ log = get_logger("PrivacyGuard")
 class PrivacyGuard:
     """
     [Optimization Iteration 3] 增强型隐私保护网关
-    - 增加 LLM 请求前的敏感信息检测与脱敏
-    - 增加邮箱、地址等更多 PII 模式
-    - 增加脱敏审计日志
+    [Optimization Round 14] 性能优化：使用类级正则缓存
     """
+    # 类级预编译正则，避免重复编译
+    _PHONE_PAT = re.compile(r'(1[3-9]\d)(\d{4})(\d{4})')
+    _ID_CARD_PAT = re.compile(r'(\d{4})\d{10,13}(\d{2}[0-9xX])')
+    _BANK_CARD_PAT = re.compile(r'(\d{4})\d{8,11}(\d{4})')
+    _EMAIL_PAT = re.compile(r'([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)')
+    _ADDRESS_PAT = re.compile(r'([\u4e00-\u9fa5]{2,}(?:省|市|区|县|镇|村|路|街|号|栋|单元|室)[\u4e00-\u9fa5\d]{2,})')
 
     def __init__(self, role="GUEST"):
         # 优化点：基于角色的脱敏等级控制
         self.role = role
-        self.phone_pattern = re.compile(r'(1[3-9]\d)(\d{4})(\d{4})')
-        self.id_card_pattern = re.compile(r'(\d{4})\d{10,13}(\d{2}[0-9xX])')
-        self.bank_card_pattern = re.compile(r'(\d{4})\d{8,11}(\d{4})')
-
-        # [Optimization Iteration 3] 新增 PII 模式
-        self.email_pattern = re.compile(r'([a-zA-Z0-9_.+-]+)@([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)')
-        self.address_pattern = re.compile(r'([\u4e00-\u9fa5]{2,}(?:省|市|区|县|镇|村|路|街|号|栋|单元|室)[\u4e00-\u9fa5\d]{2,})')
-        self.amount_pattern = re.compile(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s*(?:元|万|USD|CNY)')
-
         self.mask_char = ConfigManager.get("privacy.mask_char", "*")
         self.custom_keywords = ConfigManager.get("privacy.keywords") or []
         self._update_keyword_pattern()
+        # ... (stats init)
 
         # [Optimization Iteration 3] 脱敏统计
         self._stats = {
@@ -60,35 +56,34 @@ class PrivacyGuard:
     def sanitize_for_llm(self, text: str) -> tuple:
         """
         [Optimization Iteration 3] LLM 请求前的敏感信息脱敏
-        返回 (脱敏后文本, 是否包含敏感信息)
+        [Optimization Round 14] 性能优化：使用类级正则
         """
         if not isinstance(text, str) or not text:
             return text, False
 
-        original = text
         has_sensitive = False
 
         # 1. 脱敏手机号
-        if self.phone_pattern.search(text):
-            text = self.phone_pattern.sub(r'\1****\3', text)
+        if self._PHONE_PAT.search(text):
+            text = self._PHONE_PAT.sub(r'\1****\3', text)
             has_sensitive = True
             self._stats["phone_masked"] += 1
 
         # 2. 脱敏身份证
-        if self.id_card_pattern.search(text):
-            text = self.id_card_pattern.sub(r'\1**********\2', text)
+        if self._ID_CARD_PAT.search(text):
+            text = self._ID_CARD_PAT.sub(r'\1**********\2', text)
             has_sensitive = True
             self._stats["id_masked"] += 1
 
         # 3. 脱敏银行卡
-        if self.bank_card_pattern.search(text):
-            text = self.bank_card_pattern.sub(r'\1********\2', text)
+        if self._BANK_CARD_PAT.search(text):
+            text = self._BANK_CARD_PAT.sub(r'\1********\2', text)
             has_sensitive = True
             self._stats["bank_masked"] += 1
 
         # 4. 脱敏邮箱
-        if self.email_pattern.search(text):
-            text = self.email_pattern.sub(r'\1@***.***', text)
+        if self._EMAIL_PAT.search(text):
+            text = self._EMAIL_PAT.sub(r'\1@***.***', text)
             has_sensitive = True
             self._stats["email_masked"] += 1
 
@@ -161,13 +156,13 @@ class PrivacyGuard:
         
         if is_sensitive_context:
             if self.role == "AUDITOR":
-                new_text = self.phone_pattern.sub(rf"\1{self.mask_char*4}\3", new_text)
-                new_text = self.id_card_pattern.sub(rf"\1{self.mask_char*10}\2", new_text)
-                new_text = self.bank_card_pattern.sub(rf"\1{self.mask_char*8}\2", new_text)
+                new_text = self._PHONE_PAT.sub(rf"\1{self.mask_char*4}\3", new_text)
+                new_text = self._ID_CARD_PAT.sub(rf"\1{self.mask_char*10}\2", new_text)
+                new_text = self._BANK_CARD_PAT.sub(rf"\1{self.mask_char*8}\2", new_text)
             else:
-                new_text = self.phone_pattern.sub("[PHONE_SECRET]", new_text)
-                new_text = self.id_card_pattern.sub("[ID_SECRET]", new_text)
-                new_text = self.bank_card_pattern.sub("[BANK_SECRET]", new_text)
+                new_text = self._PHONE_PAT.sub("[PHONE_SECRET]", new_text)
+                new_text = self._ID_CARD_PAT.sub("[ID_SECRET]", new_text)
+                new_text = self._BANK_CARD_PAT.sub("[BANK_SECRET]", new_text)
         
         # 3. 关键词脱敏
         if self.keyword_pattern:

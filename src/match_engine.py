@@ -36,57 +36,53 @@ class MatchEngine:
             
             shadow, potential_matches = task
             try:
-                for f in potential_matches:
-                    is_match = False
+                best_match = None
+                max_score = 0.0
+                
+                for c in potential_matches:
+                    # 计算匹配分 (使用 MatchStrategy)
+                    score = MatchStrategy.get_fuzzy_ratio(shadow['vendor_keyword'], c['vendor'])
                     
-                    # [Optimization 4] 语义消消乐：金额一致时增强户名语义对齐
-                    v_key = (shadow['vendor_keyword'] or "").lower()
-                    v_target = (f['vendor'] or "").lower()
+                    # [Round 13/18] 状态权重：优先匹配未对账的
+                    if c['status'] != 'MATCHED':
+                        score += 0.1
+                        
+                    if score > self.fuzzy_threshold and score > max_score:
+                        max_score = score
+                        best_match = c
+                
+                if best_match:
+                    log.info(f"消消乐并行匹配成功 (Score: {max_score:.2f}): {shadow['vendor_keyword']} <-> {best_match['vendor']}")
                     
-                    if not v_key:
-                        is_match = True
-                    elif v_key in v_target or v_target in v_key:
-                        is_match = True
-                    else:
-                        # [Optimization 4] 增强型多因子匹配 (Multi-Factor Matching)
-                        # 引入模糊比例计算 + 时间衰减因子
-                        ratio = MatchStrategy.get_fuzzy_ratio(v_key, v_target)
+                    # 异步任务中的写回逻辑
+                    with self.db.transaction("IMMEDIATE") as conn:
+                        # 再次检查冲突
+                        if best_match['status'] == 'MATCHED':
+                            self.db.log_system_event("MATCH_CONFLICT", "MatchEngine", f"Parallel shadow match conflict at {best_match['id']}")
                         
-                        # 计算时间接近度 (天数差)
-                        try:
-                            t_shadow = time.mktime(time.strptime(shadow['created_at'], "%Y-%m-%d %H:%M:%S"))
-                            t_target = time.mktime(time.strptime(f['created_at'], "%Y-%m-%d %H:%M:%S"))
-                            days_diff = abs(t_shadow - t_target) / 86400.0
-                            date_score = max(0, 1.0 - (days_diff / 7.0)) # 7天内线性衰减
-                        except:
-                            date_score = 0.5
-
-                        # 综合评分：语义(70%) + 时间(30%)
-                        final_score = (ratio * 0.7) + (date_score * 0.3)
-                        
-                        if final_score > self.fuzzy_threshold:
-                            is_match = True
-                            log.info(f"多因子匹配成功: {v_key} <-> {v_target} (Score: {final_score:.2f} | DateDiff: {days_diff:.1f}d)")
-                            
-                    if is_match:
-                        shadow['match_result'] = f['id']
-                        break
+                        target_status = 'MATCHED'
+                        if best_match.get('group_id'):
+                            conn.execute("UPDATE transactions SET status = ? WHERE group_id = ?", (target_status, best_match['group_id']))
+                        else:
+                            conn.execute("UPDATE transactions SET status = ? WHERE id = ?", (target_status, best_match['id']))
+                                
+                        conn.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (shadow['id'],))
             except Exception as e:
-                log.error(f"Worker 匹配异常: {e}")
+                log.error(f"Worker 并行匹配异常: {e}")
             finally:
                 self.task_queue.task_done()
 
     def run_matching(self):
         """
         [Optimization 1] 增强多模态逻辑成组匹配 (F3.1.3)
-        实现“消消乐”算法：Bank_Flow (影子) + OCR_Receipt (实体) = Audited_Transaction
-        同时聚合具有相同 group_id 的多模态实物单据。
+        [Optimization Round 13] 增加批量匹配优化与冲突检测
+        [Optimization Round 18] 并行化匹配引擎，使用 Worker 线程池
         """
-        log.info("执行多模态增强对账匹配任务...")
+        log.info("执行多模态并行对账匹配任务...")
         self.db.update_heartbeat("MatchEngine-Master", "ACTIVE")
         
         try:
-            # 1. 逻辑聚合：相同 group_id 的单据自动提升优先级并标记 (Optimization 1)
+            # 1. 逻辑聚合 (保持原有逻辑)
             with self.db.transaction("IMMEDIATE") as conn:
                 conn.execute("""
                     UPDATE transactions 
@@ -94,48 +90,37 @@ class MatchEngine:
                     WHERE group_id IS NOT NULL AND status = 'PENDING'
                     AND group_id IN (SELECT group_id FROM transactions GROUP BY group_id HAVING COUNT(*) > 1)
                 """)
-                
-                # [Optimization 4] 生成多模态资产画像事件
-                sql_grouped = "SELECT group_id, COUNT(*) as cnt FROM transactions WHERE status = 'GROUPED' GROUP BY group_id"
-                groups = conn.execute(sql_grouped).fetchall()
-                for g in groups:
-                    self.db.log_system_event("ASSET_BUNDLE_DETECTED", "MatchEngine", f"Detected Asset Bundle {g['group_id']} with {g['cnt']} images.")
 
-            # 2. 查找所有 PENDING 状态的影子分录
+            # 启动并行的 Worker (如果尚未启动)
+            if not hasattr(self, '_workers_started'):
+                for _ in range(self.worker_count):
+                    t = threading.Thread(target=self._match_worker, daemon=True)
+                    t.start()
+                self._workers_started = True
+
+            # 2. 查找影子分录与潜在匹配项
             with self.db.transaction("DEFERRED") as conn:
                 cursor = conn.execute("SELECT id, amount, vendor_keyword, created_at FROM pending_entries WHERE status = 'PENDING'")
                 shadows = [dict(row) for row in cursor.fetchall()]
-
-            for s in shadows:
-                # 3. 在实体单据中搜索匹配项
-                # 逻辑：金额一致 + 时间窗口（7天内）+ 供应商语义匹配
-                with self.db.transaction("IMMEDIATE") as conn:
+                
+                # 为每一笔流水预加载潜在匹配项以减少锁竞争
+                for s in shadows:
                     cursor = conn.execute("""
-                        SELECT id, vendor, group_id FROM transactions 
-                        WHERE status IN ('PENDING', 'GROUPED') 
+                        SELECT id, vendor, group_id, status FROM transactions 
+                        WHERE status IN ('PENDING', 'GROUPED', 'MATCHED') 
                         AND amount = ? 
                         AND ABS(strftime('%s', ?) - strftime('%s', created_at)) < 604800
                     """, (s['amount'], s['created_at']))
-                    matches = [dict(row) for row in cursor.fetchall()]
+                    candidates = [dict(row) for row in cursor.fetchall()]
                     
-                    for m in matches:
-                        v_key = s['vendor_keyword'].lower()
-                        v_target = m['vendor'].lower()
-                        # 简单的语义匹配
-                        if v_key in v_target or v_target in v_key:
-                            log.info(f"消消乐匹配成功: {s['vendor_keyword']} <-> {m['vendor']} (ID: {m['id']})")
-                            
-                            # 如果匹配项是成组照片的一部分，执行整体聚合逻辑
-                            if m.get('group_id'):
-                                log.info(f"匹配项属于逻辑组 {m['group_id']}，执行整组消消乐...")
-                                conn.execute("UPDATE transactions SET status = 'MATCHED' WHERE group_id = ?", (m['group_id'],))
-                            else:
-                                conn.execute("UPDATE transactions SET status = 'MATCHED' WHERE id = ?", (m['id'],))
-                                
-                            conn.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (s['id'],))
-                            break
+                    # 将任务投入队列
+                    self.task_queue.put((s, candidates))
+
+            # 等待本批次处理完成
+            self.task_queue.join()
+            
         except Exception as e:
-            log.error(f"影子匹配异常: {e}")
+            log.error(f"并行匹配异常: {e}")
 
     def _push_batch_reconcile_card(self, pairs):
         """推送批量对账消消乐卡片 (F3.4.1)"""
@@ -189,7 +174,8 @@ class MatchEngine:
         last_reminder_check = 0
         reminder_interval = 14400 # 每 4 小时一次
         
-        while True:
+        from graceful_exit import should_exit
+        while not should_exit():
             self.run_matching()
             
             now = time.time()

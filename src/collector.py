@@ -179,6 +179,11 @@ class CollectorWorker(threading.Thread):
             return
         log.info(f"正在处理时空关联批次 (Total Size: {len(self.batch_buffer)})")
 
+        # [Optimization Round 17] 错误隔离与目录管理
+        error_dir = os.path.join(os.path.dirname(ConfigManager.get("path.input")), "error")
+        os.makedirs(error_dir, exist_ok=True)
+
+        # ... (Group cluster logic stays the same)
         # [Optimization Round 2] 增强型多模态空间语义聚合 (SRS 3.1.3)
         # 逻辑：结合时间窗口、文件名相似度与内容指纹进行聚类
 
@@ -222,19 +227,18 @@ class CollectorWorker(threading.Thread):
 
         # 4. 执行入库
         for group in groups:
-            # 生成组 ID (SG-时间-特征)
             group_id = f"SG-{int(group[0]['mtime'])}-{hashlib.md5(group[0]['path'].encode()).hexdigest()[:4]}"
-            is_bundle = len(group) > 1
-            
-            if is_bundle:
-                log.info(f"  [多模态聚合] 发现关联单据组 {group_id} (含 {len(group)} 个文件)")
-
             for item in group:
                 path = item["path"]
                 try:
                     if self._should_process(path):
-                        # 注入聚合属性
-                        self._process_file(path, group_id=group_id)
+                        success = self._process_file(path, group_id=group_id)
+                        if not success:
+                            # 隔离损坏文件
+                            target = os.path.join(error_dir, os.path.basename(path))
+                            import shutil
+                            shutil.move(path, target)
+                            log.warning(f"由于解析失败，单据已隔离至 Error 目录: {os.path.basename(path)}")
                     self.task_queue.task_done()
                 except Exception as e:
                     log.error(f"处理缓冲文件失败 {path}: {e}")
@@ -261,7 +265,7 @@ class CollectorWorker(threading.Thread):
 
         time.sleep(0.1)  # 降低资源占用
         if not os.path.exists(file_path):
-            return
+            return True
 
         # [Suggestion 10] 增加文件锁定检查
         try:
@@ -272,11 +276,11 @@ class CollectorWorker(threading.Thread):
                 f"文件正在被写入，跳过本次处理: {file_path}",
                 extra={"trace_id": trace_id},
             )
-            return
+            return True
 
         ext = os.path.splitext(file_path)[1].lower()
         if ext not in self.allowed_exts:
-            return
+            return True
 
         # [Optimization 1] 影子银企直连识别
         if ext in {".csv", ".xlsx"} and any(
@@ -287,10 +291,12 @@ class CollectorWorker(threading.Thread):
                 extra={"trace_id": trace_id},
             )
             self._parse_bank_statement(file_path)
-            return
+            return True
 
-        if os.path.getsize(file_path) < 100:
-            return
+        # [Round 17] 最小文件大小校验
+        if os.path.getsize(file_path) < self.min_file_size:
+            log.warning(f"文件太小 ({os.path.getsize(file_path)}B)，疑为损坏或无效文件: {file_path}")
+            return False
 
         # 优化点：项目维度解析
         tags = []
@@ -301,7 +307,7 @@ class CollectorWorker(threading.Thread):
         # 混合哈希计算
         file_hash = calculate_file_hash(file_path)
         if not file_hash:
-            return
+            return False
 
         # 入库
         res = self.db.add_transaction_with_tags(
@@ -318,6 +324,8 @@ class CollectorWorker(threading.Thread):
                 f"单据入库成功 ID={res} | Group={group_id} | Tags: {tags}",
                 extra={"trace_id": trace_id},
             )
+            return True
+        return False
 
     def _parse_bank_statement(self, file_path):
         """

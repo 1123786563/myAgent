@@ -212,7 +212,7 @@ class OpenAICompatibleLLM(BaseLLM):
 
     def __init__(self):
         self.base_url = ConfigManager.get("llm.base_url", "http://127.0.0.1:8045/v1")
-        self.api_key = ConfigManager.get("llm.api_key", "sk-b175f35fa7c34888a26da2daf42c1bf3")
+        self.api_key = ConfigManager.get("llm.api_key")
         self.model = ConfigManager.get("llm.model", "gemini-3-flash")
         self.max_retries = ConfigManager.get("llm.max_retries", 3)
         self.timeout = ConfigManager.get("llm.timeout", 30)
@@ -353,12 +353,9 @@ class OpenAICompatibleLLM(BaseLLM):
             "confidence": 0.1
         }
 
-    def generate_response(self, prompt: str, system_role: str = "assistant") -> Dict[str, Any]:
+    def generate_response(self, prompt: str, system_role: str = "assistant", context_params: dict = None) -> Dict[str, Any]:
         """
-        调用真实 LLM API 生成分类响应
-        [Optimization Iteration 3] 集成缓存与预算控制
-        [Optimization Iteration 5] 集成分布式追踪
-        [Optimization Round 1] 集成隐私脱敏网关
+        [Optimization Round 20] 增强的 LLM 调用方法，支持动态提示词参数渲染
         """
         trace_id = TraceContext.get_trace_id()
 
@@ -369,9 +366,17 @@ class OpenAICompatibleLLM(BaseLLM):
         if was_masked:
             log.info(f"LLM 请求已脱敏 | TraceID={trace_id}")
 
+        # [Round 20] 动态渲染系统提示词
+        if context_params:
+            sys_prompt = self.prompt_mgr.render_prompt("accounting_classifier", context_params) or self.system_prompt
+        else:
+            sys_prompt = self.system_prompt
+
         # 1. 检查缓存
+        # [Round 20] 缓存键包含系统提示词哈希，确保动态参数变化时缓存正确失效
+        sys_hash = hashlib.md5(sys_prompt.encode()).hexdigest()[:8]
         if self.enable_cache:
-            cached = _response_cache.get(safe_prompt, self.model)
+            cached = _response_cache.get(f"{sys_hash}:{safe_prompt}", self.model)
             if cached:
                 self._budget_manager.record_cache_hit()
                 cached["from_cache"] = True
@@ -398,7 +403,7 @@ class OpenAICompatibleLLM(BaseLLM):
             log.info(f"调用 LLM API: {safe_prompt[:50]}...", extra={"trace_id": trace_id})
 
             messages = [
-                {"role": "system", "content": self.system_prompt},
+                {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": safe_prompt}
             ]
 
@@ -432,7 +437,7 @@ class OpenAICompatibleLLM(BaseLLM):
 
                 # 6. 存入缓存
                 if self.enable_cache:
-                    _response_cache.set(prompt, self.model, response)
+                    _response_cache.set(f"{sys_hash}:{safe_prompt}", self.model, response)
 
                 log.info(
                     f"LLM 响应成功: {response['result']['category']} (Conf: {response['confidence']:.2f}, Latency: {response['latency_ms']}ms)",
@@ -447,7 +452,7 @@ class OpenAICompatibleLLM(BaseLLM):
 
                 # 降级到 Mock 模式
                 log.warning("降级到 Mock 模式进行分类...", extra={"trace_id": trace_id})
-                return MockOpenManusLLM().generate_response(prompt, system_role)
+                return MockOpenManusLLM().generate_response(safe_prompt, system_role)
 
 
 class MockOpenManusLLM(BaseLLM):
