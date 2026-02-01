@@ -132,20 +132,27 @@ class DBTransactions(DBBase):
             return False
 
     def mark_transaction_reverted(self, trans_id, reason="Manual Revert"):
-        """[Iteration 7] 逻辑回撤并联动扣减供应商信任分"""
+        """[Iteration 7/9] 逻辑回撤：联动扣减信任分 + 自动冲销试算平衡"""
         try:
             with self.transaction("IMMEDIATE") as conn:
-                # 1. 获取供应商信息
-                row = conn.execute("SELECT vendor, status FROM transactions WHERE id = ?", (trans_id,)).fetchone()
+                # 1. 获取供应商与科目金额信息
+                row = conn.execute("SELECT vendor, status, category, amount FROM transactions WHERE id = ?", (trans_id,)).fetchone()
                 if not row: return False
                 
                 vendor = row['vendor']
                 old_status = row['status']
+                category = row['category']
+                amount = row['amount']
 
                 # 2. 标记回撤
                 conn.execute("UPDATE transactions SET logical_revert = 1, status = 'REVERTED' WHERE id = ?", (trans_id,))
                 
-                # 3. 联动扣减信任分 (如果之前是 APPROVED)
+                # 3. [Iteration 9] 自动冲销试算平衡
+                if category and amount:
+                    # 反向操作：传入负金额
+                    self.update_trial_balance(category, -amount)
+
+                # 4. 联动扣减信任分 (如果之前是 APPROVED)
                 if old_status in ('AUDITED', 'POSTED', 'COMPLETED'):
                     conn.execute("""
                         UPDATE knowledge_base 
@@ -155,8 +162,7 @@ class DBTransactions(DBBase):
                         WHERE entity_name = ?
                     """, (vendor,))
                 
-                # [Note] log_system_event depends on DBHelper, here we use generic log or assuming context
-                get_logger("DB-Revert").warning(f"ID {trans_id} 已回撤，原因: {reason}")
+                get_logger("DB-Revert").warning(f"ID {trans_id} 已回撤并完成账务冲销，原因: {reason}")
                 return True
         except Exception as e:
             get_logger("DB-Revert").error(f"逻辑回撤失败: {e}")

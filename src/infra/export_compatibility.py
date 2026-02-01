@@ -15,28 +15,39 @@ class QB_SAP_Exporter:
     def to_quickbooks_csv(self, records, filename="qb_import.csv"):
         """
         导出为 QuickBooks (QB) 标准导入格式 (IIF/CSV)
-        参考格式：Date, Transaction Type, Num, Name, Memo, Account, Amount
+        [Iteration 9] 增加多币种支持
         """
+        from core.config_manager import ConfigManager
         target_path = get_path("workspace", filename)
+        usd_rate = ConfigManager.get_float("fx.usd_cny", 7.2) # 默认汇率
+        
         try:
             qb_data = []
             for r in records:
-                # 简单的科目映射逻辑（实际可根据 QB 科目表配置）
                 qb_account = r.get('category', 'Uncategorized Expense')
+                currency = r.get('currency', 'CNY')
+                amount = float(r.get('amount', 0))
                 
+                # 如果记录不是 USD，根据 QB 偏好决定是否转换
+                if currency != 'USD':
+                    amount_in_usd = amount / usd_rate
+                else:
+                    amount_in_usd = amount
+
                 qb_data.append({
                     'Date': r.get('created_at', '').split(' ')[0],
                     'Transaction Type': 'Expense',
                     'Num': r.get('id', ''),
                     'Name': r.get('vendor', 'Unknown'),
-                    'Memo': f"AI-Processed: {r.get('trace_id', '')[:8]}",
+                    'Memo': f"AI-Processed: {r.get('trace_id', '')[:8]} | Orig: {amount} {currency}",
                     'Account': qb_account,
-                    'Amount': -float(r.get('amount', 0)) # 支出通常为负
+                    'Amount': -amount_in_usd,
+                    'Currency': 'USD'
                 })
             
             df = pd.DataFrame(qb_data)
             df.to_csv(target_path, index=False, encoding='utf-8')
-            log.info(f"QuickBooks 格式导出成功: {target_path}")
+            log.info(f"QuickBooks 多币种格式导出成功: {target_path}")
             return target_path
         except Exception as e:
             log.error(f"QuickBooks 导出失败: {e}")
