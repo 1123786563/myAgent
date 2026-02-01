@@ -31,8 +31,11 @@ from auth.routes.role_routes import router as role_router
 from api.ui_routes import router as ui_router
 from accounting.accounting_routes import router as accounting_router
 from accounting.reports_routes import router as reports_router
+from accounting.reconciliation_routes import router as reconciliation_router
+from accounting.workflow_routes import router as workflow_router
 from invoice.invoice_routes import router as invoice_router
 from auth.middleware.rate_limit_middleware import RateLimitMiddleware
+from auth.middleware.audit_middleware import AuditMiddleware
 from sqlalchemy import text, func
 
 log = get_logger("APIServer")
@@ -47,6 +50,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 审计中间件 (在限流之前，记录所有重要操作)
+app.add_middleware(AuditMiddleware)
+
 # 限流中间件
 app.add_middleware(RateLimitMiddleware)
 
@@ -60,6 +66,8 @@ app.include_router(ui_router, prefix="/api/v1/ui", tags=["ui"])
 app.include_router(accounting_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
 app.include_router(invoice_router, prefix="/api/v1")
+app.include_router(reconciliation_router, prefix="/api/v1")
+app.include_router(workflow_router, prefix="/api/v1")
 
 # Mount Static UI
 os.makedirs("src/web/static", exist_ok=True)
