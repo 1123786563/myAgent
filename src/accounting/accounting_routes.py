@@ -95,6 +95,11 @@ class TrialBalanceRow(BaseModel):
     is_balanced: Optional[bool] = None
 
 
+class PeriodCloseRequest(BaseModel):
+    year: int
+    month: int
+
+
 # ==================== 科目管理 ====================
 
 @router.post("/accounts/init-standard", status_code=status.HTTP_201_CREATED)
@@ -345,3 +350,49 @@ async def get_trial_balance(
         year=year,
         month=month
     )
+
+
+# ==================== 期末处理 ====================
+
+@router.post("/periods/generate-pl-transfer")
+async def generate_pl_transfer(
+    request_data: PeriodCloseRequest,
+    current_user: CurrentUser = Depends(require_permission("transactions:create"))
+):
+    """自动生成损益结转凭证"""
+    service = get_accounting_service()
+    voucher, error = service.generate_pl_transfer_voucher(
+        organization_id=current_user.organization_id,
+        year=request_data.year,
+        month=request_data.month,
+        user_id=current_user.user_id
+    )
+
+    if error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    return {
+        "message": "损益结转凭证已生成",
+        "voucher_id": voucher.id,
+        "voucher_number": voucher.voucher_number
+    }
+
+
+@router.post("/periods/close")
+async def close_period(
+    request_data: PeriodCloseRequest,
+    current_user: CurrentUser = Depends(require_permission("system_config:manage"))
+):
+    """结账 (锁定期间)"""
+    service = get_accounting_service()
+    success, error = service.close_period(
+        organization_id=current_user.organization_id,
+        year=request_data.year,
+        month=request_data.month,
+        user_id=current_user.user_id
+    )
+
+    if not success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error)
+
+    return {"message": f"{request_data.year}年{request_data.month}月 结账成功"}

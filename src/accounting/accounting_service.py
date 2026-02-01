@@ -256,27 +256,36 @@ class AccountingService:
         Args:
             items: [{"account_code": "1001", "direction": "DEBIT", "amount": 100.00, "summary": "..."}]
         """
-        # 验证借贷平衡
-        total_debit = Decimal('0')
-        total_credit = Decimal('0')
-
-        for item in items:
-            amount = Decimal(str(item.get("amount", 0)))
-            if item.get("direction") == "DEBIT":
-                total_debit += amount
-            else:
-                total_credit += amount
-
-        if total_debit != total_credit:
-            return None, f"借贷不平衡: 借方 {total_debit}, 贷方 {total_credit}"
-
-        if total_debit == 0:
-            return None, "凭证金额不能为零"
-
         with self.db.transaction() as session:
-            # 获取当前期间
+            # 检查期间是否已结账
             year = voucher_date.year
             month = voucher_date.month
+
+            period = session.query(AccountingPeriod).filter_by(
+                organization_id=organization_id,
+                year=year,
+                month=month
+            ).first()
+
+            if period and period.is_closed:
+                return None, f"期间 {year}年{month}月 已结账，不能新增凭证"
+
+            # 验证借贷平衡
+            total_debit = Decimal('0')
+            total_credit = Decimal('0')
+
+            for item in items:
+                amount = Decimal(str(item.get("amount", 0)))
+                if item.get("direction") == "DEBIT":
+                    total_debit += amount
+                else:
+                    total_credit += amount
+
+            if total_debit != total_credit:
+                return None, f"借贷不平衡: 借方 {total_debit}, 贷方 {total_credit}"
+
+            if total_debit == 0:
+                return None, "凭证金额不能为零"
 
             # 获取凭证号
             max_number = session.query(Voucher).filter_by(
@@ -341,6 +350,146 @@ class AccountingService:
             )
 
             return voucher, None
+
+    def close_period(
+        self,
+        organization_id: int,
+        year: int,
+        month: int,
+        user_id: int
+    ) -> Tuple[bool, Optional[str]]:
+        """结账 (锁定期间)"""
+        with self.db.transaction() as session:
+            # 1. 检查是否存在未过账凭证
+            unposted = session.query(Voucher).filter_by(
+                organization_id=organization_id,
+                year=year,
+                month=month
+            ).filter(Voucher.status != "POSTED").first()
+
+            if unposted:
+                return False, f"期间存在未过账凭证 (No.{unposted.voucher_number})，请先过账或删除"
+
+            # 2. 检查试算平衡
+            balances = self.get_trial_balance(organization_id, year, month)
+            last_row = balances[-1]
+            if not last_row.get("is_balanced", False):
+                return False, "试算不平衡，无法结账"
+
+            # 3. 锁定期间
+            period = session.query(AccountingPeriod).filter_by(
+                organization_id=organization_id,
+                year=year,
+                month=month
+            ).first()
+
+            if not period:
+                # 自动补全期间记录
+                period = AccountingPeriod(
+                    organization_id=organization_id,
+                    year=year,
+                    month=month,
+                    start_date=datetime(year, month, 1),
+                    end_date=datetime(year, month, 28), # 简化处理
+                    is_closed=True,
+                    closed_at=datetime.utcnow(),
+                    closed_by=user_id
+                )
+                session.add(period)
+            else:
+                period.is_closed = True
+                period.closed_at = datetime.utcnow()
+                period.closed_by = user_id
+
+            AuditService.log(
+                action="period.close",
+                user_id=user_id,
+                organization_id=organization_id,
+                new_values={"year": year, "month": month}
+            )
+            return True, None
+
+    def generate_pl_transfer_voucher(
+        self,
+        organization_id: int,
+        year: int,
+        month: int,
+        user_id: int
+    ) -> Tuple[Optional[Voucher], Optional[str]]:
+        """自动生成损益结转凭证"""
+        with self.db.transaction() as session:
+            # 获取所有损益类科目 (REVENUE, EXPENSE)
+            pl_accounts = session.query(Account).filter(
+                Account.organization_id == organization_id,
+                Account.account_type.in_([AccountType.REVENUE, AccountType.EXPENSE]),
+                Account.is_leaf == True
+            ).all()
+
+            transfer_items = []
+            total_profit = Decimal('0')
+
+            for acc in pl_accounts:
+                # 获取该期间的本期发生额 (净额)
+                balance = session.query(AccountBalance).filter_by(
+                    organization_id=organization_id,
+                    account_id=acc.id,
+                    year=year,
+                    month=month
+                ).first()
+
+                if not balance:
+                    continue
+
+                # 计算需要结转的金额 (余额冲平)
+                # 余额 = (期初 + 借) - (贷) if 借方科目
+                # 结转方向应与科目方向相反
+                period_net = (balance.period_debit or Decimal('0')) - (balance.period_credit or Decimal('0'))
+
+                if period_net == 0:
+                    continue
+
+                # 结转分录：反向冲平
+                direction = BalanceDirection.CREDIT if period_net > 0 else BalanceDirection.DEBIT
+                transfer_items.append({
+                    "account_code": acc.code,
+                    "direction": direction.value,
+                    "amount": abs(period_net),
+                    "summary": f"结转{acc.name}"
+                })
+
+                # 累积对本年利润的影响
+                total_profit += period_net
+
+            if not transfer_items:
+                return None, "当前期间无损益发生，无需结转"
+
+            # 对应分录：转入本年利润 (3103)
+            profit_acc = session.query(Account).filter_by(
+                organization_id=organization_id,
+                code="3103"
+            ).first()
+
+            if not profit_acc:
+                return None, "未找到 '本年利润(3103)' 科目，请先初始化科目表"
+
+            transfer_items.append({
+                "account_code": profit_acc.code,
+                "direction": BalanceDirection.CREDIT.value if total_profit > 0 else BalanceDirection.DEBIT.value,
+                "amount": abs(total_profit),
+                "summary": f"{year}年{month}月损益结转"
+            })
+
+            # 调用现有逻辑创建凭证
+            voucher, error = self.create_voucher(
+                organization_id=organization_id,
+                voucher_date=datetime(year, month, 28), # 月末
+                items=transfer_items,
+                summary="自动结转损益",
+                voucher_type="转",
+                user_id=user_id
+            )
+
+            return voucher, error
 
     def post_voucher(
         self,
