@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer, StatisticCard } from '@ant-design/pro-components';
-import { Row, Col, Card, Typography, Space, Badge, message, ConfigProvider, theme, Drawer, Button } from 'antd';
+import { Row, Col, Card, Typography, Space, Badge, message, ConfigProvider, theme, Drawer, Button, Switch } from 'antd';
 import {
   LineChartOutlined,
   AccountBookOutlined,
@@ -24,6 +24,7 @@ const Dashboard = () => {
   const [chartData, setChartData] = useState([]);
   const [selectedAction, setSelectedAction] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [showForecast, setShowForecast] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,6 +36,7 @@ const Dashboard = () => {
         setData({
           metrics: metricsRes.metrics || { balance: 0, pending_vouchers: 0, matched_invoices: 0, health_score: 0 },
           actions: [
+            // ... (keep existing actions)
             {
               id: 1,
               title: '对账差异提醒',
@@ -68,7 +70,24 @@ const Dashboard = () => {
           ]
         });
 
-        setChartData(chartRes.data || []);
+        // Mock chart data generation to support forecast
+        const baseData = chartRes.data || [];
+        // If forecast is enabled, we append mock future data
+        if (showForecast) {
+           const lastDate = new Date();
+           const forecastData = [];
+           for(let i=1; i<=5; i++) {
+             const d = new Date(lastDate);
+             d.setDate(d.getDate() + i);
+             const dateStr = d.toISOString().split('T')[0];
+             forecastData.push({ date: dateStr, value: 5000 + Math.random() * 2000, category: '预测收入' });
+             forecastData.push({ date: dateStr, value: 3000 + Math.random() * 1000, category: '预测支出' });
+           }
+           setChartData([...baseData, ...forecastData]);
+        } else {
+           setChartData(baseData);
+        }
+
       } catch (error) {
         console.error("Dashboard fetch error", error);
         message.error("获取看板数据失败");
@@ -77,7 +96,7 @@ const Dashboard = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [showForecast]);
 
   const handleViewReasoning = (action) => {
     setSelectedAction(action);
@@ -253,6 +272,17 @@ const Dashboard = () => {
 
               <Card
                 title={<span style={{ color: '#fff', fontWeight: 600 }}>收支趋势 (最近 14 天)</span>}
+                extra={
+                  <Space>
+                    <Text style={{ color: 'rgba(255,255,255,0.45)', fontSize: '12px' }}>显示 AI 预测</Text>
+                    <Switch 
+                      checked={showForecast} 
+                      onChange={(v) => setShowForecast(v)} 
+                      size="small" 
+                      style={{ background: showForecast ? '#7c3aed' : 'rgba(255,255,255,0.2)' }}
+                    />
+                  </Space>
+                }
                 className="glass-card"
                 style={{ marginTop: 24 }}
                 bodyStyle={{ padding: '24px' }}
