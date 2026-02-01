@@ -30,7 +30,11 @@ load_dotenv()
 Base = declarative_base()
 
 
-class AccountingCategoryEmbedding(Base):
+class TenantMixin:
+    tenant_id = Column(String(50), nullable=False, index=True)
+
+
+class AccountingCategoryEmbedding(TenantMixin, Base):
     """
     [Optimization] Vector store for semantic accounting classification
     """
@@ -78,7 +82,7 @@ class SystemEvent(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
-class Transaction(Base):
+class Transaction(TenantMixin, Base):
     __tablename__ = "transactions"
     id = Column(Integer, primary_key=True, autoincrement=True)
     status = Column(String)
@@ -99,7 +103,7 @@ class Transaction(Base):
     tags = relationship("TransactionTag", back_populates="transaction")
 
 
-class TransactionTag(Base):
+class TransactionTag(TenantMixin, Base):
     __tablename__ = "transaction_tags"
     id = Column(Integer, primary_key=True, autoincrement=True)
     transaction_id = Column(Integer, ForeignKey("transactions.id"))
@@ -108,7 +112,7 @@ class TransactionTag(Base):
     transaction = relationship("Transaction", back_populates="tags")
 
 
-class PendingEntry(Base):
+class PendingEntry(TenantMixin, Base):
     __tablename__ = "pending_entries"
     id = Column(Integer, primary_key=True, autoincrement=True)
     amount = Column(Numeric(10, 2))
@@ -117,7 +121,7 @@ class PendingEntry(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
-class TrialBalance(Base):
+class TrialBalance(TenantMixin, Base):
     __tablename__ = "trial_balance"
     account_code = Column(String, primary_key=True)
     debit_total = Column(Numeric(15, 2), default=0)
@@ -125,7 +129,7 @@ class TrialBalance(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
-class ROIMetricsHistory(Base):
+class ROIMetricsHistory(TenantMixin, Base):
     __tablename__ = "roi_metrics_history"
     report_date = Column(Date, primary_key=True)
     human_hours_saved = Column(Numeric(10, 2))
@@ -133,7 +137,7 @@ class ROIMetricsHistory(Base):
     roi_ratio = Column(Numeric(10, 2))
 
 
-class KnowledgeBase(Base):
+class KnowledgeBase(TenantMixin, Base):
     __tablename__ = "knowledge_base"
     id = Column(Integer, primary_key=True, autoincrement=True)
     entity_name = Column(String, unique=True)
@@ -147,11 +151,13 @@ class KnowledgeBase(Base):
 
 
 # Database configuration
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT", "5432")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "postgres")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "postgres")
-POSTGRES_DBNAME = os.getenv("POSTGRES_DBNAME", "ledger_alpha")
+from core.config_manager import ConfigManager
+
+POSTGRES_HOST = ConfigManager.get_str("db.host", "localhost")
+POSTGRES_PORT = ConfigManager.get("db.port", 5432)
+POSTGRES_USER = ConfigManager.get_str("db.user", "postgres")
+POSTGRES_PASSWORD = ConfigManager.get_str("db.password", "postgres")
+POSTGRES_DBNAME = ConfigManager.get_str("db.name", "ledger_alpha")
 
 DATABASE_URL = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DBNAME}"
 

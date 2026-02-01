@@ -16,7 +16,6 @@ class ConfigSchema:
     """
     SCHEMA: Dict[str, Type] = {
         # 路径配置
-        "path.db": str,
         "path.logs": str,
         "path.input": str,
         "path.rules": str,
@@ -42,6 +41,11 @@ class ConfigSchema:
         "threshold.price_outlier_factor": float,
 
         # 数据库配置
+        "db.host": str,
+        "db.port": (int, str),
+        "db.user": str,
+        "db.password": str,
+        "db.name": str,
         "db.retry_count": int,
         "db.retry_delay": float,
         "db.busy_timeout": int,
@@ -141,7 +145,6 @@ class ConfigManager:
             # 2. 默认配置
             defaults = {
                 "path": {
-                    "db": get_path("ledger_alpha.db"),
                     "logs": get_path("logs"),
                     "input": get_path("workspace", "input"),
                     "rules": get_path("src", "accounting_rules.yaml"),
@@ -152,7 +155,16 @@ class ConfigManager:
                     "retry_backoff_base": 2,
                     "health_timeout": 60
                 },
-                "threshold": {"confidence_high": 0.95}
+                "threshold": {"confidence_high": 0.95},
+                "db": {
+                    "host": "localhost",
+                    "port": 5432,
+                    "user": "postgres",
+                    "password": "password",
+                    "name": "ledger_alpha",
+                    "retry_count": 5,
+                    "retry_delay": 0.1
+                }
             }
 
             # 3. 加载用户配置
@@ -200,7 +212,7 @@ class ConfigManager:
         # LEDGER_PATH_DB -> path.db
         parts = env_key[7:].lower().split('_')
         curr = config
-        
+
         # 特殊处理 IM_FEISHU_WEBHOOK_URL 这样的配置
         if len(parts) >= 3 and parts[0] == 'im' and parts[1] == 'feishu':
             # 处理 im.feishu.webhook_url

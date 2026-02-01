@@ -3,10 +3,33 @@ import time
 from contextlib import contextmanager
 from core.config_manager import ConfigManager
 from core.db_metrics import DBMetrics
-from core.db_models import SessionLocal, engine, Base
+from core.db_models import SessionLocal, engine, Base, TenantMixin
+from auth.tenant_context import get_tenant_id
 from infra.logger import get_logger
+from sqlalchemy import text, event
+from sqlalchemy.orm import Query
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import text
+
+@event.listens_for(Query, "before_compile", retval=True)
+def before_compile_tenant_filter(query):
+    """
+    自动注入租户过滤条件的事件监听器。
+    如果当前上下文中有 tenant_id，且查询涉及继承自 TenantMixin 的模型，
+    则自动添加 WHERE tenant_id = :tenant_id 条件。
+    """
+    tenant_id = get_tenant_id()
+    if not tenant_id:
+        return query
+
+    # 遍历查询涉及的所有实体
+    for desc in query.column_descriptions:
+        entity = desc.entity
+        # 检查实体是否继承自 TenantMixin
+        if entity and isinstance(entity, type) and issubclass(entity, TenantMixin):
+            # 自动注入过滤条件
+            query = query.filter(entity.tenant_id == tenant_id)
+
+    return query
 
 class DBBase:
     """

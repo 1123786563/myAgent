@@ -36,6 +36,7 @@ from accounting.workflow_routes import router as workflow_router
 from invoice.invoice_routes import router as invoice_router
 from auth.middleware.rate_limit_middleware import RateLimitMiddleware
 from auth.middleware.audit_middleware import AuditMiddleware
+from auth.middleware.tenant_middleware import TenantMiddleware
 from sqlalchemy import text, func
 
 log = get_logger("APIServer")
@@ -49,6 +50,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 租户上下文中间件 (最先执行，建立租户环境)
+app.add_middleware(TenantMiddleware)
 
 # 审计中间件 (在限流之前，记录所有重要操作)
 app.add_middleware(AuditMiddleware)
