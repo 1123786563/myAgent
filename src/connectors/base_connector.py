@@ -1,7 +1,7 @@
 import abc
 import time
 from typing import List, Dict, Any
-from logger import get_logger
+from infra.logger import get_logger
 from retry_utils import exponential_backoff
 
 log = get_logger("BaseConnector")

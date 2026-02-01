@@ -2,7 +2,7 @@ import time
 import functools
 import hashlib
 import os
-from logger import get_logger
+from infra.logger import get_logger
 
 log = get_logger("Utils")
 
@@ -41,12 +41,12 @@ def trace_propagator(func):
     """
     import threading
     # 注意：logger 模块可能尚未完全加载其 threading.local，此处直接引用逻辑
-    from logger import _context_data
+    from infra.logger import _context_data
     trace_id = getattr(_context_data, 'trace_id', 'Global')
     
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        from logger import log_context
+        from infra.logger import log_context
         with log_context(trace_id):
             return func(*args, **kwargs)
     return wrapper

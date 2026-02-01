@@ -9,11 +9,11 @@ import json
 import hashlib
 import hmac
 from datetime import datetime
-from logger import get_logger
-from interaction_hub import InteractionHub
-from db_helper import DBHelper
-from config_manager import ConfigManager
-from trace_context import TraceContext
+from infra.logger import get_logger
+from api.interaction_hub import InteractionHub
+from core.db_helper import DBHelper
+from core.config_manager import ConfigManager
+from infra.trace_context import TraceContext
 
 log = get_logger("APIServer")
 app = FastAPI(
@@ -162,7 +162,7 @@ async def trace_middleware(request: Request, call_next):
 
 
 class WebhookPayload(BaseModel):
-    """适配飞书/Slack 的通用 Webhook 结构"""
+    """适配飞书/Slack 的通用 Webhook structure"""
     uuid: Optional[str] = None
     token: Optional[str] = None
     challenge: Optional[str] = None
@@ -239,8 +239,8 @@ async def get_metrics_summary(api_key: str = Depends(get_api_key)):
     trace_id = TraceContext.get_trace_id()
     with TraceContext.start_span("get_metrics_summary"):
         try:
-            from metrics_exporter import MetricsCollector
-            from llm_connector import TokenBudgetManager
+            from infra.metrics_exporter import MetricsCollector
+            from infra.llm_connector import TokenBudgetManager
 
             collector = MetricsCollector()
             budget_mgr = TokenBudgetManager()
@@ -338,7 +338,7 @@ async def feishu_webhook(
 @app.get("/dashboard", response_class=HTMLResponse)
 async def get_dashboard(api_key: str = Depends(get_api_key)):
     """
-    [Optimization Round 10/12/20/21/24/36/39/41/44/45] 增强型可视化仪表盘
+    [Optimization Round 10/12/20/21/24/36/39/41/44/45/51] 增强型可视化仪表盘
     """
     db = DBHelper()
     stats = db.get_ledger_stats()
@@ -361,7 +361,12 @@ async def get_dashboard(api_key: str = Depends(get_api_key)):
         recent_tx = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE created_at > datetime('now', '-1 hour')").fetchone()['cnt']
     
     # 1. 效益快报
-    trend_html = " | ".join([f"{t['report_date'][-2:]}日: {t['human_hours_saved']:.1f}h" for t in trend])
+    # [Round 51] 修复日期对象不可切片问题
+    def format_date(d):
+        if hasattr(d, 'day'): return f"{d.day:02d}"
+        return str(d)[-2:]
+    
+    trend_html = " | ".join([f"{format_date(t['report_date'] if isinstance(t, dict) else t)}日: {t['human_hours_saved'] if isinstance(t, dict) else 0:.1f}h" for t in trend])
     
     roi_html = f"""
     <div class="card" style="border-left: 5px solid #2196F3;">
@@ -383,14 +388,6 @@ async def get_dashboard(api_key: str = Depends(get_api_key)):
         </p>
     </div>
     """
-    
-    # ...
-    
-    # ...
-    
-    # ...
-    
-    # ...
     
     # 2. 状态统计 (Round 36: 友好状态显示)
     rows_html = "".join([

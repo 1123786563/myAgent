@@ -1,6 +1,6 @@
 import logging
 import json
-from privacy_guard import PrivacyGuard
+from infra.privacy_guard import PrivacyGuard
 
 class PrivacyFilter(logging.Filter):
     """

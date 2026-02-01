@@ -8,8 +8,8 @@ import time
 import threading
 from typing import Dict, Any, List
 from http.server import HTTPServer, BaseHTTPRequestHandler
-from logger import get_logger
-from config_manager import ConfigManager
+from infra.logger import get_logger
+from core.config_manager import ConfigManager
 
 log = get_logger("MetricsExporter")
 
@@ -78,7 +78,7 @@ class MetricsCollector:
     def collect_db_metrics(self):
         """收集数据库指标"""
         try:
-            from db_helper import DBHelper, DBMetrics
+            from core.db_helper import DBHelper, DBMetrics
             stats = DBMetrics.get_stats()
 
             self.gauge_set("ledger_db_transactions_total", stats.get("total_transactions", 0))
@@ -95,7 +95,7 @@ class MetricsCollector:
     def collect_llm_metrics(self):
         """收集 LLM 指标"""
         try:
-            from llm_connector import TokenBudgetManager
+            from infra.llm_connector import TokenBudgetManager
             stats = TokenBudgetManager().get_stats()
 
             self.gauge_set("ledger_llm_daily_tokens", stats.get("daily_tokens", 0))
@@ -111,7 +111,7 @@ class MetricsCollector:
     def collect_trace_metrics(self):
         """收集追踪指标"""
         try:
-            from trace_context import TraceContext
+            from infra.trace_context import TraceContext
             stats = TraceContext.get_stats()
 
             self.gauge_set("ledger_traces_created", stats.get("traces_created", 0))

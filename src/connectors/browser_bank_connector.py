@@ -1,5 +1,5 @@
 from connectors.base_connector import BaseConnector
-from logger import get_logger
+from infra.logger import get_logger
 import time
 import random
 

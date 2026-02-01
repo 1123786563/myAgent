@@ -4,8 +4,8 @@ import os
 import hashlib
 import re
 import difflib
-from db_helper import DBHelper
-from logger import get_logger
+from core.db_helper import DBHelper
+from infra.logger import get_logger
 
 log = get_logger("KnowledgeBridge")
 
@@ -30,7 +30,7 @@ class DTPResponse:
 
 class KnowledgeBridge:
     def __init__(self, rules_path=None):
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
 
         self.rules_path = rules_path or ConfigManager.get("path.rules")
         self.db = DBHelper()

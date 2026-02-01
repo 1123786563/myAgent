@@ -7739,3 +7739,67 @@ sqlite3.OperationalError: disk I/O error
 2026-02-01 14:25:34,029 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
 2026-02-01 14:26:34,095 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
 2026-02-01 14:27:34,256 [Global] - DB - ERROR - WAL 检查点执行失败: cannot access local variable 'get_logger' where it is not associated with a value
+2026-02-01 14:33:50,557 [Global] - DB-ROI - ERROR - ROI 计算最终态失败: No module named 'core'
+2026-02-01 14:33:50,558 [N/A] - APIServer - ERROR - 未处理异常: 'datetime.date' object is not subscriptable
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/base.py", line 191, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+                                   ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 162, in __exit__
+    self.gen.throw(value)
+    ~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/base.py", line 193, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/api/api_server.py", line 149, in trace_middleware
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/base.py", line 168, in call_next
+    raise app_exc from app_exc.__cause__ or app_exc.__context__
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/fastapi/routing.py", line 115, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/fastapi/routing.py", line 101, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/fastapi/routing.py", line 355, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+    )
+    ^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/fastapi/routing.py", line 243, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/api/api_server.py", line 364, in get_dashboard
+    trend_html = " | ".join([f"{t['report_date'][-2:]}日: {t['human_hours_saved']:.1f}h" for t in trend])
+                                ~~~~~~~~~~~~~~~~^^^^^
+TypeError: 'datetime.date' object is not subscriptable
+2026-02-01 14:35:46,197 [Global] - DB-ROI - ERROR - ROI 计算最终态失败: No module named 'core'
+2026-02-01 14:37:12,813 [Global] - MasterDaemon - ERROR - 系统已在运行 (PID: 15199)，请勿重复启动！
+2026-02-01 14:42:46,706 [Global] - MasterDaemon - ERROR - 系统已在运行 (PID: 15624)，请勿重复启动！
+2026-02-01 14:43:50,844 [Global] - DB-ROI - ERROR - ROI 计算最终态失败: No module named 'core'
+2026-02-01 14:52:49,290 [Global] - MasterDaemon - ERROR - 系统已在运行 (PID: 16009)，请勿重复启动！

@@ -2,7 +2,7 @@ import signal
 import sys
 import time
 import threading
-from logger import get_logger
+from infra.logger import get_logger
 
 log = get_logger("GracefulExit")
 

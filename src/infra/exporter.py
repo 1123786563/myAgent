@@ -3,9 +3,9 @@ import json
 import os
 import uuid
 import threading
-from project_paths import get_path
-from logger import get_logger
-from db_helper import DBHelper
+from utils.project_paths import get_path
+from infra.logger import get_logger
+from core.db_helper import DBHelper
 
 log = get_logger("Exporter")
 
@@ -59,7 +59,7 @@ class FinancialExporter:
             count = len(records)
             
             # 1. 动态接入现金流预测
-            from cashflow_predictor import CashflowPredictor
+            from engine.cashflow_predictor import CashflowPredictor
             prediction = CashflowPredictor().predict()
 
             # 2. 动态接入 ROI 指标
@@ -143,7 +143,7 @@ class FinancialExporter:
     def _audit_start(self, export_id, filename, count):
         """记录导出审计开始"""
         # [Optimization 4] 导出前自动创建数据快照
-        from db_helper import DBHelper
+        from core.db_helper import DBHelper
         DBHelper().create_ledger_snapshot(tag=f"EXPORT_{export_id[:8]}")
         
         try:

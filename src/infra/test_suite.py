@@ -35,13 +35,13 @@ sys.modules["agentscope.message"] = mock_as.message
 # 确保能加载 src 模块
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
 
-from privacy_guard import PrivacyGuard
-from config_manager import ConfigManager
-from accounting_agent import AccountingAgent, RecoveryWorker
-from match_engine import MatchEngine
-from db_helper import DBHelper
-from sentinel_agent import SentinelAgent
-from collector import CollectorWorker
+from infra.privacy_guard import PrivacyGuard
+from core.config_manager import ConfigManager
+from agents.accounting_agent import AccountingAgent, RecoveryWorker
+from engine.match_engine import MatchEngine
+from core.db_helper import DBHelper
+from agents.sentinel_agent import SentinelAgent
+from engine.collector import CollectorWorker
 import queue
 
 class TestLedgerAlpha(unittest.TestCase):

@@ -1,7 +1,7 @@
-from bus_init import LedgerMsg
+from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
-from logger import get_logger
-from db_helper import DBHelper
+from infra.logger import get_logger
+from core.db_helper import DBHelper
 import json
 
 log = get_logger("SentinelAgent")
@@ -16,7 +16,7 @@ class SentinelAgent(AgentBase):
     def __init__(self, name):
         super().__init__()
         self.name = name
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
 
         self.db = DBHelper()
         # [Suggestion 1] 加载动态阈值

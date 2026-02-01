@@ -7,10 +7,10 @@ import hashlib
 import threading
 import re
 from typing import Optional, Tuple, Dict, Any
-from logger import get_logger
-from project_paths import get_path
-from config_manager import ConfigManager
-from trace_context import TraceContext
+from infra.logger import get_logger
+from utils.project_paths import get_path
+from core.config_manager import ConfigManager
+from infra.trace_context import TraceContext
 
 log = get_logger("LLMConnector")
 
@@ -87,7 +87,7 @@ class TokenBudgetManager:
         try:
             # 引入更严谨的模型名探测
             if not hasattr(self, '_last_rate') or random.random() < 0.01:
-                from config_manager import ConfigManager
+                from core.config_manager import ConfigManager
                 model_name = str(ConfigManager.get("llm.model", "default")).lower()
                 
                 price_map = {
@@ -263,7 +263,7 @@ class OpenAICompatibleLLM(BaseLLM):
         self._init_client()
 
         # [Optimization Round 4] 使用外部 Prompt 管理器
-        from prompt_manager import PromptManager
+        from infra.prompt_manager import PromptManager
         self.prompt_mgr = PromptManager()
         self.system_prompt = self.prompt_mgr.get_prompt("accounting_classifier") or "Default Prompt"
 
@@ -294,7 +294,7 @@ class OpenAICompatibleLLM(BaseLLM):
         trace_id = TraceContext.get_trace_id()
         
         # 初始化强制代理
-        from proxy_actor import ProxyActor
+        from agents.proxy_actor import ProxyActor
         proxy = ProxyActor()
 
         for attempt in range(self.max_retries):
@@ -399,7 +399,7 @@ class OpenAICompatibleLLM(BaseLLM):
         trace_id = TraceContext.get_trace_id()
 
         # 0. 隐私脱敏处理 (Privacy Guard)
-        from privacy_guard import PrivacyGuard
+        from infra.privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="LLM_PROXY")
         safe_prompt, was_masked = guard.sanitize_for_llm(prompt)
         if was_masked:

@@ -6,16 +6,16 @@ import operator
 import threading
 import time
 from pathlib import Path
-from bus_init import LedgerMsg
+from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
-from logger import get_logger
-from project_paths import get_path
-from config_manager import ConfigManager
-from db_helper import DBHelper
+from infra.logger import get_logger
+from utils.project_paths import get_path
+from core.config_manager import ConfigManager
+from core.db_helper import DBHelper
 
-from llm_connector import LLMFactory
+from infra.llm_connector import LLMFactory
 
-from decimal_utils import to_decimal
+from utils.decimal_utils import to_decimal
 
 log = get_logger("AccountingAgent")
 
@@ -144,7 +144,8 @@ class AccountingAgent(AgentBase):
         return dimensions
 
     def reply(self, x: dict = None) -> dict:
-        from db_helper import DBHelper
+        from core.db_helper import DBHelper
+        from core.config_manager import ConfigManager
 
         self.db = DBHelper()
         self._load_rules()
@@ -311,7 +312,6 @@ class RecoveryWorker(threading.Thread):
 
     def run(self):
         """[Iteration 8] 使用可配置的扫描间隔"""
-        from agents.accounting_agent import AccountingAgent
         recovery_interval = ConfigManager.get_int("intervals.recovery_scan", 60)
         log.info(f"RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: {recovery_interval}s)...")
         while True:
@@ -430,7 +430,7 @@ class RecoveryWorker(threading.Thread):
 if __name__ == "__main__":
     import threading
     import time
-    from graceful_exit import should_exit
+    from infra.graceful_exit import should_exit
 
     agent = AccountingAgent("Accounting-Master")
     worker = RecoveryWorker(agent)

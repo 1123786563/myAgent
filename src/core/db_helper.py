@@ -4,9 +4,9 @@ import time
 from decimal import Decimal
 from contextlib import contextmanager
 from typing import Dict, Any, Optional
-from config_manager import ConfigManager
-from project_paths import get_path
-from logger import get_logger
+from core.config_manager import ConfigManager
+from utils.project_paths import get_path
+from infra.logger import get_logger
 
 # [Cycle 4] SQLite Decimal Adapters
 def adapt_decimal(d):
@@ -172,7 +172,7 @@ class DBHelper:
         slow_threshold = ConfigManager.get_float("db.slow_threshold", 0.5)
 
         import random
-        from trace_context import TraceContext
+        from infra.trace_context import TraceContext
 
         last_error = None
         start_t = time.perf_counter()
@@ -194,7 +194,7 @@ class DBHelper:
                 DBMetrics.record_transaction(True, duration_ms, retries_used, is_slow)
 
                 if is_slow:
-                    from logger import get_logger
+                    from infra.logger import get_logger
                     get_logger("DB-Profiler").warning(
                         f"检测到慢事务耗时: {duration:.4f}s | Mode: {mode}",
                         extra={"trace_id": trace_id}
@@ -206,7 +206,7 @@ class DBHelper:
                 retries_used = i + 1
                 if "locked" in str(e).lower() or "busy" in str(e).lower():
                     wait_time = (base_delay * (2 ** i)) + (random.random() * 0.1)
-                    from logger import get_logger
+                    from infra.logger import get_logger
                     get_logger("DB").debug(
                         f"数据库锁等待，重试 {i+1}/{retry_count}，等待 {wait_time:.2f}s",
                         extra={"trace_id": trace_id}
@@ -582,7 +582,7 @@ class DBHelper:
                 conn.execute(sql, (category, amount))
                 return True
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-Balance").error(f"更新试算平衡失败: {e}")
             return False
 
@@ -656,7 +656,7 @@ class DBHelper:
                         conn.execute(tag_sql, (trans_id, tag['key'], tag['value']))
                 return trans_id
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-Chain").error(f"链式入库失败: {e}")
             return None
 
@@ -764,7 +764,7 @@ class DBHelper:
                 conn.executemany(sql, params)
                 return True
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-Batch").error(f"批量插入失败: {e}")
             return False
 
@@ -779,7 +779,7 @@ class DBHelper:
                 cursor = conn.execute(sql, values)
                 return cursor.lastrowid
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB").error(f"影子分录入库失败: {e}")
             return None
 
@@ -855,7 +855,7 @@ class DBHelper:
                 rows = conn.execute(sql).fetchall()
                 return [{"report_date": r["report_date"], "human_hours_saved": round(r["hours"], 2)} for r in rows]
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-ROI").error(f"趋势查询失败: {e}")
             return []
 
@@ -915,7 +915,7 @@ class DBHelper:
                     "minutes_per_tx": minutes_per_tx
                 }
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-ROI").error(f"ROI 计算最终态失败: {e}")
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
@@ -996,7 +996,7 @@ class DBHelper:
                 self._stats_cache_t = current_time
                 return res
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-Stats").error(f"账务统计高阶查询失败: {e}")
             return [{"status": "ERROR", "display_name": "查询异常", "count": 0, "total_amount": 0.0}]
 
@@ -1054,7 +1054,7 @@ class DBHelper:
                     "last_transaction": rows[0]['created_at']
                 }
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB-Trend").error(f"聚合供应商画像失败: {e}")
             return {}
 
@@ -1191,7 +1191,7 @@ class DBHelper:
                     "total_expense": total_expense
                 }
         except Exception as e:
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("DB").error(f"获取月度报表失败: {e}")
             return {"revenue": 0, "vat_in": 0, "total_expense": 0}
 

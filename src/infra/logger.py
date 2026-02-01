@@ -5,9 +5,9 @@ import queue
 import threading
 from contextlib import contextmanager
 from logging.handlers import TimedRotatingFileHandler, QueueHandler, QueueListener
-from config_manager import ConfigManager
-from privacy_guard import PrivacyGuard
-from logger_filter import PrivacyFilter
+from core.config_manager import ConfigManager
+from infra.privacy_guard import PrivacyGuard
+from infra.logger_filter import PrivacyFilter
 
 # 使用线程本地存储 Trace ID
 _context_data = threading.local()

@@ -1,7 +1,7 @@
 import re
 import time
 from functools import lru_cache
-from config_manager import ConfigManager
+from core.config_manager import ConfigManager
 
 class PrivacyGuard:
     """
@@ -101,7 +101,7 @@ class PrivacyGuard:
         if has_sensitive:
             self._stats["total_masked"] += 1
             # [Round 51] 动态获取 logger 避免循环导入
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("PrivacyGuard").debug(f"LLM 请求脱敏: 检测到敏感信息并已处理")
 
         return text, has_sensitive

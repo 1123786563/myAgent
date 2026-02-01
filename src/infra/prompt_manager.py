@@ -10,9 +10,9 @@ import re
 import time
 import threading
 from typing import Dict, Optional, Any, List
-from logger import get_logger
-from project_paths import get_path
-from config_manager import ConfigManager
+from infra.logger import get_logger
+from utils.project_paths import get_path
+from core.config_manager import ConfigManager
 
 log = get_logger("PromptManager")
 

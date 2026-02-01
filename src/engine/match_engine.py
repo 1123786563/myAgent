@@ -3,10 +3,10 @@ import threading
 import queue
 from difflib import SequenceMatcher
 from decimal import Decimal
-from db_helper import DBHelper
-from decimal_utils import to_decimal
-from logger import get_logger
-from config_manager import ConfigManager
+from core.db_helper import DBHelper
+from utils.decimal_utils import to_decimal
+from infra.logger import get_logger
+from core.config_manager import ConfigManager
 
 log = get_logger("MatchEngine")
 
@@ -176,7 +176,7 @@ class MatchEngine:
         last_reminder_check = 0
         reminder_interval = 14400 # 每 4 小时一次
         
-        from graceful_exit import should_exit
+        from infra.graceful_exit import should_exit
         while not should_exit():
             self.run_matching()
             

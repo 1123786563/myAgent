@@ -1,4 +1,4 @@
-from logger import get_logger
+from infra.logger import get_logger
 import time
 
 log = get_logger("RoutingRegistry")
@@ -23,7 +23,7 @@ class RoutingRegistry:
         }
         
         # [Optimization 5] 行业敏感关键词库 (Sector-Aware)
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
         self.sector = ConfigManager.get("enterprise.sector", "GENERAL")
         
         # 针对特定行业的专家级强制路由关键词
@@ -44,7 +44,7 @@ class RoutingRegistry:
     def check_circuit_breaker(self):
         """[Optimization 1] 检查推理熔断器状态"""
         if time.time() - self._last_circuit_check > 60:
-            from config_manager import ConfigManager
+            from core.config_manager import ConfigManager
             self._is_circuit_broken = ConfigManager.get("circuit.accounting_external", False)
             self._last_circuit_check = time.time()
         return self._is_circuit_broken
@@ -80,7 +80,7 @@ class RoutingRegistry:
                 return "L2-OpenManus"
 
         # 3. 置信度降级
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
         l1_threshold = ConfigManager.get("routing.l1_threshold", 0.95)
         if l1_confidence < l1_threshold:
             if vendor:
@@ -96,7 +96,7 @@ class RoutingRegistry:
         """
         if not vendor: return
         
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
         l1_threshold = ConfigManager.get("routing.l1_threshold", 0.95)
         
         if confidence < l1_threshold:

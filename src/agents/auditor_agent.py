@@ -1,9 +1,9 @@
 from decimal import Decimal
-from decimal_utils import to_decimal
-from bus_init import LedgerMsg
+from utils.decimal_utils import to_decimal
+from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
-from logger import get_logger
-from db_helper import DBHelper
+from infra.logger import get_logger
+from core.db_helper import DBHelper
 import re
 import os
 
@@ -78,7 +78,7 @@ class AuditorAgent(AgentBase):
     def __init__(self, name):
         super().__init__()
         self.name = name
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
 
         self.db = DBHelper()
         # 预编译科目编码校验正则
@@ -125,7 +125,7 @@ class AuditorAgent(AgentBase):
         vendor = content.get("vendor", "")
 
         # 动态加载行业配置
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
 
         current_sector = ConfigManager.get("enterprise.sector", "GENERAL")
 
@@ -284,6 +284,7 @@ class AuditorAgent(AgentBase):
         group_id = x.get("group_id")
 
         # 1. 基础状态初始化
+        from core.config_manager import ConfigManager
         confidence = proposal.get("confidence", 0.5)
         rule_quality = proposal.get("inference_log", {}).get("rule_id") is not None
         risk_score = 0.0

@@ -7,7 +7,7 @@ import time
 import hmac
 import hashlib
 import threading
-from config_manager import ConfigManager
+from core.config_manager import ConfigManager
 
 # 核心安全：内部通信令牌
 SYSTEM_AUTH_TOKEN = "LA_SECURE_TOKEN_2026_XF"
@@ -82,7 +82,7 @@ class LedgerMsg:
 class ManagerAgent(AgentBase):
     def __init__(self, name):
         super().__init__(name=name)
-        from db_helper import DBHelper
+        from core.db_helper import DBHelper
         self.db = DBHelper()
         self._load_permissions()
 

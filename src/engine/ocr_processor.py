@@ -1,7 +1,7 @@
 import re
 import random
 from typing import Dict, Any, List
-from logger import get_logger
+from infra.logger import get_logger
 
 log = get_logger("OCRProcessor")
 

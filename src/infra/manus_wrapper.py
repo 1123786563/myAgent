@@ -3,9 +3,9 @@ import json
 import re
 import time
 from typing import Dict, Any, List
-from bus_init import LedgerMsg
-from logger import get_logger
-from llm_connector import LLMFactory
+from core.bus_init import LedgerMsg
+from infra.logger import get_logger
+from infra.llm_connector import LLMFactory
 
 log = get_logger("OpenManusWrapper")
 
@@ -121,14 +121,14 @@ class OpenManusAnalyst:
             return {"category": "MANUAL_REVIEW", "reason": "Cost limit exceeded", "confidence": 0.0}
 
         # [Round 31] 注入更详尽的系统上下文与隐私脱敏
-        from config_manager import ConfigManager
+        from core.config_manager import ConfigManager
         sector = ConfigManager.get("enterprise.sector", "GENERAL")
         
         history = [f"System Context: Corporate Sector is {sector}."]
         history.append(f"Task: {task_description}")
         if context_data:
             # 自动过滤 Context 中的敏感信息 (PII)
-            from privacy_guard import PrivacyGuard
+            from infra.privacy_guard import PrivacyGuard
             guard = PrivacyGuard(role="AGENT_INTERNAL")
             safe_context = {k: (guard.desensitize(v) if isinstance(v, str) else v) for k, v in context_data.items()}
             history.append(f"Sanitized Context: {json.dumps(safe_context, ensure_ascii=False)}")

@@ -1,6 +1,6 @@
-from logger import get_logger
-from privacy_guard import PrivacyGuard
-from config_manager import ConfigManager
+from infra.logger import get_logger
+from infra.privacy_guard import PrivacyGuard
+from core.config_manager import ConfigManager
 import json
 
 log = get_logger("ProxyActor")

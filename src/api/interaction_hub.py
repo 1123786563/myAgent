@@ -1,10 +1,10 @@
 import json
 import time
 import threading
-from db_helper import DBHelper
-from logger import get_logger
-from config_manager import ConfigManager
-from graceful_exit import should_exit
+from core.db_helper import DBHelper
+from infra.logger import get_logger
+from core.config_manager import ConfigManager
+from infra.graceful_exit import should_exit
 
 log = get_logger("InteractionHub")
 
@@ -35,7 +35,7 @@ class InteractionHub:
         return self.create_action_card("🔍 业务背景补全", content, actions, inputs, payload={"trans_id": transaction_id, "trace_id": trace_id})
 
     def push_card(self, transaction_id, proposal_data, trace_id=None, required_role="ADMIN"):
-        from privacy_guard import PrivacyGuard
+        from infra.privacy_guard import PrivacyGuard
         guard = PrivacyGuard(role="GUEST")
         safe_data = {k: (guard.desensitize(v, context="NOTE") if isinstance(v, str) else v) for k, v in proposal_data.items()}
         actions = [
@@ -65,7 +65,7 @@ class InteractionHub:
                 new_cat = extra_payload.get('updated_category')
                 vendor = extra_payload.get('vendor', 'Unknown')
             if new_cat:
-                from knowledge_bridge import KnowledgeBridge
+                from core.knowledge_bridge import KnowledgeBridge
                 KnowledgeBridge().learn_new_rule(vendor, new_cat, source="MANUAL")
                 with self.db.transaction("IMMEDIATE") as conn:
                     conn.execute("UPDATE transactions SET category = ?, status = 'PENDING_AUDIT' WHERE vendor = ? AND status = 'PENDING'", (new_cat, vendor))

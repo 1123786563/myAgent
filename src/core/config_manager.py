@@ -2,8 +2,8 @@ import yaml
 import os
 import threading
 from typing import Any, Dict, Optional, Type, TypeVar, Union
-from project_paths import get_path
-from config_validation import validate_config
+from utils.project_paths import get_path
+from core.config_validation import validate_config
 
 T = TypeVar('T')
 
@@ -245,7 +245,7 @@ class ConfigManager:
             else:
                 return value
         except (ValueError, TypeError):
-            from logger import get_logger
+            from infra.logger import get_logger
             get_logger("ConfigManager").warning(
                 f"配置类型转换失败: {key_path} = {value} (期望 {target_type.__name__})"
             )

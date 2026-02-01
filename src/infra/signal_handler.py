@@ -13,8 +13,8 @@ def handle_signal(signum, frame):
         print(f"\n[Signal] 捕获 SIGUSR1，正在触发任务快照导出...")
     elif signum == signal.SIGUSR2:
         # [Suggestion 1] 动态调整日志级别并重载配置
-        from logger import get_logger
-        from config_manager import ConfigManager
+        from infra.logger import get_logger
+        from core.config_manager import ConfigManager
         ConfigManager.load(force=True)
         log = get_logger("System")
         log.info("捕获 SIGUSR2，配置已重载并动态切换日志级别至 DEBUG")

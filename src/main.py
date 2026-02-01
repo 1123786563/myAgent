@@ -1,4 +1,3 @@
-import path_init
 import subprocess
 import time
 import sys
@@ -6,11 +5,11 @@ import os
 import signal
 import threading
 import json
-from logger import get_logger
-from db_helper import DBHelper
-from config_manager import ConfigManager
-from project_paths import get_path
-from graceful_exit import should_exit, register_cleanup
+from infra.logger import get_logger
+from core.db_helper import DBHelper
+from core.config_manager import ConfigManager
+from utils.project_paths import get_path
+from infra.graceful_exit import should_exit, register_cleanup
 
 log = get_logger("MasterDaemon")
 
@@ -110,10 +109,11 @@ class MasterDaemon:
         log.info(f"正在启动子服务: {name}")
         env = os.environ.copy()
         env["LEDGER_PARENT_PID"] = str(os.getpid())
-        # 确保 PYTHONPATH 包含 src 及其子目录
-        env["PYTHONPATH"] = os.path.join(os.getcwd(), 'src') + os.pathsep + env.get("PYTHONPATH", "")
-        # 子服务执行时需要自动加载 path_init
-        return subprocess.Popen([sys.executable, "-c", f"import sys; import os; sys.path.insert(0, os.getcwd()); from src import path_init; exec(open('{script_path}').read())"], env=env)
+        # 确保 PYTHONPATH 包含所有核心目录
+        root = "/Users/yongjunwu/trea/myAgent/src"
+        paths = [root, f"{root}/core", f"{root}/agents", f"{root}/engine", f"{root}/infra", f"{root}/utils", f"{root}/api"]
+        env["PYTHONPATH"] = os.pathsep.join(paths) + os.pathsep + env.get("PYTHONPATH", "")
+        return subprocess.Popen([sys.executable, script_path], env=env)
 
     def shutdown(self, signum, frame):
         log.info("接收到退出信号，正在安全关闭所有子服务...")

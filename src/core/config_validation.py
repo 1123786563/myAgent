@@ -18,8 +18,7 @@ def validate_config(config: Dict[str, Any]):
         "intervals": {
             "daemon_poll": (int, float),
             "retry_backoff_base": (int, float)
-        },
-        "bank_mapping": dict
+        }
     }
 
     def check_recursive(conf_part, schema_part, prefix=""):
