@@ -14,6 +14,8 @@ import zhCN from 'antd/locale/zh_CN';
 // Placeholder pages
 import Reconciliation from './pages/Reconciliation';
 import Workflow from './pages/Workflow';
+import AccountChart from './pages/accounting/AccountChart';
+import VoucherEntry from './pages/accounting/VoucherEntry';
 
 const Dashboard = () => <div>Dashboard Content (TODO)</div>;
 const Settings = () => <div>System Settings (TODO)</div>;
@@ -42,6 +44,21 @@ const Layout = ({ children }) => {
               path: '/',
               name: '仪表盘',
               icon: <DashboardOutlined />,
+            },
+            {
+              path: '/accounting',
+              name: '财务核算',
+              icon: <AuditOutlined />,
+              children: [
+                {
+                  path: '/accounting/chart',
+                  name: '会计科目表',
+                },
+                {
+                  path: '/accounting/voucher',
+                  name: '凭证录入',
+                },
+              ],
             },
             {
               path: '/reconciliation',
@@ -109,6 +126,8 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/accounting/chart" element={<AccountChart />} />
+            <Route path="/accounting/voucher" element={<VoucherEntry />} />
             <Route path="/reconciliation" element={<Reconciliation />} />
             <Route path="/workflow" element={<Workflow />} />
             <Route path="/settings" element={<Settings />} />
