@@ -96,11 +96,16 @@ auth:
   password_require_special: false
   bcrypt_rounds: 12
 
-  # 账户安全
-  max_failed_login_attempts: 5       # 最大登录失败次数
-  account_lockout_minutes: 30        # 账户锁定时间 (分钟)
+# [Iteration 9] IM 交互配置 (Feishu/Lark)
+im:
+  enabled: true
+  provider: "feishu"
+  feishu:
+    webhook_url: "${FEISHU_WEBHOOK_URL}"
+    secret: "${FEISHU_SECRET}"
 
 bank_mapping:
+
   default:
     vendor_col: "对方户名"
     amount_col: "金额"

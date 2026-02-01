@@ -29,6 +29,9 @@ from auth.routes.user_routes import router as user_router
 from fastapi.staticfiles import StaticFiles
 from auth.routes.role_routes import router as role_router
 from api.ui_routes import router as ui_router
+from accounting.accounting_routes import router as accounting_router
+from accounting.reports_routes import router as reports_router
+from invoice.invoice_routes import router as invoice_router
 from auth.middleware.rate_limit_middleware import RateLimitMiddleware
 from sqlalchemy import text, func
 
@@ -52,6 +55,11 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(role_router, prefix="/api/v1")
 app.include_router(ui_router, prefix="/api/v1/ui", tags=["ui"])
+
+# 注册会计模块路由
+app.include_router(accounting_router, prefix="/api/v1")
+app.include_router(reports_router, prefix="/api/v1")
+app.include_router(invoice_router, prefix="/api/v1")
 
 # Mount Static UI
 os.makedirs("src/web/static", exist_ok=True)
