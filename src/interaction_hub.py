@@ -197,14 +197,20 @@ class InteractionHub:
                 
                 # [Round 4] 知识回流触发点
                 from knowledge_bridge import KnowledgeBridge
-                # 注意：这里我们明确指定 source="MANUAL"，以便 KnowledgeBridge 知道这是高优先级的用户输入
-                # 如果我们想通过 GRAY 机制来观察，可以设为 "USER_FEEDBACK" 并在 learn_new_rule 里映射
-                # 但根据需求，用户手动修正通常被视为 Truth，所以这里传递 MANUAL 让其可能成为 STABLE 或高权重 GRAY
                 KnowledgeBridge().learn_new_rule(vendor, new_cat, source="MANUAL")
 
+            # [Optimization Round 3] 执行入账并更新试算平衡
             with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (transaction_id,))
-            log.info(f"交易 {transaction_id} 已确认入账。")
+                # 获取金额和科目
+                row = conn.execute("SELECT amount, category FROM transactions WHERE id = ?", (transaction_id,)).fetchone()
+                if row:
+                    amt = float(row["amount"])
+                    cat = row["category"]
+                    conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (transaction_id,))
+                    # 更新全局试算平衡 (简单逻辑：支出增加借方)
+                    self.db.update_trial_balance(cat, amt, direction="DEBIT")
+                    
+            log.info(f"交易 {transaction_id} 已确认入账并更新试算平衡表。")
             return True
         
         # 优化点：支持批量消消乐确认 (F3.4.1)
@@ -230,31 +236,64 @@ class PollingWorker(threading.Thread):
         self.db = hub.db
 
     def run(self):
-        log.info("InteractionHub 轮询服务启动...")
+        log.info("InteractionHub 轮询服务启动 (Proactive Mode)...")
+        last_proactive_check = 0
+        
         while not should_exit():
             try:
-                # 模拟处理 Outbox (System Events)
+                now = time.time()
+                # 1. 基础事件轮询 (每 5 秒)
                 with self.db.transaction("DEFERRED") as conn:
-                    # 获取未处理的推送任务 (此处简化为获取最近 10 分钟的特定事件)
                     sql = """
                         SELECT id, event_type, message, trace_id 
                         FROM system_events 
                         WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') 
-                        AND created_at > datetime('now', '-10 minutes')
-                        -- 实际应有 status 字段标记是否已发送，此处省略 schema 变更
+                        AND created_at > datetime('now', '-5 minutes')
                         ORDER BY created_at DESC LIMIT 5
                     """
                     events = conn.execute(sql).fetchall()
                 
                 for evt in events:
                     # 模拟发送逻辑
-                    # log.debug(f"处理 Outbox 事件: {evt['event_type']} -> {evt['message']}")
                     pass
+
+                # 2. 主动状态巡检 (每 30 秒) - [Optimization Round 2]
+                if now - last_proactive_check > 30:
+                    self._check_proactive_tasks()
+                    last_proactive_check = now
                 
                 time.sleep(5)
             except Exception as e:
                 log.error(f"Hub 轮询异常: {e}")
                 time.sleep(5)
+
+    def _check_proactive_tasks(self):
+        """
+        [Optimization Round 2] 主动发现需要人工干预的交易并推送卡片
+        """
+        try:
+            with self.db.transaction("DEFERRED") as conn:
+                # 查找：1. 明确标记为 REJECTED 的 (需要修正) 
+                # 2. PENDING 超过 10 分钟且没有 file_path 的 (推测是银行流水需补票据)
+                sql = """
+                    SELECT id, vendor, amount, status, trace_id
+                    FROM transactions 
+                    WHERE (status = 'REJECTED' AND updated_at < datetime('now', '-1 minute'))
+                    OR (status = 'PENDING' AND file_path IS NULL AND created_at < datetime('now', '-10 minutes'))
+                    LIMIT 3
+                """
+                tasks = conn.execute(sql).fetchall()
+            
+            for task in tasks:
+                if task["status"] == "REJECTED":
+                    log.info(f"  [主动触达] 检测到驳回交易 {task['id']}，推送修正卡片...")
+                    self.hub.push_card(task["id"], {"vendor": task["vendor"], "amount": task["amount"], "category": "待修正", "reason": "审计未通过"}, trace_id=task["trace_id"])
+                else:
+                    log.info(f"  [主动触达] 检测到流水缺票 {task['id']}，推送证据索要...")
+                    self.hub.push_evidence_request(task["id"], task["vendor"], task["amount"], trace_id=task["trace_id"])
+                    
+        except Exception as e:
+            log.error(f"主动任务检查失败: {e}")
 
 if __name__ == "__main__":
     hub = InteractionHub()

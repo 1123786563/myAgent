@@ -179,50 +179,61 @@ class CollectorWorker(threading.Thread):
             return
         log.info(f"正在处理时空关联批次 (Total Size: {len(self.batch_buffer)})")
 
-        # [Optimization 1] 增强型智能分组 (Smart Temporal Grouping)
-        # Cluster files by time window (60s) to form logical events
+        # [Optimization Round 2] 增强型多模态空间语义聚合 (SRS 3.1.3)
+        # 逻辑：结合时间窗口、文件名相似度与内容指纹进行聚类
 
-        # 1. Get file modification times
-        files_with_time = []
+        # 1. 预处理：获取元数据
+        file_meta = []
         for path in self.batch_buffer:
             try:
-                mtime = os.path.getmtime(path)
-                files_with_time.append((path, mtime))
+                stats = os.stat(path)
+                # 简单视觉特征：文件名指纹（提取数字部分）
+                visual_fingerprint = "".join(re.findall(r'\d+', os.path.basename(path)))
+                file_meta.append({
+                    "path": path,
+                    "mtime": stats.st_mtime,
+                    "size": stats.st_size,
+                    "fingerprint": visual_fingerprint
+                })
             except:
-                files_with_time.append((path, time.time()))
+                file_meta.append({"path": path, "mtime": time.time(), "size": 0, "fingerprint": ""})
 
-        # 2. Sort by time
-        files_with_time.sort(key=lambda x: x[1])
+        # 2. 排序
+        file_meta.sort(key=lambda x: x["mtime"])
 
-        # 3. Cluster
+        # 3. 深度聚类
         groups = []
-        if files_with_time:
-            current_group = [files_with_time[0]]
-            for i in range(1, len(files_with_time)):
-                prev_time = current_group[-1][1]
-                curr_time = files_with_time[i][1]
+        if file_meta:
+            current_group = [file_meta[0]]
+            for i in range(1, len(file_meta)):
+                prev = current_group[-1]
+                curr = file_meta[i]
 
-                # If gap > 60s, break group
-                if curr_time - prev_time > 60:
-                    groups.append(current_group)
-                    current_group = [files_with_time[i]]
+                # 判定条件：时间间隔 < 30s OR 文件名指纹重合度高
+                is_time_close = (curr["mtime"] - prev["mtime"]) < 30
+                is_name_related = len(curr["fingerprint"]) > 3 and curr["fingerprint"][:4] == prev["fingerprint"][:4]
+
+                if is_time_close or is_name_related:
+                    current_group.append(curr)
                 else:
-                    current_group.append(files_with_time[i])
+                    groups.append(current_group)
+                    current_group = [curr]
             groups.append(current_group)
 
-        # 4. Process clusters
+        # 4. 执行入库
         for group in groups:
-            # Generate group ID based on first file time and hash of paths
-            first_time = int(group[0][1])
-            paths_str = "".join([x[0] for x in group])
-            group_hash = hashlib.md5(paths_str.encode()).hexdigest()[:6]
-            group_id = f"SG-{first_time}-{group_hash}"
+            # 生成组 ID (SG-时间-特征)
+            group_id = f"SG-{int(group[0]['mtime'])}-{hashlib.md5(group[0]['path'].encode()).hexdigest()[:4]}"
+            is_bundle = len(group) > 1
+            
+            if is_bundle:
+                log.info(f"  [多模态聚合] 发现关联单据组 {group_id} (含 {len(group)} 个文件)")
 
-            log.info(f"  - 发现分组 {group_id} (包含 {len(group)} 个文件)")
-
-            for path, _ in group:
+            for item in group:
+                path = item["path"]
                 try:
                     if self._should_process(path):
+                        # 注入聚合属性
                         self._process_file(path, group_id=group_id)
                     self.task_queue.task_done()
                 except Exception as e:

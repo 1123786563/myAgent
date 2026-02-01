@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header, status
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header, status, Depends
+from fastapi.security import APIKeyHeader
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
@@ -21,6 +22,18 @@ app = FastAPI(
     description="AI-Powered Accounting Automation System"
 )
 
+# [Optimization Round 5] API 安全鉴权
+API_KEY_NAME = "X-API-Key"
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+async def get_api_key(api_key: str = Depends(api_key_header)):
+    expected_key = ConfigManager.get("api.admin_key", "ledger-secret-2025")
+    if api_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Could not validate credentials"
+        )
+    return api_key
 
 # ==================== [Optimization Iteration 7] 结构化响应模型 ====================
 
@@ -201,9 +214,9 @@ async def health_check():
 
 
 @app.get("/stats", response_model=APIResponse)
-async def get_stats():
+async def get_stats(api_key: str = Depends(get_api_key)):
     """
-    [Optimization Iteration 7] 增强统计端点
+    [Optimization Iteration 7] 增强统计端点 (带鉴权)
     """
     trace_id = TraceContext.get_trace_id()
     with TraceContext.start_span("get_stats"):
@@ -219,9 +232,9 @@ async def get_stats():
 
 
 @app.get("/metrics/summary", response_model=APIResponse)
-async def get_metrics_summary():
+async def get_metrics_summary(api_key: str = Depends(get_api_key)):
     """
-    [Optimization Iteration 7] 系统指标摘要端点
+    [Optimization Iteration 7] 系统指标摘要端点 (带鉴权)
     """
     trace_id = TraceContext.get_trace_id()
     with TraceContext.start_span("get_metrics_summary"):

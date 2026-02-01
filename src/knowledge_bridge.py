@@ -288,14 +288,50 @@ class KnowledgeBridge:
                 os.remove(backup_path)
         return success
 
+    def _extract_rules_from_audited_tx(self):
+        """
+        [Optimization Round 1] 自动从已通过审计且具有高置信度（或 L2 修复）的交易中提取规则
+        """
+        log.info("执行从已审计交易提取知识...")
+        try:
+            # 查找已审计通过，且由 L2 推理或高置信度 L1 产生的记录，且目前在 KB 中还不是 STABLE 的
+            sql = """
+                SELECT DISTINCT vendor, category 
+                FROM transactions t
+                WHERE t.status IN ('AUDITED', 'COMPLETED', 'POSTED')
+                AND t.vendor IS NOT NULL
+                AND NOT EXISTS (
+                    SELECT 1 FROM knowledge_base k 
+                    WHERE k.entity_name = t.vendor AND k.audit_status = 'STABLE'
+                )
+                LIMIT 50
+            """
+            with self.db.transaction("DEFERRED") as conn:
+                candidates = conn.execute(sql).fetchall()
+            
+            for cand in candidates:
+                vendor = cand["vendor"]
+                category = cand["category"]
+                # 再次调用 learn_new_rule，它会处理 GRAY 逻辑
+                self.learn_new_rule(vendor, category, source="AUTO_DISTILL")
+                
+        except Exception as e:
+            log.error(f"从交易提取知识失败: {e}")
+
     def distill_knowledge(self):
         """
         [Optimization 4] 增强型知识蒸馏与语义去重 (F2.6)
+        [Optimization Round 1] 增加从已审计交易中自动学习的能力
         Safety: Protects STABLE (Manual) rules from being deleted.
         """
         log.info("启动增强型时效性语义蒸馏程序...")
+        
+        # 0. 从已审计交易中提取新规则 (New Logic)
+        self._extract_rules_from_audited_tx()
+
         try:
             with self.db.transaction("IMMEDIATE") as conn:
+                # ... (rest of the existing logic)
                 # 1. 常规冲突裁决：利用 v_knowledge_conflicts 视图
                 # This view only selects entities with >1 distinct categories in GRAY status.
                 conflicts = conn.execute(

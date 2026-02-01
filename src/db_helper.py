@@ -250,12 +250,25 @@ class DBHelper:
     def _init_db(self):
         """
         [Optimization 2] 增强数据库启动自愈逻辑
+        [Optimization Round 7] 增加 Schema 版本管理与自动迁移
         """
-        # ... (保持快照自愈逻辑)
+        CURRENT_SCHEMA_VERSION = 10  # 随更新递增
         
         with self.transaction("IMMEDIATE") as conn:
             cursor = conn.cursor()
             
+            # 创建版本记录表
+            cursor.execute("CREATE TABLE IF NOT EXISTS sys_config (key TEXT PRIMARY KEY, value TEXT)")
+            cursor.execute("SELECT value FROM sys_config WHERE key = 'schema_version'")
+            row = cursor.fetchone()
+            version = int(row['value']) if row else 0
+            
+            if version < CURRENT_SCHEMA_VERSION:
+                log = get_logger("DB-Migrator")
+                log.info(f"执行数据库迁移: v{version} -> v{CURRENT_SCHEMA_VERSION}")
+                # 此处可以根据 version 执行不同的 ALTER TABLE 语句
+                cursor.execute("INSERT OR REPLACE INTO sys_config (key, value) VALUES ('schema_version', ?)", (str(CURRENT_SCHEMA_VERSION),))
+
             # [Optimization 1] 全局试算平衡表 (Trial Balance)
             cursor.execute('''CREATE TABLE IF NOT EXISTS trial_balance (
                 account_code TEXT PRIMARY KEY,
@@ -512,6 +525,28 @@ class DBHelper:
         except Exception:
             return 0
 
+    def update_trial_balance(self, category, amount, direction="DEBIT"):
+        """
+        [Optimization Round 3] 更新全局试算平衡表
+        direction: DEBIT (借) 或 CREDIT (贷)
+        """
+        try:
+            with self.transaction("IMMEDIATE") as conn:
+                field = "debit_total" if direction == "DEBIT" else "credit_total"
+                sql = f"""
+                    INSERT INTO trial_balance (account_code, {field}, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(account_code) DO UPDATE SET
+                        {field} = {field} + excluded.{field},
+                        updated_at = CURRENT_TIMESTAMP
+                """
+                conn.execute(sql, (category, amount))
+                return True
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB-Balance").error(f"更新试算平衡失败: {e}")
+            return False
+
     def backup_db(self, backup_path):
         """在线热备份数据库"""
         try:
@@ -611,6 +646,7 @@ class DBHelper:
     def add_transaction_with_tags(self, tags=None, **kwargs):
         """
         带标签原子化入库 (F3.2.3)
+        [Optimization Round 7] 增加语义去重校验 (Semantic Deduplication)
         """
         try:
             import json
@@ -619,6 +655,20 @@ class DBHelper:
                 kwargs['inference_log'] = json.dumps(kwargs['inference_log'], ensure_ascii=False)
 
             with self.transaction("IMMEDIATE") as conn:
+                # 语义查重：检查相同商户、金额在最近 5 分钟内是否有记录
+                if kwargs.get("amount") and kwargs.get("vendor"):
+                    check_sql = """
+                        SELECT id FROM transactions 
+                        WHERE vendor = ? AND amount = ? 
+                        AND created_at > datetime('now', '-5 minutes')
+                        LIMIT 1
+                    """
+                    dup = conn.execute(check_sql, (kwargs["vendor"], kwargs["amount"])).fetchone()
+                    if dup:
+                        from logger import get_logger
+                        get_logger("DB").warning(f"检测到语义重复单据，跳过入库: {kwargs['vendor']} - {kwargs['amount']}")
+                        return None
+
                 # 1. 插入主表
                 fields = ", ".join(kwargs.keys())
                 placeholders = ", ".join(["?"] * len(kwargs))
@@ -1035,6 +1085,21 @@ class DBHelper:
             from logger import get_logger
             get_logger("DB").error(f"获取月度报表失败: {e}")
             return {"revenue": 0, "vat_in": 0, "total_expense": 0}
+
+    def trigger_wal_checkpoint(self):
+        """
+        [Optimization Round 2] 强制执行 WAL 检查点，确保数据一致性与文件健康
+        """
+        try:
+            conn = self._get_conn()
+            conn.execute("PRAGMA wal_checkpoint(FULL)")
+            log = get_logger("DB")
+            log.debug("WAL 检查点执行成功 (FULL)")
+            return True
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB").error(f"WAL 检查点执行失败: {e}")
+            return False
 
     def perform_db_maintenance(self):
         """

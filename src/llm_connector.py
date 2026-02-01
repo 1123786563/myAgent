@@ -126,8 +126,13 @@ class LLMResponseCache:
         self._lock = threading.Lock()
 
     def _generate_key(self, prompt: str, model: str) -> str:
-        """生成缓存键"""
-        content = f"{model}:{prompt}"
+        """
+        [Optimization Round 8] 归一化缓存键生成
+        通过去除空白符、转换为小写等方式，提高缓存命中率
+        """
+        # 归一化处理：去除所有空白符并转小写
+        normalized_prompt = re.sub(r'\s+', '', prompt).lower()
+        content = f"{model}:{normalized_prompt}"
         return hashlib.md5(content.encode()).hexdigest()
 
     def get(self, prompt: str, model: str) -> dict:
@@ -218,23 +223,10 @@ class OpenAICompatibleLLM(BaseLLM):
         self._budget_manager = TokenBudgetManager()
         self._init_client()
 
-        # 系统提示词模板
-        self.system_prompt = """你是一个专业的会计分类助手，负责将交易信息分类到正确的会计科目。
-
-你的任务是：
-1. 分析交易描述和供应商信息
-2. 确定最合适的会计科目分类
-3. 给出分类理由
-4. 评估分类置信度 (0-1)
-
-请以 JSON 格式返回结果：
-{
-    "category": "会计科目名称",
-    "reason": "分类理由",
-    "confidence": 0.95
-}
-
-常见科目包括：技术服务费、业务招待费、差旅费-交通费、办公设备、办公用品、水电费、房租、薪酬福利、广告宣传费、杂项支出等。"""
+        # [Optimization Round 4] 使用外部 Prompt 管理器
+        from prompt_manager import PromptManager
+        self.prompt_mgr = PromptManager()
+        self.system_prompt = self.prompt_mgr.get_prompt("accounting_classifier") or "Default Prompt"
 
     def _init_client(self):
         """初始化 OpenAI 客户端"""
@@ -317,33 +309,48 @@ class OpenAICompatibleLLM(BaseLLM):
 
     def _parse_response(self, content: str) -> Dict[str, Any]:
         """
-        [Optimization Iteration 5] 优化的 JSON 解析逻辑
-        消除重复的 try-except 块，使用统一的解析策略
+        [Optimization Round 4] 极致鲁棒的 JSON 解析
+        支持 Markdown、混合文本、转义字符及非法尾随字符处理
         """
-        # 定义解析策略列表
-        extraction_strategies = [
-            # 策略 1: 直接解析
-            lambda c: c,
-            # 策略 2: 提取 markdown 代码块
-            lambda c: re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', c).group(1) if re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', c) else None,
-            # 策略 3: 提取 {...} 部分
-            lambda c: re.search(r'\{[\s\S]*\}', c).group(0) if re.search(r'\{[\s\S]*\}', c) else None,
-        ]
+        if not content or not isinstance(content, str):
+            return {"category": "待核定", "reason": "Empty LLM response", "confidence": 0.0}
 
-        for strategy in extraction_strategies:
+        # 1. 尝试提取 Markdown JSON 块
+        md_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        if md_match:
+            candidate = md_match.group(1)
             try:
-                extracted = strategy(content)
-                if extracted:
-                    return json.loads(extracted)
-            except (json.JSONDecodeError, AttributeError):
-                continue
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                pass
 
-        # 所有策略都失败，返回默认结构
-        log.warning(f"无法解析 LLM 响应为 JSON: {content[:100]}...")
+        # 2. 尝试正则提取第一个 { 到 最后一个 } 之间的内容
+        brace_match = re.search(r'(\{.*\})', content, re.DOTALL)
+        if brace_match:
+            candidate = brace_match.group(1)
+            try:
+                # 预处理：移除潜在的尾随逗号 (common in LLM output)
+                candidate = re.sub(r',\s*}', '}', candidate)
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                pass
+
+        # 3. 实在不行，尝试按行提取关键字段 (Heuristic Fallback)
+        log.warning(f"JSON 解析彻底失败，执行启发式提取: {content[:100]}...")
+        extracted = {}
+        for key in ["category", "reason"]:
+            match = re.search(rf'"{key}"\s*:\s*"([^"]+)"', content)
+            if match:
+                extracted[key] = match.group(1)
+        
+        if extracted.get("category"):
+            extracted["confidence"] = 0.4
+            return extracted
+
         return {
             "category": "待人工确认",
-            "reason": f"LLM 响应解析失败: {content[:50]}",
-            "confidence": 0.3
+            "reason": f"无法解析响应结构: {content[:50]}",
+            "confidence": 0.1
         }
 
     def generate_response(self, prompt: str, system_role: str = "assistant") -> Dict[str, Any]:
@@ -351,12 +358,20 @@ class OpenAICompatibleLLM(BaseLLM):
         调用真实 LLM API 生成分类响应
         [Optimization Iteration 3] 集成缓存与预算控制
         [Optimization Iteration 5] 集成分布式追踪
+        [Optimization Round 1] 集成隐私脱敏网关
         """
         trace_id = TraceContext.get_trace_id()
 
+        # 0. 隐私脱敏处理 (Privacy Guard)
+        from privacy_guard import PrivacyGuard
+        guard = PrivacyGuard(role="LLM_PROXY")
+        safe_prompt, was_masked = guard.sanitize_for_llm(prompt)
+        if was_masked:
+            log.info(f"LLM 请求已脱敏 | TraceID={trace_id}")
+
         # 1. 检查缓存
         if self.enable_cache:
-            cached = _response_cache.get(prompt, self.model)
+            cached = _response_cache.get(safe_prompt, self.model)
             if cached:
                 self._budget_manager.record_cache_hit()
                 cached["from_cache"] = True
@@ -367,24 +382,24 @@ class OpenAICompatibleLLM(BaseLLM):
         allowed, reason = self._budget_manager.check_budget()
         if not allowed:
             log.warning(f"LLM 预算超限: {reason}，降级到 Mock 模式", extra={"trace_id": trace_id})
-            return MockOpenManusLLM().generate_response(prompt, system_role)
+            return MockOpenManusLLM().generate_response(safe_prompt, system_role)
 
         # 3. 检查客户端
         if not self._client:
             log.error("LLM 客户端未初始化，回退到 Mock 模式", extra={"trace_id": trace_id})
-            return MockOpenManusLLM().generate_response(prompt, system_role)
+            return MockOpenManusLLM().generate_response(safe_prompt, system_role)
 
         # 4. 使用 Span 包裹整个 LLM 调用流程
         with TraceContext.start_span("llm_generate_response", {
             "model": self.model,
-            "prompt_length": len(prompt)
+            "prompt_length": len(safe_prompt)
         }) as span:
             start_time = time.time()
-            log.info(f"调用 LLM API: {prompt[:50]}...", extra={"trace_id": trace_id})
+            log.info(f"调用 LLM API: {safe_prompt[:50]}...", extra={"trace_id": trace_id})
 
             messages = [
                 {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": safe_prompt}
             ]
 
             try:

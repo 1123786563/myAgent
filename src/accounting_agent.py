@@ -145,7 +145,11 @@ class AccountingAgent(AgentBase):
 
         self.db = DBHelper()
         self._load_rules()
+        
+        # [Optimization Round 8] 输入文本归一化处理
         raw_text = str(x.get("content", ""))
+        normalized_text = re.sub(r'\s+', ' ', raw_text.strip())
+        
         amount = float(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         trace_id = x.get("trace_id")
@@ -154,7 +158,7 @@ class AccountingAgent(AgentBase):
         from routing_registry import RoutingRegistry
 
         registry = RoutingRegistry()
-        route = registry.get_route(raw_text, vendor=vendor)
+        route = registry.get_route(normalized_text, vendor=vendor)
         if "L2" in route:
             log.info(f"动态路由拦截 -> 强制升级 L2 | TraceID={trace_id}")
             x["requires_upgrade"] = True
@@ -170,9 +174,9 @@ class AccountingAgent(AgentBase):
         is_gray = False
         tags = []
 
-        # 快速通道
-        if raw_text in self._keyword_map:
-            rule = self._keyword_map[raw_text]
+        # 快速通道 (使用归一化文本)
+        if normalized_text in self._keyword_map:
+            rule = self._keyword_map[normalized_text]
             category, confidence = rule["category"], rule.get("confidence", 0.95)
             matched_rule_id, is_gray = (
                 rule.get("id"),
@@ -182,7 +186,7 @@ class AccountingAgent(AgentBase):
             # 语义匹配
             semantic_high = ConfigManager.get_float("threshold.semantic_match_high", 0.8)
             default_confidence = ConfigManager.get_float("agents.accounting.default_confidence", 0.95)
-            rule, score = self._semantic_match(raw_text)
+            rule, score = self._semantic_match(normalized_text)
             if rule and score > semantic_high:
                 category, confidence = rule["category"], score * default_confidence
                 matched_rule_id = rule.get("id")
@@ -192,11 +196,11 @@ class AccountingAgent(AgentBase):
                     if (
                         rule.get("use_regex")
                         and rule.get("_regex")
-                        and rule["_regex"].search(raw_text)
+                        and rule["_regex"].search(normalized_text)
                     ) or (
                         not rule.get("use_regex")
                         and rule.get("keyword")
-                        and rule["keyword"] in raw_text
+                        and rule["keyword"] in normalized_text
                     ):
                         if self._evaluate_conditions(
                             amount, x, rule.get("conditions", [])
@@ -213,7 +217,7 @@ class AccountingAgent(AgentBase):
                             break
 
         # 4. 维度提取与打标 (Optimization 1)
-        semantic_dims = self._extract_semantic_dimensions(raw_text, amount)
+        semantic_dims = self._extract_semantic_dimensions(normalized_text, amount)
         for k, v in semantic_dims.items():
             tags.append({"key": k, "value": v})
 
@@ -314,6 +318,7 @@ class RecoveryWorker(threading.Thread):
         tid = task["id"]
         vendor = task["vendor"] or ""
         amount = float(task["amount"])
+        old_category = task.get("category", "未知")
         log.info(f"正在尝试修复交易 {tid} (Vendor: {vendor})...")
 
         new_category = "待人工确认"
@@ -326,8 +331,8 @@ class RecoveryWorker(threading.Thread):
             from manus_wrapper import OpenManusAnalyst
             analyst = OpenManusAnalyst()
             
-            task_desc = f"Analyze accounting category for vendor '{vendor}' with amount {amount}."
-            context = {"vendor": vendor, "amount": amount, "tid": tid}
+            task_desc = f"Analyze accounting category for vendor '{vendor}' with amount {amount}. Previous rejected category was '{old_category}'."
+            context = {"vendor": vendor, "amount": amount, "tid": tid, "old_category": old_category}
             
             # 启动 ReAct 循环
             result = analyst.investigate(task_desc, context_data=context)
@@ -358,7 +363,9 @@ class RecoveryWorker(threading.Thread):
                 old_log = task["inference_log"]
                 new_log_entry = {
                     "step": "RECOVERY_ATTEMPT",
-                    "l2_decision": new_category,
+                    "old_category": old_category,
+                    "new_category": new_category,
+                    "diff": f"{old_category} -> {new_category}" if old_category != new_category else "No Change",
                     "reason": reason,
                     "confidence": confidence,
                     "engine": "L2-OpenManus-Sim",

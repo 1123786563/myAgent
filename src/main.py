@@ -55,6 +55,21 @@ class MasterDaemon:
     def _preflight_check(self):
         """启动前预检"""
         log.info("执行系统启动预检与自愈恢复...")
+        
+        # [Optimization Round 5] 环境与依赖项检查
+        try:
+            import openai
+            import pandas
+            import yaml
+            log.info("核心依赖库 (openai, pandas, yaml) 检查通过。")
+        except ImportError as e:
+            log.error(f"预检失败: 缺失核心依赖项 {e}。请执行 pip install -r requirements.txt")
+            return False
+
+        # 检查关键环境变量
+        if not ConfigManager.get("llm.api_key"):
+            log.warning("环境变量 LLM_API_KEY 未设置，系统将运行在 MOCK 模式。")
+
         # 检查关键服务文件是否存在
         for name, path in self.services.items():
             if not os.path.exists(path):
