@@ -9,11 +9,13 @@ import hashlib
 from datetime import datetime
 from infra.logger import get_logger
 from core.db_helper import DBHelper
+from core.db_models import Transaction, SysStatus
 from core.config_manager import ConfigManager
 from infra.trace_context import TraceContext
 from api.api_models import APIResponse, HealthResponse, ErrorResponse, WebhookPayload
 from api.api_tasks import AsyncTaskProcessor
 from api.api_dashboard import render_dashboard
+from sqlalchemy import text, func
 
 log = get_logger("APIServer")
 app = FastAPI(title="LedgerAlpha API", version="v1.0")
@@ -62,10 +64,31 @@ async def feishu_webhook(request: Request, background_tasks: BackgroundTasks):
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(api_key: str = Depends(get_api_key)):
     db = DBHelper()
-    with db.transaction("DEFERRED") as conn:
-        recent_tx = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE created_at > NOW() - INTERVAL '1 hour'").fetchone()['cnt']
-        svc_stats = conn.execute("SELECT service_name, last_heartbeat, status, metrics FROM sys_status").fetchall()
-    return render_dashboard(db.get_ledger_stats(), db.get_roi_metrics(), db.get_roi_weekly_trend(), getattr(db, '_archived_count', 0), getattr(db, '_global_total_amount', 0.0), recent_tx, svc_stats)
+    with db.transaction() as session:
+        # 最近一小时交易量
+        cutoff = func.now() - text("INTERVAL '1 hour'")
+        recent_tx = session.query(Transaction).filter(Transaction.created_at > cutoff).count()
+        
+        # 服务状态
+        svc_stats_objs = session.query(SysStatus).all()
+        svc_stats = []
+        for s in svc_stats_objs:
+            svc_stats.append({
+                "service_name": s.service_name,
+                "last_heartbeat": s.last_heartbeat,
+                "status": s.status,
+                "metrics": s.metrics
+            })
+            
+    return render_dashboard(
+        db.get_ledger_stats(), 
+        db.get_roi_metrics(), 
+        db.get_roi_weekly_trend(), 
+        getattr(db, '_archived_count', 0), 
+        getattr(db, '_global_total_amount', 0.0), 
+        recent_tx, 
+        svc_stats
+    )
 
 def start_server(host="0.0.0.0", port=None):
     if port is None:

@@ -2,7 +2,12 @@ from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
 from infra.logger import get_logger
 from core.db_helper import DBHelper
+from core.db_models import Transaction, SysStatus
+from sqlalchemy import text, func
 import json
+import datetime
+import time
+import statistics
 
 log = get_logger("SentinelAgent")
 
@@ -10,7 +15,6 @@ log = get_logger("SentinelAgent")
 class SentinelAgent(AgentBase):
     """
     税务合规哨兵 (The Sentinel)
-    模拟金税四期巡检逻辑：进销项匹配、税负率预警、红线阻断。
     """
 
     def __init__(self, name):
@@ -44,69 +48,59 @@ class SentinelAgent(AgentBase):
     def _analyze_vendor_price_clustering(self, vendor, category, current_price):
         try:
             # [Optimization 4] Enhanced clustering with Time-Decay Weighting
-            sql = """
-                SELECT amount, created_at FROM transactions 
-                WHERE vendor = ? AND category = ? AND status = 'AUDITED'
-                ORDER BY created_at DESC LIMIT 20
-            """
-            with self.db.transaction("DEFERRED") as conn:
-                rows = conn.execute(sql, (vendor, category)).fetchall()
+            with self.db.transaction() as session:
+                rows_objs = session.query(Transaction.amount, Transaction.created_at).filter(
+                    Transaction.vendor == vendor,
+                    Transaction.category == category,
+                    Transaction.status == 'AUDITED'
+                ).order_by(Transaction.created_at.desc()).limit(20).all()
 
-            if len(rows) < 3:
-                return True, 0
+                if len(rows_objs) < 3:
+                    return True, 0
 
-            import datetime
-            import time
-            import statistics
+                # Parse data points
+                data_points = []
+                now_ts = time.time()
 
-            # Parse data points
-            data_points = []
-            now_ts = time.time()
+                for r in rows_objs:
+                    try:
+                        dt = r.created_at
+                        if isinstance(dt, str):
+                            dt = datetime.datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+                        ts = time.mktime(dt.timetuple())
+                        data_points.append({"amount": float(r.amount), "ts": ts})
+                    except:
+                        continue
 
-            for r in rows:
-                try:
-                    dt = datetime.datetime.strptime(
-                        r["created_at"], "%Y-%m-%d %H:%M:%S"
+                if not data_points:
+                    return True, 0
+
+                # Calculate Weighted Mean
+                total_weight = 0.0
+                weighted_sum = 0.0
+
+                for p in data_points:
+                    days_ago = (now_ts - p["ts"]) / 86400.0
+                    weight = 1.0 / (1.0 + max(0, days_ago))
+                    weighted_sum += p["amount"] * weight
+                    total_weight += weight
+
+                weighted_mean = weighted_sum / total_weight if total_weight > 0 else 0
+
+                prices = [p["amount"] for p in data_points]
+                std_dev = statistics.stdev(prices) if len(prices) > 1 else 0
+                cv = std_dev / (weighted_mean + 1e-9)
+
+                dynamic_threshold = 0.15 + (cv * 0.5)
+                deviation = abs(current_price - weighted_mean) / (weighted_mean + 1e-9)
+
+                if deviation > dynamic_threshold:
+                    log.warning(
+                        f"Vendor Price Anomaly: {vendor} | Curr: {current_price} vs WeightedMean: {weighted_mean:.2f} | Dev: {deviation:.1%} > {dynamic_threshold:.1%}"
                     )
-                    ts = time.mktime(dt.timetuple())
-                    data_points.append({"amount": float(r["amount"]), "ts": ts})
-                except:
-                    continue
+                    return False, deviation
 
-            if not data_points:
-                return True, 0
-
-            # Calculate Weighted Mean
-            # Formula: Weight = 1 / (1 + days_ago) -> Recent prices have higher weight
-            total_weight = 0.0
-            weighted_sum = 0.0
-
-            for p in data_points:
-                days_ago = (now_ts - p["ts"]) / 86400.0
-                weight = 1.0 / (1.0 + max(0, days_ago))
-                weighted_sum += p["amount"] * weight
-                total_weight += weight
-
-            weighted_mean = weighted_sum / total_weight if total_weight > 0 else 0
-
-            # Calculate dynamic threshold based on historical volatility (CV)
-            prices = [p["amount"] for p in data_points]
-            std_dev = statistics.stdev(prices) if len(prices) > 1 else 0
-            cv = std_dev / (weighted_mean + 1e-9)
-
-            # Threshold relaxes if history is volatile
-            dynamic_threshold = 0.15 + (cv * 0.5)
-
-            # Deviation check
-            deviation = abs(current_price - weighted_mean) / (weighted_mean + 1e-9)
-
-            if deviation > dynamic_threshold:
-                log.warning(
-                    f"Vendor Price Anomaly: {vendor} | Curr: {current_price} vs WeightedMean: {weighted_mean:.2f} | Dev: {deviation:.1%} > {dynamic_threshold:.1%}"
-                )
-                return False, deviation
-
-            return True, deviation
+                return True, deviation
         except Exception as e:
             log.error(f"Price analysis failed: {e}")
             return True, 0
@@ -115,9 +109,10 @@ class SentinelAgent(AgentBase):
         """[Optimization Round 2] 增加联网补丁检测"""
         val = default
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                row = conn.execute("SELECT policy_value FROM tax_policies WHERE policy_key = ?", (key,)).fetchone()
-                if row: val = row["policy_value"]
+            with self.db.transaction() as session:
+                # 假设 tax_policies 也是一个表，如果没有模型，可以使用 text()
+                row = session.execute(text("SELECT policy_value FROM tax_policies WHERE policy_key = :key"), {"key": key}).fetchone()
+                if row: val = row[0]
         except:
             pass
         
@@ -125,7 +120,6 @@ class SentinelAgent(AgentBase):
         patch = self._check_external_policy_patch({"policy_key": key})
         if patch:
             log.info(f"Sentinel: 发现外部政策补丁覆盖 {key} -> {patch}")
-            # 简单的解析逻辑，如果补丁包含百分比，尝试提取
             import re
             pct_match = re.search(r'(\d+)%', str(patch))
             if pct_match:
@@ -135,46 +129,39 @@ class SentinelAgent(AgentBase):
 
     def _refresh_policies_from_web(self):
         """
-        [Optimization Round 2] 利用 OpenManus 真实联网获取税务政策 (TaxSentinel Real Networking)
+        [Optimization Round 2] 利用 OpenManus 真实联网获取税务政策
         """
         log.info("Sentinel: 正在启动 OpenManus 巡检最新税务政策...")
         try:
             from infra.manus_wrapper import OpenManusAnalyst
             analyst = OpenManusAnalyst()
             
-            task = "搜索 2025 年中国针对小微企业的最新增值税免税政策和所得税优惠政策，提取免税额度、税率等关键数值。"
+            task = "搜索 2025 年中国针对小微企业的最新增值税免税政策 and 所得税优惠政策，提取免税额度、税率等关键数值。"
             result = analyst.investigate(task)
             
-            # 解析并更新本地数据库
             if "policy_updates" in result:
                 for p in result["policy_updates"]:
-                    with self.db.transaction("IMMEDIATE") as conn:
-                        conn.execute(
-                            "INSERT OR REPLACE INTO tax_policies (policy_key, policy_value, description) VALUES (?, ?, ?)",
-                            (p["key"], p["value"], p.get("desc", ""))
+                    with self.db.transaction() as session:
+                        # 使用原生 SQL 处理没有模型定义的表
+                        session.execute(
+                            text("INSERT INTO tax_policies (policy_key, policy_value, description) VALUES (:key, :val, :desc) ON CONFLICT(policy_key) DO UPDATE SET policy_value = EXCLUDED.policy_value, description = EXCLUDED.description"),
+                            {"key": p["key"], "val": p["value"], "desc": p.get("desc", "")}
                         )
                 log.info(f"Sentinel: 成功从联网更新了 {len(result['policy_updates'])} 条政策。")
         except Exception as e:
             log.error(f"Sentinel: 联网巡检失败: {e}")
 
     def _calculate_projected_tax(self):
-        """
-        [Optimization 3] 税务筹划预警逻辑 (Proactive Tax Advisor)
-        识别起征点风险并主动推送策略卡片 (F3.3.2)
-        """
         stats = self._get_monthly_stats()
         revenue = stats.get("revenue", 0)
         vat_in_actual = stats.get("vat_in", 0)
 
-        # 动态读取税率
         rate_key = "vat_rate_general" if self.taxpayer_type == "GENERAL" else "vat_rate_small"
         rate_default = 0.13 if self.taxpayer_type == "GENERAL" else 0.03
         vat_rate = self._get_tax_policy(rate_key, rate_default)
         
-        # 预估销项税 (Output VAT)
         vat_out_est = revenue * vat_rate
 
-        # [Optimization 3] 策略建议逻辑
         strategy_tips = []
         limit = self._get_tax_policy("tax_free_limit", self.free_limit)
         
@@ -197,20 +184,17 @@ class SentinelAgent(AgentBase):
         }
 
     def _check_budget_compliance(self, dept_name, amount):
-        """
-        [Optimization 3] 预算红线主动管控 (F3.3.3)
-        """
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                row = conn.execute(
-                    "SELECT monthly_limit, current_spent FROM dept_budgets WHERE dept_name = ?",
-                    (dept_name,),
+            with self.db.transaction() as session:
+                row = session.execute(
+                    text("SELECT monthly_limit, current_spent FROM dept_budgets WHERE dept_name = :dept"),
+                    {"dept": dept_name}
                 ).fetchone()
                 if not row:
-                    return True  # 未设预算不拦截
+                    return True
 
-                limit = float(row["monthly_limit"])
-                spent = float(row["current_spent"])
+                limit = float(row[0])
+                spent = float(row[1])
                 remaining = limit - spent
 
                 if amount > remaining:
@@ -225,30 +209,24 @@ class SentinelAgent(AgentBase):
             return True
 
     def _run_tax_stress_test(self, proposal):
-        """
-        [Optimization 5] 增强型税务沙箱模拟 (Tax Sandbox)
-        """
         sim_spending = float(proposal.get("simulated_spending", 0))
         stats = self._get_monthly_stats()
 
-        # 1. 从数据库加载最新的动态税率
         vat_rate_general = 0.13
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                row = conn.execute(
-                    "SELECT policy_value FROM tax_policies WHERE policy_key = 'vat_rate_general'"
+            with self.db.transaction() as session:
+                row = session.execute(
+                    text("SELECT policy_value FROM tax_policies WHERE policy_key = 'vat_rate_general'")
                 ).fetchone()
                 if row:
-                    vat_rate_general = row["policy_value"]
+                    vat_rate_general = row[0]
         except:
             pass
 
-        # 2. 计算当前与模拟后的税负
         current_vat_out = stats["revenue"] * vat_rate_general
         current_vat_in = stats.get("vat_in", 0)
         current_payable = max(0, current_vat_out - current_vat_in)
 
-        # 模拟新增进项
         new_vat_in = current_vat_in + (sim_spending * vat_rate_general)
         simulated_payable = max(0, current_vat_out - new_vat_in)
 
@@ -267,7 +245,6 @@ class SentinelAgent(AgentBase):
         )
 
     def _check_external_policy_patch(self, proposal):
-        """[Optimization Round 2] 语义化政策补丁检查"""
         category = str(proposal.get("category", ""))
         if "研发" in category or proposal.get("policy_key") == "rd_deduction_rate":
             return "2025年研发费用加计扣除比例提升至100%"
@@ -276,33 +253,22 @@ class SentinelAgent(AgentBase):
         return None
 
     def _get_monthly_stats(self):
-        """
-        [Optimization 3] 获取本月经营数据聚合 (Real DB Data)
-        """
         return self.db.get_monthly_stats()
 
     def check_transaction_compliance(self, proposal):
-        """
-        [Optimization 3] 公共合规性检查接口 (供 Auditor 调用)
-        返回: (bool passed, str reason)
-        """
         vendor = proposal.get("vendor", "")
         category = proposal.get("category", "")
         amount = float(proposal.get("amount", 0))
 
-        # 1. 业务相关性检查
         if not self._check_business_relevance(vendor, category):
             return False, f"业务相关性存疑: 供应商[{vendor}]与科目[{category}]不匹配"
 
-        # 2. 预算检查 (如果能提取出部门)
-        # 简单逻辑：假设 tag 中有 department
         tags = proposal.get("tags", [])
         dept = next((t["value"] for t in tags if t["key"] == "department"), None)
         if dept:
             if not self._check_budget_compliance(dept, amount):
                 return False, f"预算熔断: 部门[{dept}]余额不足"
 
-        # 3. 价格离群检查
         is_normal, deviation = self._analyze_vendor_price_clustering(
             vendor, category, amount
         )
@@ -324,7 +290,6 @@ class SentinelAgent(AgentBase):
             return self._run_tax_stress_test(proposal)
 
         log.info(f"Sentinel 启动巡检...")
-        # ... (简化流程)
         return LedgerMsg.create(
             self.name, {"decision": "PASS"}, action="SENTINEL_CHECK"
         )

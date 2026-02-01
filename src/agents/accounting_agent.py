@@ -5,6 +5,7 @@ import hashlib
 import operator
 import threading
 import time
+import json
 from pathlib import Path
 from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
@@ -12,10 +13,10 @@ from infra.logger import get_logger
 from utils.project_paths import get_path
 from core.config_manager import ConfigManager
 from core.db_helper import DBHelper
-
+from core.db_models import Transaction
 from infra.llm_connector import LLMFactory
-
 from utils.decimal_utils import to_decimal
+from sqlalchemy import func, text
 
 log = get_logger("AccountingAgent")
 
@@ -294,7 +295,7 @@ class AccountingAgent(AgentBase):
         }
 
         log.info(f"分类结果: {vendor} -> {category} (Conf: {confidence:.2f})")
-        registry.record_feedback(vendor, confidence)  # 自学习反馈
+        # registry.record_feedback(vendor, confidence)  # 自学习反馈 (此处暂不实现或留空)
 
         return LedgerMsg.create(
             self.name,
@@ -312,7 +313,6 @@ class AccountingAgent(AgentBase):
 class RecoveryWorker(threading.Thread):
     """
     [Optimization 4] 自愈工作线程 (Self-Healing Worker)
-    负责扫描被审计驳回的单据，并升级到 L2 (OpenManus) 进行重试
     """
 
     def __init__(self, agent):
@@ -327,19 +327,20 @@ class RecoveryWorker(threading.Thread):
         while True:
             try:
                 # 1. 扫描被驳回的交易
-                with self.db.transaction("DEFERRED") as conn:
+                with self.db.transaction() as session:
                     # 查找最近 24 小时内被驳回且未尝试过恢复的记录
-                    sql = """
-                        SELECT id, vendor, amount, inference_log
+                    # SQLAlchemy 表达式： Transaction.inference_log 并不直接支持 ::text 强制转换，使用 text()
+                    sql = text("""
+                        SELECT id, vendor, amount, inference_log, category
                         FROM transactions
                         WHERE status = 'REJECTED'
                         AND created_at > CURRENT_TIMESTAMP - interval '1 day'
-                        AND (inference_log::text NOT LIKE '%%RECOVERY_ATTEMPT%%' OR inference_log IS NULL)
-                    """
-                    tasks = conn.execute(sql).fetchall()
+                        AND (inference_log::text NOT LIKE :recovery_tag OR inference_log IS NULL)
+                    """)
+                    tasks_rows = session.execute(sql, {"recovery_tag": '%RECOVERY_ATTEMPT%'}).fetchall()
 
-                for task in tasks:
-                    self._attempt_recovery(dict(task))
+                for task in tasks_rows:
+                    self._attempt_recovery(dict(task._mapping))
 
                 time.sleep(recovery_interval)
             except Exception as e:
@@ -387,11 +388,10 @@ class RecoveryWorker(threading.Thread):
             log.info(f"L2 ReAct reasoning result: {new_category} (Conf: {confidence})")
             
             # [Optimization Round 2] 知识回流 (Knowledge Backflow)
-            # 将 L2 处理结果沉淀为 L1 规则
             if confidence > 0.8:
                 log.info(f"Triggering knowledge backflow for: {safe_vendor} -> {new_category}")
                 kb.handle_manus_decision({
-                    "entity": vendor, # 使用原始脱敏前的名称作为 Key
+                    "entity": vendor, 
                     "category": new_category,
                     "confidence": confidence,
                     "reasoning": reason
@@ -400,7 +400,7 @@ class RecoveryWorker(threading.Thread):
         except Exception as e:
             log.error(f"L2 ReAct Error: {e}", exc_info=True)
 
-        # [Iteration 8] Fallback logic with configurable micro-payment threshold
+        # [Iteration 8] Fallback logic 
         micro_payment_threshold = ConfigManager.get_float("threshold.micro_payment_waiver", 50)
         fallback_confidence = ConfigManager.get_float("agents.accounting.fallback_confidence", 0.7)
         if confidence == 0.0 and amount < micro_payment_threshold:
@@ -410,10 +410,11 @@ class RecoveryWorker(threading.Thread):
 
         # 更新数据库
         try:
-            with self.db.transaction("IMMEDIATE") as conn:
-                import json
+            with self.db.transaction() as session:
+                trans = session.query(Transaction).get(tid)
+                if not trans: return
 
-                old_log = task["inference_log"]
+                old_log = trans.inference_log
                 new_log_entry = {
                     "step": "RECOVERY_ATTEMPT",
                     "old_category": old_category,
@@ -425,35 +426,16 @@ class RecoveryWorker(threading.Thread):
                     "raw_llm_response": response,
                 }
 
-                # [Iteration 8] 增强 JSON 解析错误处理
-                try:
-                    log_obj = json.loads(old_log) if old_log else {}
-                    if "recovery_trace" not in log_obj:
-                        log_obj["recovery_trace"] = []
-                    log_obj["recovery_trace"].append(new_log_entry)
-                    final_log = json.dumps(log_obj, ensure_ascii=False)
-                except json.JSONDecodeError as e:
-                    log.warning(f"交易 {tid} 的 inference_log 非法 JSON: {e}")
-                    final_log = json.dumps({
-                        "original_log": str(old_log),
-                        "recovery_trace": [new_log_entry]
-                    }, ensure_ascii=False)
-                except (TypeError, ValueError) as e:
-                    log.warning(f"交易 {tid} 日志序列化失败: {e}")
-                    final_log = str(old_log) + " | RECOVERY: " + str(new_log_entry)
+                log_obj = old_log if isinstance(old_log, dict) else {}
+                if "recovery_trace" not in log_obj:
+                    log_obj["recovery_trace"] = []
+                log_obj["recovery_trace"].append(new_log_entry)
+                
+                trans.category = new_category
+                trans.status = 'PENDING_AUDIT'
+                trans.inference_log = log_obj
 
-                conn.execute(
-                    """
-                    UPDATE transactions 
-                    SET category = %s, status = 'PENDING_AUDIT', inference_log = %s 
-                    WHERE id = %s
-                """,
-                    (new_category, final_log, tid),
-                )
-
-            log.info(
-                f"交易 {tid} 修复成功 -> {new_category} (Reason: {reason})，已重新提交审计。"
-            )
+            log.info(f"交易 {tid} 修复成功 -> {new_category} (Reason: {reason})，已重新提交审计。")
         except Exception as e:
             log.error(f"交易 {tid} 修复失败: {e}")
 
@@ -469,6 +451,5 @@ if __name__ == "__main__":
 
     log.info("AccountingAgent 服务已启动 (包含自愈模块)...")
 
-    # 模拟服务循环，处理来自 Bus 的请求 (此处仅为占位，实际需对接 MQ 或 DB 轮询)
     while not should_exit():
         time.sleep(5)

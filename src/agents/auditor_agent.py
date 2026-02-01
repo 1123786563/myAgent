@@ -6,10 +6,12 @@ from core.bus_init import LedgerMsg
 from agentscope.agent import AgentBase
 from infra.logger import get_logger
 from core.db_helper import DBHelper
+from core.db_models import KnowledgeBase, Transaction, TrialBalance
 from core.config_manager import ConfigManager
 from utils.decimal_utils import to_decimal
 from agents.auditor_consensus import ConsensusEngine, ConsensusStrategy
 from agents.auditor_risk import AuditorRiskAssessment
+from sqlalchemy import func, text
 
 log = get_logger("AuditorAgent")
 
@@ -75,7 +77,6 @@ class AuditorAgent(AgentBase):
             reasons.extend(c_reasons)
             risk_score += c_risk
 
-        # [Iteration 4] 多轮投票逻辑修正
         if (risk_score > 0.3) or (amount > self.force_manual_amount * ConfigManager.get_float("audit.consensus_trigger_ratio", 0.5)):
             votes = self.consensus_engine.vote(x)
             success, decision_reason = self.consensus_engine.decide(votes)
@@ -100,32 +101,41 @@ class AuditorAgent(AgentBase):
 
     def _get_vendor_audit_info(self, vendor):
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                sql = "SELECT audit_status, audit_level, consecutive_success FROM knowledge_base WHERE entity_name = ?"
-                row = conn.execute(sql, (vendor,)).fetchone()
-                return dict(row) if row else {"audit_status": "GRAY", "audit_level": "NORMAL", "consecutive_success": 0}
+            with self.db.transaction() as session:
+                row = session.query(KnowledgeBase).filter_by(entity_name=vendor).first()
+                if row:
+                    return {
+                        "audit_status": row.audit_status,
+                        "audit_level": getattr(row, 'audit_level', 'NORMAL'),
+                        "consecutive_success": row.consecutive_success
+                    }
+                return {"audit_status": "GRAY", "audit_level": "NORMAL", "consecutive_success": 0}
         except: return {"audit_status": "GRAY", "audit_level": "NORMAL", "consecutive_success": 0}
 
     def _get_historical_preference_fts(self, vendor):
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                sql = "SELECT t.category FROM transactions t JOIN knowledge_base k ON t.vendor = k.entity_name WHERE k.id IN (SELECT rowid FROM kb_fts WHERE entity_name MATCH ?) AND t.status = 'AUDITED' GROUP BY t.category ORDER BY COUNT(*) DESC LIMIT 1"
-                row = conn.execute(sql, (f"{vendor}*",)).fetchone()
-                return row["category"] if row else None
+            with self.db.transaction() as session:
+                # 迁移 FTS 逻辑到 SQLAlchemy (假设 FTS 是原生 SQL 扩展)
+                sql = text("SELECT t.category FROM transactions t JOIN knowledge_base k ON t.vendor = k.entity_name WHERE k.id IN (SELECT rowid FROM kb_fts WHERE entity_name MATCH :vendor) AND t.status = 'AUDITED' GROUP BY t.category ORDER BY COUNT(*) DESC LIMIT 1")
+                row = session.execute(sql, {"vendor": f"{vendor}*"}).fetchone()
+                return row[0] if row else None
         except: return None
 
     def _aggregate_group_context(self, group_id):
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                rows = conn.execute("SELECT amount, vendor, inference_log FROM transactions WHERE group_id = ?", (group_id,)).fetchall()
-                return {"total_amount": sum(to_decimal(r["amount"]) for r in rows), "vendors": list(set(r["vendor"] for r in rows if r["vendor"]))}
+            with self.db.transaction() as session:
+                rows = session.query(Transaction.amount, Transaction.vendor).filter_by(group_id=group_id).all()
+                return {
+                    "total_amount": sum(to_decimal(r.amount) for r in rows),
+                    "vendors": list(set(r.vendor for r in rows if r.vendor))
+                }
         except: return None
 
     def _check_global_balance(self, category, amount):
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                row = conn.execute("SELECT SUM(debit_total) as debits, SUM(credit_total) as credits FROM trial_balance").fetchone()
-                if row and abs((row["debits"] or 0) - (row["credits"] or 0)) > 0.01:
+            with self.db.transaction() as session:
+                row = session.query(func.sum(TrialBalance.debit_total).label('debits'), func.sum(TrialBalance.credit_total).label('credits')).first()
+                if row and abs((row.debits or 0) - (row.credits or 0)) > 0.01:
                     log.critical("系统试算不平衡警告！")
                 return bool(category and len(category) >= 2)
         except: return True
@@ -141,12 +151,23 @@ class AuditorAgent(AgentBase):
 
     def _update_audit_result(self, vendor, is_success, risk_score=0.0, trace_id=None):
         try:
-            with self.db.transaction("IMMEDIATE") as conn:
+            with self.db.transaction() as session:
+                kb = session.query(KnowledgeBase).filter_by(entity_name=vendor).first()
+                if not kb: return
+                
                 if is_success:
-                    sql = "UPDATE knowledge_base SET hit_count = hit_count + 1, consecutive_success = consecutive_success + 1, audit_status = CASE WHEN audit_status = 'GRAY' AND consecutive_success >= 2 THEN 'STABLE' ELSE audit_status END, updated_at = CURRENT_TIMESTAMP WHERE entity_name = ?"
+                    kb.hit_count = (kb.hit_count or 0) + 1
+                    kb.consecutive_success = (kb.consecutive_success or 0) + 1
+                    if kb.audit_status == 'GRAY' and kb.consecutive_success >= 2:
+                        kb.audit_status = 'STABLE'
                 else:
-                    sql = "UPDATE knowledge_base SET reject_count = reject_count + 1, consecutive_success = 0, audit_status = CASE WHEN reject_count >= 3 THEN 'BLOCKED' ELSE audit_status END, audit_level = 'HIGH_RISK', updated_at = CURRENT_TIMESTAMP WHERE entity_name = ?"
-                conn.execute(sql, (vendor,))
+                    kb.reject_count = (kb.reject_count or 0) + 1
+                    kb.consecutive_success = 0
+                    if kb.reject_count >= 3:
+                        kb.audit_status = 'BLOCKED'
+                    kb.audit_level = 'HIGH_RISK'
+                
+                kb.updated_at = func.now()
         except: pass
 
     def _reject(self, x, reason):

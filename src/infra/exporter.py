@@ -6,6 +6,7 @@ import threading
 from utils.project_paths import get_path
 from infra.logger import get_logger
 from core.db_helper import DBHelper
+from sqlalchemy import text
 
 log = get_logger("Exporter")
 
@@ -154,33 +155,30 @@ class FinancialExporter:
 
     def _audit_start(self, export_id, filename, count):
         """记录导出审计开始"""
-        # [Optimization 4] 导出前自动创建数据快照
         from core.db_helper import DBHelper
         db = DBHelper()
-        # [Iteration 3] 极端异常场景下的回滚保护：导出前强制创建逻辑快照
         try:
             db.log_system_event("EXPORT_SNAPSHOT", "Exporter", f"开始导出 {filename}，创建快照 {export_id[:8]}")
-            # 假设 db_maintenance 有这个方法，如果没有则 log 记录即可
             if hasattr(db, 'create_ledger_snapshot'):
                 db.create_ledger_snapshot(tag=f"EXPORT_{export_id[:8]}")
         except: pass
         
         try:
-            with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute("""
+            with self.db.transaction() as session:
+                session.execute(text("""
                     INSERT INTO export_audit (export_id, filename, record_count, operator, status)
-                    VALUES (?, ?, ?, ?, 'PENDING')
-                """, (export_id, filename, count, self.operator))
+                    VALUES (:eid, :fname, :cnt, :op, 'PENDING')
+                """), {"eid": export_id, "fname": filename, "cnt": count, "op": self.operator})
         except Exception as e:
             log.error(f"审计记录失败 (Start): {e}")
 
     def _audit_complete(self, export_id, status):
         """记录导出审计完成"""
         try:
-            with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute("""
-                    UPDATE export_audit SET status = ? WHERE export_id = ?
-                """, (status, export_id))
+            with self.db.transaction() as session:
+                session.execute(text("""
+                    UPDATE export_audit SET status = :status WHERE export_id = :eid
+                """), {"status": status, "eid": export_id})
         except Exception as e:
             log.error(f"审计记录失败 (Complete): {e}")
 

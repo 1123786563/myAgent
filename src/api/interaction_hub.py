@@ -2,9 +2,11 @@ import json
 import time
 import threading
 from core.db_helper import DBHelper
+from core.db_models import Transaction, SystemEvent
 from infra.logger import get_logger
 from core.config_manager import ConfigManager
 from infra.graceful_exit import should_exit
+from sqlalchemy import text, func
 
 log = get_logger("InteractionHub")
 
@@ -55,8 +57,8 @@ class InteractionHub:
     def handle_callback(self, transaction_id, action_value, provided_trace_id, original_trace_id, user_role="GUEST", signature=None, extra_payload=None, timestamp=None):
         if provided_trace_id != original_trace_id: return False
         if action_value == "REJECT":
-            with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute("UPDATE transactions SET status = 'BLOCKED' WHERE id = ?", (transaction_id,))
+            with self.db.transaction() as session:
+                session.query(Transaction).filter_by(id=transaction_id).update({"status": "BLOCKED"}, synchronize_session=False)
             return True
         elif action_value == "CONFIRM":
             vendor = "Unknown"
@@ -67,13 +69,13 @@ class InteractionHub:
             if new_cat:
                 from core.knowledge_bridge import KnowledgeBridge
                 KnowledgeBridge().learn_new_rule(vendor, new_cat, source="MANUAL")
-                with self.db.transaction("IMMEDIATE") as conn:
-                    conn.execute("UPDATE transactions SET category = ?, status = 'PENDING_AUDIT' WHERE vendor = ? AND status = 'PENDING'", (new_cat, vendor))
-            with self.db.transaction("IMMEDIATE") as conn:
-                row = conn.execute("SELECT amount, category FROM transactions WHERE id = ?", (transaction_id,)).fetchone()
+                with self.db.transaction() as session:
+                    session.query(Transaction).filter(Transaction.vendor == vendor, Transaction.status == 'PENDING').update({"category": new_cat, "status": 'PENDING_AUDIT'}, synchronize_session=False)
+            with self.db.transaction() as session:
+                row = session.query(Transaction).filter_by(id=transaction_id).first()
                 if row:
-                    self.db.update_trial_balance(row["category"], float(row["amount"]))
-                    conn.execute("UPDATE transactions SET status = 'POSTED' WHERE id = ?", (transaction_id,))
+                    self.db.update_trial_balance(row.category, float(row.amount))
+                    row.status = 'POSTED'
             return True
         return False
 
@@ -90,19 +92,22 @@ class PollingWorker(threading.Thread):
             try:
                 now = time.time()
                 # 1. 处理系统事件 (PUSH_CARD, EVIDENCE_REQUEST)
-                with self.db.transaction("IMMEDIATE") as conn:
-                    sql = """
-                        SELECT id, event_type, message, trace_id 
-                        FROM system_events 
-                        WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') 
-                        AND created_at > CURRENT_TIMESTAMP - interval '30 seconds'
-                        ORDER BY created_at ASC
-                    """
-                    events = conn.execute(sql).fetchall()
+                with self.db.transaction() as session:
+                    # 获取最近 30 秒内的未处理事件
+                    events_objs = session.query(SystemEvent).filter(
+                        SystemEvent.event_type.in_(['PUSH_CARD', 'EVIDENCE_REQUEST']),
+                        SystemEvent.created_at > func.now() - text("interval '30 seconds'")
+                    ).order_by(SystemEvent.created_at.asc()).all()
                     
-                    for event in events:
-                        self._dispatch_event(event)
-                        conn.execute("UPDATE system_events SET event_type = 'HANDLED_' || event_type WHERE id = ?", (event['id'],))
+                    for event in events_objs:
+                        event_data = {
+                            "id": event.id,
+                            "event_type": event.event_type,
+                            "message": event.message,
+                            "trace_id": event.trace_id
+                        }
+                        self._dispatch_event(event_data)
+                        event.event_type = 'HANDLED_' + event.event_type
 
                 # 2. 定期执行主动任务扫描
                 if now - last_proactive_check > 60:
@@ -133,14 +138,24 @@ class PollingWorker(threading.Thread):
 
     def _check_proactive_tasks(self):
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                sql = "SELECT id, vendor, amount, status, trace_id FROM transactions WHERE (status = 'REJECTED' AND created_at < CURRENT_TIMESTAMP - interval '1 minute') OR (status = 'PENDING' AND created_at < CURRENT_TIMESTAMP - interval '10 minutes') LIMIT 3"
-                tasks = conn.execute(sql).fetchall()
-            for task in tasks:
-                if task["status"] == "REJECTED":
-                    self.hub.push_card(task["id"], {"vendor": task["vendor"], "amount": task["amount"], "category": "待修正", "reason": "审计未通过"}, trace_id=task["trace_id"])
-                else:
-                    self.hub.push_evidence_request(task["id"], task["vendor"], task["amount"], trace_id=task["trace_id"])
+            with self.db.transaction() as session:
+                # 查找 rejected 1分钟 或 pending 10分钟的任务
+                cutoff_rejected = func.now() - text("interval '1 minute'")
+                cutoff_pending = func.now() - text("interval '10 minutes'")
+                
+                from sqlalchemy import or_, and_
+                tasks_objs = session.query(Transaction).filter(
+                    or_(
+                        and_(Transaction.status == 'REJECTED', Transaction.created_at < cutoff_rejected),
+                        and_(Transaction.status == 'PENDING', Transaction.created_at < cutoff_pending)
+                    )
+                ).limit(3).all()
+                
+                for task in tasks_objs:
+                    if task.status == "REJECTED":
+                        self.hub.push_card(task.id, {"vendor": task.vendor, "amount": task.amount, "category": "待修正", "reason": "审计未通过"}, trace_id=task.trace_id)
+                    else:
+                        self.hub.push_evidence_request(task.id, task.vendor, task.amount, trace_id=task.trace_id)
         except Exception as e:
             log.error(f"主动任务检查失败: {e}")
 

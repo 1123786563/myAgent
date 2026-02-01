@@ -1,20 +1,10 @@
-import sqlite3
 import threading
 from decimal import Decimal
 from typing import Dict, Any
 
-def adapt_decimal(d):
-    return str(d)
-
-def convert_decimal(s):
-    return Decimal(s.decode('utf-8'))
-
-sqlite3.register_adapter(Decimal, adapt_decimal)
-sqlite3.register_converter("DECIMAL", convert_decimal)
-
 class DBMetrics:
     """
-    [Optimization Iteration 4] 数据库操作指标收集器
+    [Optimization Iteration 4 - SQLAlchemy] 数据库操作指标收集器
     """
     _lock = threading.Lock()
     _stats = {
