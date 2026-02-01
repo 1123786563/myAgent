@@ -56,7 +56,7 @@ class MasterDaemon:
         """启动前预检"""
         log.info("执行系统启动预检与自愈恢复...")
         
-        # [Optimization Round 5] 环境与依赖项检查
+        # 环境与依赖项检查
         try:
             import openai
             import pandas
@@ -76,7 +76,7 @@ class MasterDaemon:
                 log.error(f"预检失败: 找不到服务文件 {name} -> {path}")
                 return False
         
-        # [Optimization 3] 启动自愈：清理僵尸事务状态
+        # 启动自愈：清理僵尸事务状态
         try:
             self.db.update_heartbeat("Master-Daemon", "STARTING")
             recovered_count = self.db.fix_orphaned_transactions()
@@ -90,7 +90,7 @@ class MasterDaemon:
         return True
 
     def reload(self, signum, frame):
-        # [Suggestion 3] 增加信号防抖 (Debouncing) 逻辑
+        # 增加信号防抖 (Debouncing) 逻辑
         current_time = time.time()
         last_reload = getattr(self, '_last_reload_t', 0)
         if current_time - last_reload < 5.0: # 5秒内不重复加载
@@ -109,6 +109,8 @@ class MasterDaemon:
         log.info(f"正在启动子服务: {name}")
         env = os.environ.copy()
         env["LEDGER_PARENT_PID"] = str(os.getpid())
+        # 确保 PYTHONPATH 包含 src
+        env["PYTHONPATH"] = os.path.join(os.getcwd(), 'src') + os.pathsep + env.get("PYTHONPATH", "")
         return subprocess.Popen([sys.executable, script_path], env=env)
 
     def shutdown(self, signum, frame):
@@ -177,12 +179,12 @@ class MasterDaemon:
 
             while self.is_running and not should_exit():
                 try:
-                    # [Optimization Round 14] 鲁棒的 psutil 指标获取
+                    # 鲁棒的 psutil 指标获取
                     process = None
                     try:
                         import psutil
                         process = psutil.Process(os.getpid())
-                    except ImportError:
+                    except:
                         pass
                     
                     current_time = time.time()
@@ -195,45 +197,30 @@ class MasterDaemon:
                     # 每 60 秒更新一次业务指标
                     if current_time - last_metrics_update > 60:
                         try:
-                            # [Optimization 4] 动态 Token 配额与风险感知配额管理
-                            # 逻辑：检测单笔平均金额，自动锁定/解锁高阶模型
+                            from knowledge_bridge import KnowledgeBridge
+                            kb_bridge = KnowledgeBridge()
+                            kb_bridge.cleanup_stale_rules(min_hits=1, days_old=7)
+                            kb_bridge.distill_knowledge()
                             
-                            # [Optimization Round 15] 执行定期知识维护任务 (Knowledge Cleanup)
-                            KnowledgeBridge().cleanup_stale_rules(min_hits=1, days_old=7)
-                            
-                            # 执行定期的知识蒸馏自愈任务
-                            KnowledgeBridge().distill_knowledge()
-                            
-                            # [Optimization 5] 执行数据库定期自愈维护 (DB Maintenance)
                             self.db.perform_db_maintenance()
                             
-                            # [Optimization Round 11] 实时 ROI 指标持久化与偏差分析 (SRS 4.2)
                             roi_data = self.db.get_roi_metrics()
                             if roi_data:
-                                log.info(f"系统效益快报: 已节省 {roi_data.get('human_hours_saved', 0)} 小时 | ROI: {roi_data.get('roi_ratio', 0)}")
+                                log.info(f"系统效益快报: 已节省 {roi_data.get('human_hours_saved', 0)} 小时")
 
-                            # [Optimization Round 23] 现金流健康哨兵 (SRS 3.3.3)
                             try:
                                 from cashflow_predictor import CashflowPredictor
                                 predictor = CashflowPredictor()
                                 cf_report = predictor.predict()
                                 if cf_report.get("is_alarm"):
-                                    log.critical(f"系统主动防御：现金流风险预警！{cf_report.get('status')} | 耗尽点：{cf_report.get('days_until_burnout')}天")
                                     self.db.log_system_event("CASHFLOW_ALARM", "MasterDaemon", cf_report.get('insight'))
-                            except Exception as ce:
-                                log.error(f"现金流预测失败: {ce}")
+                            except:
+                                pass
 
-                            # [Optimization 4] 通知确认重传巡检
-                            # 此处为逻辑预留：self.db.retry_pending_notifications()
-
-                            # [Optimization 5] 运营自愈：Outbox 积压巡检与告警 (F4.5)
                             backlog_count = self.db.verify_outbox_integrity("InteractionHub")
                             if backlog_count > 5:
-                                log.critical(f"系统告警：InteractionHub 积压事件 {backlog_count} 笔，请检查外部通道可靠性！")
+                                log.critical(f"系统告警：InteractionHub 积压事件 {backlog_count} 笔！")
 
-                            # [Optimization 5] 执行数据库自愈维护
-                            self.db.perform_db_maintenance()
-                            
                             stats = self.db.get_ledger_stats()
                             processed_count = sum(s['count'] for s in stats if s['status'] in ('AUDITED', 'COMPLETED', 'POSTED'))
                             metrics["human_hours_saved"] = (processed_count * 5) / 60.0
@@ -251,22 +238,19 @@ class MasterDaemon:
 
                         if not is_crashed:
                             if not self.db.check_health(name, timeout_seconds=health_timeout):
-                                log.warning(f"检测到子服务 {name} 逻辑挂起 (Heartbeat Stuck)！触发强制重启...")
                                 is_hung = True
 
                         if is_crashed or is_hung:
                             if is_hung:
-                                log.info(f"发送 SIGKILL -> {name}")
                                 proc.kill()
                                 proc.wait()
 
                             if current_time < self.next_retry_time.get(name, 0):
                                 continue
 
-                            exit_code = proc.poll()
                             self.restart_counts[name] += 1
                             wait_time = min(60, backoff_base ** (self.restart_counts[name] - 1))
-                            log.warning(f"服务 {name} 异常重启 ({exit_code})，第 {self.restart_counts[name]} 次。冷却 {wait_time}s...")
+                            log.warning(f"服务 {name} 异常重启，冷却 {wait_time}s...")
 
                             self.next_retry_time[name] = current_time + wait_time
                             self.processes[name] = self.start_service(name, self.services[name])

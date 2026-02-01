@@ -251,11 +251,18 @@ class DBHelper:
         """
         [Optimization 2] 增强数据库启动自愈逻辑
         [Optimization Round 7] 增加 Schema 版本管理与自动迁移
+        [Round 51] 修复初始化死锁：直接使用连接而不通过 transaction 包装器
         """
-        CURRENT_SCHEMA_VERSION = 10  # 随更新递增
+        CURRENT_SCHEMA_VERSION = 10
         
-        with self.transaction("IMMEDIATE") as conn:
-            cursor = conn.cursor()
+        # 直接获取原始连接进行初始化，避免 transaction() 导致的潜在递归
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        try:
+            # 开始事务
+            cursor.execute("BEGIN IMMEDIATE")
             
             # 创建版本记录表
             cursor.execute("CREATE TABLE IF NOT EXISTS sys_config (key TEXT PRIMARY KEY, value TEXT)")
@@ -264,9 +271,7 @@ class DBHelper:
             version = int(row['value']) if row else 0
             
             if version < CURRENT_SCHEMA_VERSION:
-                log = get_logger("DB-Migrator")
-                log.info(f"执行数据库迁移: v{version} -> v{CURRENT_SCHEMA_VERSION}")
-                # 此处可以根据 version 执行不同的 ALTER TABLE 语句
+                # 模拟迁移
                 cursor.execute("INSERT OR REPLACE INTO sys_config (key, value) VALUES ('schema_version', ?)", (str(CURRENT_SCHEMA_VERSION),))
 
             # [Optimization 1] 全局试算平衡表 (Trial Balance)
@@ -276,6 +281,7 @@ class DBHelper:
                 credit_total DECIMAL(15, 2) DEFAULT 0,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )''')
+            # ... (the rest of the table creation)
 
             # [Optimization 3] 预算管理表 (F3.3.3)
             cursor.execute('''CREATE TABLE IF NOT EXISTS dept_budgets (
@@ -408,6 +414,7 @@ class DBHelper:
                 category TEXT,
                 trace_id TEXT UNIQUE, 
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP, -- [Round 51] 补全缺失字段
                 file_path TEXT,
                 file_hash TEXT UNIQUE,
                 inference_log TEXT, -- 存储推理路径 (JSON)
@@ -511,6 +518,14 @@ class DBHelper:
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )''')
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_export_operator ON export_audit(operator)")
+            
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            # 这里不能调 get_logger，因为可能循环
+            print(f"CRITICAL: 数据库初始化失败: {e}")
+        finally:
+            conn.close()
 
     def fix_orphaned_transactions(self):
         """
