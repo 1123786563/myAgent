@@ -26,6 +26,11 @@ class DBInitializer:
             if version < CURRENT_SCHEMA_VERSION:
                 cursor.execute("INSERT OR REPLACE INTO sys_config (key, value) VALUES ('schema_version', ?)", (str(CURRENT_SCHEMA_VERSION),))
 
+            # [Iteration 6] 逻辑回撤支持
+            try:
+                cursor.execute("ALTER TABLE transactions ADD COLUMN logical_revert INTEGER DEFAULT 0")
+            except sqlite3.OperationalError: pass
+
             # [Optimization 1] 全局试算平衡表 (Trial Balance)
             cursor.execute('''CREATE TABLE IF NOT EXISTS trial_balance (
                 account_code TEXT PRIMARY KEY,

@@ -94,3 +94,27 @@ class QB_SAP_Exporter:
         except Exception as e:
             log.error(f"金蝶导出失败: {e}")
             return None
+
+    def to_yonyou_csv(self, records, filename="yonyou_u8_import.csv"):
+        """
+        导出为用友 U8 标准导入格式
+        """
+        target_path = get_path("workspace", filename)
+        try:
+            yy_data = []
+            for r in records:
+                yy_data.append({
+                    '日期': r.get('created_at', '').split(' ')[0],
+                    '凭证类别': '记账凭证',
+                    '摘要': f"AI-Audit: {r.get('vendor', 'Unknown')}",
+                    '科目编码': r.get('category', ''),
+                    '借方': r.get('amount', 0),
+                    '贷方': 0,
+                    '制单人': 'LedgerAlpha'
+                })
+            pd.DataFrame(yy_data).to_csv(target_path, index=False, encoding='gbk')
+            log.info(f"用友格式导出成功: {target_path}")
+            return target_path
+        except Exception as e:
+            log.error(f"用友导出失败: {e}")
+            return None

@@ -104,15 +104,18 @@ class DBQueries(DBBase):
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def get_historical_trend(self, vendor, months=12):
+        # [Iteration 6] 动态调整挖掘窗口以优化超长上下文
         sql = """
             SELECT category, amount, created_at, inference_log 
             FROM transactions 
             WHERE vendor = ? AND status IN ('AUDITED', 'POSTED', 'MATCHED')
+            AND logical_revert = 0
             AND created_at >= date('now', ?)
             ORDER BY created_at DESC
         """
         try:
             with self.transaction("DEFERRED") as conn:
+                # [Iteration 6] 增加对 logical_revert 的支持
                 rows = [dict(row) for row in conn.execute(sql, (vendor, f'-{months} months')).fetchall()]
                 if not rows: return {}
                 

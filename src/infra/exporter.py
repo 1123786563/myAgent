@@ -47,6 +47,9 @@ class FinancialExporter:
             elif file_format == "kingdee":
                 from infra.export_compatibility import QB_SAP_Exporter
                 target_path = QB_SAP_Exporter(self.db).to_kingdee_csv(records, filename if filename.endswith('.csv') else filename + ".csv")
+            elif file_format == "yonyou":
+                from infra.export_compatibility import QB_SAP_Exporter
+                target_path = QB_SAP_Exporter(self.db).to_yonyou_csv(records, filename if filename.endswith('.csv') else filename + ".csv")
             
             if target_path:
                 self._audit_complete(export_id, "COMPLETED")
