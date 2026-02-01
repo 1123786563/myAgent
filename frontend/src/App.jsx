@@ -132,7 +132,22 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <ConfigProvider locale={zhCN}>
+    <ConfigProvider
+      locale={zhCN}
+      theme={{
+        token: {
+          colorPrimary: '#1677ff',
+          borderRadius: 6,
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
+        },
+        components: {
+          Layout: {
+            headerBg: '#001529',
+            siderBg: '#001529',
+          },
+        },
+      }}
+    >
       <BrowserRouter>
         <Layout>
           <Routes>
