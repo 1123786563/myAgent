@@ -9307,3 +9307,736 @@ LINE 5:                         AND created_at > datetime('now', '-3...
                                                  ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 
+2026-02-01 16:12:19,320 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,322 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:19,322 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:19,322 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:19,324 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:19,326 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:19,326 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:19,353 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:12:19,353 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:19,364 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:12:19,365 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:19,376 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:12:19,377 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:19,394 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:12:19,394 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:19,401 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:12:19,401 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:19,407 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:12:19,407 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:19,420 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:12:19,420 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:19,626 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,627 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:12:19,628 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:12:19,647 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:19,647 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,648 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:12:19,651 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:12:19,665 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,691 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:19,691 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:12:19,694 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:12:19,699 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:12:19,701 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:19,709 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,750 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,790 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,267 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,270 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:21,323 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,324 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:21,325 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:21,344 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:24,650 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:29,466 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,470 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:29,470 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:29,470 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:29,471 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:29,472 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:29,472 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:29,500 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:12:29,500 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:29,511 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:12:29,511 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:29,521 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:12:29,521 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:29,538 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:12:29,539 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:29,544 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:12:29,544 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:29,550 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:12:29,551 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:29,565 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:12:29,565 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:29,759 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,760 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:12:29,760 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:12:29,771 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,772 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:12:29,774 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:12:29,779 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:29,797 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,806 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:29,806 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:12:29,809 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:12:29,813 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:12:29,815 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:29,833 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,869 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,904 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,015 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,018 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:31,064 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,066 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:31,066 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:31,085 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:34,855 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:39,605 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,608 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:39,608 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:39,608 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:39,610 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:39,611 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:39,611 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:39,638 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 8s...
+2026-02-01 16:12:39,638 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:39,650 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 8s...
+2026-02-01 16:12:39,651 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:39,663 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 8s...
+2026-02-01 16:12:39,664 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:39,684 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 8s...
+2026-02-01 16:12:39,684 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:39,691 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 8s...
+2026-02-01 16:12:39,691 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:39,698 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 8s...
+2026-02-01 16:12:39,698 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:39,714 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 8s...
+2026-02-01 16:12:39,714 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:39,921 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,923 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:12:39,923 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:12:39,941 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:39,946 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,947 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:12:39,950 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:12:39,965 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,984 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:39,984 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:12:39,987 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:12:39,992 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:12:39,994 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:40,004 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:40,045 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:40,083 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,236 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,239 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:41,287 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,288 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:41,289 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:41,307 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:44,944 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:49,754 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:49,756 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:49,756 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:49,756 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:49,757 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:49,759 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:49,759 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:49,787 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 16s...
+2026-02-01 16:12:49,787 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:49,797 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 16s...
+2026-02-01 16:12:49,797 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:49,809 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 16s...
+2026-02-01 16:12:49,809 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:49,827 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 16s...
+2026-02-01 16:12:49,827 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:49,833 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 16s...
+2026-02-01 16:12:49,833 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:49,839 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 16s...
+2026-02-01 16:12:49,839 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:49,852 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 16s...
+2026-02-01 16:12:49,853 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:50,055 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,056 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:12:50,056 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:12:50,070 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,071 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:12:50,074 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:50,075 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:12:50,090 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,108 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:50,108 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:12:50,111 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:12:50,115 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:12:50,117 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:50,128 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,166 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,205 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,387 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,389 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:51,441 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,442 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:51,442 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:51,462 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:55,076 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:59,894 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:59,896 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:59,896 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:59,896 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:59,897 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:59,899 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:59,899 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:13:11,992 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:11,998 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:13:11,998 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:13:11,998 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:13:12,002 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:13:12,005 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:13:12,005 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:13:12,032 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 32s...
+2026-02-01 16:13:12,032 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:13:12,039 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 32s...
+2026-02-01 16:13:12,040 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:13:12,047 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 32s...
+2026-02-01 16:13:12,047 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:13:12,053 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 32s...
+2026-02-01 16:13:12,053 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:13:12,060 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 32s...
+2026-02-01 16:13:12,060 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:13:12,066 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 32s...
+2026-02-01 16:13:12,066 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:13:12,073 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 32s...
+2026-02-01 16:13:12,073 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:13:12,302 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,303 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:13:12,304 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:13:12,311 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,312 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:13:12,316 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:13:12,326 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:13:12,339 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,352 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:13:12,352 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:13:12,354 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:13:12,359 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:13:12,362 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:13:12,384 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,427 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,475 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,053 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,056 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:13:14,107 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,108 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:13:14,108 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:13:14,128 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:02,988 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:14:02,999 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:14:04,325 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:14:04,379 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:14:04,379 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:14:04,387 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:14:04,395 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:14:04,402 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:14:04,410 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:14:04,418 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:14:04,425 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:14:04,518 [Global] - KnowledgeBridge - INFO - 清理了 0 条过期临时规则。
+2026-02-01 16:14:04,519 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:14:04,519 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:14:04,527 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:14:04,528 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:14:04,552 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:14:04,552 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:14:04,564 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:14:04,565 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:14:04,578 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:14:04,578 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:14:04,589 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:14:04,590 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:14:04,604 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:14:04,604 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:14:04,619 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:14:04,620 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:14:04,634 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:14:04,634 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:14:04,955 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:14:04,955 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:14:04,977 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:04,991 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:14:04,996 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:14:05,051 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:14:05,056 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:14:05,074 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:14:05,076 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:07,024 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:14:07,116 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:14:07,116 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:14:07,139 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:09,979 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:14,701 [Global] - KnowledgeBridge - INFO - 清理了 0 条过期临时规则。
+2026-02-01 16:14:14,701 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:14:14,701 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:14:14,708 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:14:14,708 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:14:14,722 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:14:14,722 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:14:14,740 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:14:14,740 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:14:14,754 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:14:14,754 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:14:14,782 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:14:14,782 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:14:14,791 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:14:14,791 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:14:14,800 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:14:14,800 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:14:14,826 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:14:14,826 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:14:15,114 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:14:15,119 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:14:15,121 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:14:15,121 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:14:15,146 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:15,164 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:14:15,168 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:14:15,174 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:14:15,176 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:16,757 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:14:16,812 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:14:16,812 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:14:16,830 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:20,148 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:00,370 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:15:00,380 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:15:01,702 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:15:01,742 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:15:01,742 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:15:01,749 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:15:01,755 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:15:01,762 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:15:01,768 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:15:01,775 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:15:01,783 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:15:01,854 [Global] - KnowledgeBridge - INFO - 清理了 0 条过期临时规则。
+2026-02-01 16:15:01,854 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:15:01,854 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:15:01,862 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:15:01,862 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:15:01,875 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:15:01,875 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:15:01,889 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:15:01,889 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:15:01,904 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:15:01,905 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:15:01,919 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:15:01,919 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:15:01,934 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:15:01,935 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:15:01,948 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:15:01,948 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:15:01,963 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:15:01,963 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:15:02,321 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:15:02,322 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:15:02,335 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:15:02,338 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:15:02,339 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:02,367 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:15:02,369 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:15:02,372 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:15:02,375 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:03,759 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:15:03,813 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:15:03,814 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:15:03,832 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range

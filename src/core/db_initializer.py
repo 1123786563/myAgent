@@ -76,9 +76,10 @@ class DBInitializer:
             cursor.execute("CREATE TABLE IF NOT EXISTS trial_balance (account_code TEXT PRIMARY KEY, debit_total DECIMAL(15, 2) DEFAULT 0, credit_total DECIMAL(15, 2) DEFAULT 0, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
             cursor.execute("CREATE TABLE IF NOT EXISTS roi_metrics_history (report_date DATE PRIMARY KEY, human_hours_saved DECIMAL(10, 2), token_spend_usd DECIMAL(10, 4), roi_ratio DECIMAL(10, 2))")
             
-            # [Fix] knowledge_base 增加 audit_status, category_mapping, reject_count, updated_at
+            # [Fix] knowledge_base 增加 id, audit_status, category_mapping, reject_count, updated_at
             cursor.execute('''CREATE TABLE IF NOT EXISTS knowledge_base (
-                entity_name TEXT PRIMARY KEY, 
+                id SERIAL PRIMARY KEY,
+                entity_name TEXT UNIQUE, 
                 category_mapping TEXT,
                 audit_status TEXT DEFAULT 'GRAY',
                 consecutive_success INTEGER DEFAULT 0, 

@@ -9299,3 +9299,501 @@ LINE 5:                         AND created_at > datetime('now', '-3...
                                                  ^
 HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
 
+2026-02-01 16:12:19,320 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,322 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:19,324 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:19,326 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:19,326 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:19,626 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,647 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:19,647 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,665 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,691 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:19,701 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:19,709 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,750 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:19,790 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,267 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,323 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:21,344 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:24,650 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:29,466 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,470 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:29,471 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:29,472 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:29,472 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:29,759 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,771 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,779 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:29,797 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,806 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:29,815 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:29,833 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,869 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:29,904 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,015 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,064 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:31,085 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:34,855 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:39,605 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,608 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:39,610 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:39,611 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:39,611 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:39,921 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,941 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:39,946 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,965 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:39,984 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:39,994 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:40,004 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:40,045 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:40,083 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,236 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,287 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:41,307 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:44,944 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:49,754 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:49,756 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:49,757 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:49,759 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:49,759 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:50,055 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,070 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,074 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:50,090 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,108 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:50,117 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:50,128 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,166 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:50,205 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,387 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,441 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:51,462 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:55,076 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:59,894 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:59,896 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:59,897 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:59,899 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:59,899 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:13:11,992 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:11,998 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:13:12,002 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:13:12,005 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:13:12,005 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:13:12,302 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,311 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,326 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:13:12,339 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,352 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:13:12,362 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:13:12,384 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,427 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:12,475 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,053 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,107 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:13:14,128 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:04,527 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:14:04,528 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:14:04,977 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:05,076 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:07,139 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:09,979 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:14,708 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:14:14,708 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:14:15,146 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:15,176 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:14:16,830 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:14:20,148 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:01,862 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: column "id" does not exist
+LINE 1: SELECT id, entity_name, category_mapping, quality_score FROM...
+               ^
+
+2026-02-01 16:15:01,862 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:15:02,339 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:02,375 [Global] - MatchEngine - ERROR - 证据追索任务异常: function datetime(timestamp without time zone) does not exist
+LINE 5:                     AND datetime(created_at) < datetime('now...
+                                ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:15:03,832 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
