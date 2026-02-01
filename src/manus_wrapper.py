@@ -1,8 +1,11 @@
 import uuid
 import json
 import re
+import time
+from typing import Dict, Any, List
 from bus_init import LedgerMsg
 from logger import get_logger
+from llm_connector import LLMFactory
 
 log = get_logger("OpenManusWrapper")
 
@@ -21,109 +24,161 @@ class CostCircuitBreaker:
 
 class OpenManusAnalyst:
     """
-    [Optimization 4] 模拟 OpenManus 的强推理能力与安全沙箱执行 (F3.1.4)
+    [Optimization 4] OpenManus 强推理能力封装
+    [Round 2 Optimization] 实现 Agentic ReAct 循环 (Thought -> Action -> Observation)
     """
     def __init__(self):
         self.name = "OpenManusSpecialForce"
-        self.cost_control = CostCircuitBreaker(daily_limit_usd=10.0) # $10 limit
+        self.cost_control = CostCircuitBreaker(daily_limit_usd=10.0)
+        self.llm = LLMFactory.get_llm()
+        self.max_steps = 5
 
-    def _run_in_sandbox(self, task_name, payload):
+    def _execute_tool(self, action_name: str, action_input: str) -> str:
         """
-        [Optimization 4] 安全沙箱执行层
-        模拟无状态子进程隔离执行，完成后立即擦除敏感数据
+        执行工具调用。目前支持:
+        - search_web: 联网搜索 (模拟)
+        - browser_fetch: 浏览器抓取 (调用 BrowserBankConnector)
+        - ask_user: 询问用户
         """
-        log_info = f"[{self.name}] 正在启动无状态沙箱: {task_name}"
-        print(log_info)
-        # 实际实现将使用 os.fork() 或 docker sdk
-        try:
-            # 模拟抓取逻辑
-            return {"status": "SUCCESS", "data": "BANK_FLOW_EXTRACTED"}
-        finally:
-            print(f"[{self.name}] 沙箱已物理销毁，凭据已擦除。")
-
-    def _safe_parse_output(self, llm_response):
-        """[Suggestion 4] 弹性输出解析器 (Resilient Parsing)"""
-        # 尝试 JSON 解析
-        try:
-            return json.loads(llm_response)
-        except json.JSONDecodeError:
-            pass
-            
-        # 尝试从 Markdown 代码块提取
-        match = re.search(r"```json\s*(\{.*?\})\s*```", llm_response, re.DOTALL)
-        if match:
-            try:
-                return json.loads(match.group(1))
-            except:
-                pass
-                
-        # 兜底：关键词正则提取
-        category_match = re.search(r"category[\"']?:\s*[\"'](.*?)[\"']", llm_response)
-        confidence_match = re.search(r"confidence[\"']?:\s*(\d+\.?\d*)", llm_response)
+        log.info(f"[{self.name}] 执行工具: {action_name} | 参数: {action_input}")
         
-        return {
-            "category": category_match.group(1) if category_match else "待核定",
-            "confidence": float(confidence_match.group(1)) if confidence_match else 0.5,
-            "reason": "Parsed via fallback regex"
-        }
+        if action_name == "search_web":
+            # 模拟搜索结果
+            return f"Search results for '{action_input}': Found 3 relevant pages. Key info: [Context related to {action_input}]"
+            
+        elif action_name == "browser_fetch":
+            # 调用 Round 1 实现的 BrowserBankConnector
+            try:
+                from connectors.browser_bank_connector import BrowserBankConnector
+                connector = BrowserBankConnector(bank_name="Shadow-Checking-01")
+                # 简单映射：如果 input 是 '7d'，则抓取 7 天
+                days = 7
+                if "30d" in action_input: days = 30
+                
+                raw_data = connector.fetch_raw_data(since_time=f"{days}d")
+                return f"Browser fetch successful. Retrieved {len(raw_data)} transactions."
+            except Exception as e:
+                return f"Browser fetch failed: {str(e)}"
+                
+        elif action_name == "ask_user":
+            return "User interaction requested. (Simulated: User provided clarification)"
+            
+        else:
+            return f"Unknown tool: {action_name}"
 
-    def investigate(self, raw_data_context, group_context=None, history_trend=None):
+    def _parse_llm_step(self, response_text: str) -> Dict[str, Any]:
         """
-        [Optimization 2] 增强型多模态聚合调查 (F3.1.3)
-        [Optimization 4] 结构化推理图存证 (F3.2.4)
+        解析 LLM 返回的 Thought/Action 结构
+        期望格式:
+        Thought: ...
+        Action: tool_name(args)
         """
-        # [Suggestion 3] 成本预检
-        if not self.cost_control.check_and_record(estimated_cost=0.05):
+        thought_match = re.search(r"Thought:\s*(.+)", response_text, re.IGNORECASE)
+        action_match = re.search(r"Action:\s*(\w+)\((.+)\)", response_text, re.IGNORECASE)
+        
+        thought = thought_match.group(1).strip() if thought_match else "Thinking..."
+        
+        if action_match:
+            return {
+                "type": "action",
+                "thought": thought,
+                "tool": action_match.group(1),
+                "args": action_match.group(2)
+            }
+        
+        # 如果没有 Action，可能是 Final Answer
+        final_match = re.search(r"Final Answer:\s*(.+)", response_text, re.IGNORECASE | re.DOTALL)
+        if final_match:
+            return {
+                "type": "finish",
+                "thought": thought,
+                "answer": final_match.group(1).strip()
+            }
+            
+        # 兜底：如果是一个 JSON 块，尝试直接解析为结果
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", response_text, re.DOTALL)
+        if json_match:
+             return {
+                "type": "finish",
+                "thought": thought,
+                "answer": json_match.group(1)
+            }
+
+        return {"type": "unknown", "thought": thought, "raw": response_text}
+
+    def investigate(self, task_description: str, context_data: Dict = None) -> Dict[str, Any]:
+        """
+        [Round 2] 启动 ReAct 循环
+        """
+        if not self.cost_control.check_and_record(estimated_cost=0.1):
             return {"category": "MANUAL_REVIEW", "reason": "Cost limit exceeded", "confidence": 0.0}
 
-        context_payload = f"【当前单据】: {raw_data_context}\n"
-        
-        # 记录推理初始步骤
-        reasoning_steps = [
-            {"step": 1, "action": "INITIAL_CONTEXT_LOAD", "result": "Loaded current receipt data"}
-        ]
-        
-        if group_context:
-            print(f"[{self.name}] 正在执行多模态资产画像聚合 (Size: {len(group_context)})")
-            # 聚合多角度视觉描述与元数据 (Optimization 2)
-            group_summary = group_context.get('visual_summary', '')
-            context_payload += f"【关联多角度视觉描述】: {group_summary}\n"
-            reasoning_steps.append({"step": 2, "action": "ASSET_IMAGE_AGGREGATION", "result": f"Merged {len(group_context)} image summaries"})
+        history = [f"Task: {task_description}"]
+        if context_data:
+            history.append(f"Context: {json.dumps(context_data, ensure_ascii=False)}")
+            
+        history.append("Available Tools: search_web, browser_fetch, ask_user")
+        history.append("Format your response as:\nThought: ...\nAction: tool_name(args)\nOR\nFinal Answer: JSON_STRING")
 
-        if history_trend:
-            print(f"[{self.name}] 正在注入 12 个月供应商历史趋势画像")
-            # 注入均值、常用科目等信息帮助识别离群值
-            context_payload += f"【历史画像摘要】: 常入科目={history_trend.get('primary_category')}, 月均交易={history_trend.get('avg_amount'):.2f}\n"
-            reasoning_steps.append({"step": 3, "action": "HISTORICAL_PROFILE_MATCH", "result": "Calculated consistency with vendor profile"})
+        reasoning_trace = []
 
-        print(f"[{self.name}] 正在启动 L2 强推理 (Reasoning Graph Mode)...")
-        
-        # [Suggestion 5] 双向反查回路
-        if "未知物品" in context_payload:
-             return {
-                 "action": "ASK_USER",
-                 "question": "无法识别该物品。请提供照片或说明用途。",
-                 "confidence": 0.0
-             }
+        for step in range(self.max_steps):
+            prompt = "\n".join(history) + "\n\nBegin Step " + str(step+1)
+            
+            # 1. LLM Generate
+            llm_result = self.llm.generate_response(prompt)
+            # generate_response 返回的是结构化 dict，我们需要提取 text 用于 ReAct 解析
+            # 这里由于 BaseLLM 接口是针对分类优化的，我们需要稍微 hack 一下或者假定 LLM 能理解 ReAct prompt
+            # 实际上 OpenAICompatibleLLM 会返回 {"result": {"category":...}} 这种结构
+            # 为了支持 ReAct，我们需要让 LLM 返回自由文本。
+            # 这里的改进点是：LLMFactory 应该支持 mode="chat" 而不仅仅是 "classification"
+            # 暂时假设 generate_response 的 'reasoning' 字段包含我们需要的内容，或者我们直接修改 prompt 让它把 ReAct 思考过程放在 reasoning 里
+            
+            response_text = llm_result.get("reasoning", "") + "\n" + json.dumps(llm_result.get("result", {}))
+            
+            # 尝试解析
+            parsed = self._parse_llm_step(response_text)
+            
+            reasoning_trace.append({
+                "step": step + 1,
+                "thought": parsed.get("thought"),
+                "action": parsed.get("tool"),
+                "args": parsed.get("args")
+            })
+            
+            if parsed["type"] == "finish":
+                try:
+                    # 尝试解析 Final Answer 为 JSON
+                    final_json = json.loads(parsed["answer"]) if isinstance(parsed["answer"], str) else parsed["answer"]
+                    if not isinstance(final_json, dict):
+                         final_json = {"category": "待核定", "reason": str(parsed["answer"])}
+                    
+                    final_json["reasoning_graph"] = reasoning_trace
+                    return final_json
+                except:
+                    return {
+                        "category": "待核定", 
+                        "reason": parsed["answer"], 
+                        "confidence": 0.5,
+                        "reasoning_graph": reasoning_trace
+                    }
+            
+            elif parsed["type"] == "action":
+                # 2. Execute Action
+                observation = self._execute_tool(parsed["tool"], parsed["args"])
+                history.append(f"Observation: {observation}")
+                
+            else:
+                # Unknown response, force termination or retry
+                history.append("System: Invalid format. Please Output 'Final Answer: JSON' or 'Action: tool(arg)'")
 
-        # 模拟 LLM 响应 (包含杂音)
-        llm_raw_response = """
-        I have analyzed the receipt.
-        ```json
-        {
-            "category": "办公费用-福利费",
-            "reason": "多模态核实：经照片比对确认属于员工福利实物。",
-            "confidence": 0.99
+        return {
+            "category": "超时未决", 
+            "reason": "Max steps reached without conclusion", 
+            "confidence": 0.0,
+            "reasoning_graph": reasoning_trace
         }
-        ```
-        """
-        
-        # 使用安全解析器
-        parsed_result = self._safe_parse_output(llm_raw_response)
-        parsed_result["reasoning_graph"] = reasoning_steps
-        
-        return parsed_result
 
 if __name__ == "__main__":
     analyst = OpenManusAnalyst()
-    print(analyst.investigate("收到一张玄铁重剑的发票，金额 500 元"))
+    print(analyst.investigate("分析这笔交易: 收到一张玄铁重剑的发票，金额 500 元"))

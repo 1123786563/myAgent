@@ -5,9 +5,12 @@ import random
 import os
 import hashlib
 import threading
+import re
+from typing import Optional, Tuple, Dict, Any
 from logger import get_logger
 from project_paths import get_path
 from config_manager import ConfigManager
+from trace_context import TraceContext
 
 log = get_logger("LLMConnector")
 
@@ -250,71 +253,92 @@ class OpenAICompatibleLLM(BaseLLM):
             log.error(f"LLM 客户端初始化失败: {e}")
             self._client = None
 
-    def _call_api_with_retry(self, messages: list) -> tuple:
-        """带重试机制的 API 调用，返回 (解析结果, usage信息)"""
+    def _call_api_with_retry(self, messages: list) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        """
+        [Optimization Iteration 5] 带重试机制和分布式追踪的 API 调用
+        [Optimization Round 3] 集成 ProxyActor 强制出口检查
+        返回 (解析结果, usage信息)
+        """
         last_error = None
+        trace_id = TraceContext.get_trace_id()
+        
+        # 初始化强制代理
+        from proxy_actor import ProxyActor
+        proxy = ProxyActor()
 
         for attempt in range(self.max_retries):
-            try:
-                response = self._client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    temperature=self.temperature,
-                    max_tokens=500
-                )
+            with TraceContext.start_span("llm_api_call", {
+                "attempt": attempt + 1,
+                "model": self.model,
+                "base_url": self.base_url
+            }) as span:
+                try:
+                    # 使用代理发送请求，而不是直接调用 client
+                    response = proxy.send_llm_request(
+                        client=self._client,
+                        model=self.model,
+                        messages=messages,
+                        temperature=self.temperature,
+                        max_tokens=500
+                    )
 
-                content = response.choices[0].message.content
-                log.debug(f"LLM 原始响应: {content[:200]}...")
+                    content = response.choices[0].message.content
+                    log.debug(f"LLM 原始响应: {content[:200]}...", extra={"trace_id": trace_id})
 
-                # 提取 usage 信息
-                usage = {}
-                if hasattr(response, 'usage') and response.usage:
-                    usage = {
-                        "prompt_tokens": response.usage.prompt_tokens,
-                        "completion_tokens": response.usage.completion_tokens,
-                        "total_tokens": response.usage.total_tokens
-                    }
+                    # 提取 usage 信息
+                    usage = {}
+                    if hasattr(response, 'usage') and response.usage:
+                        usage = {
+                            "prompt_tokens": response.usage.prompt_tokens,
+                            "completion_tokens": response.usage.completion_tokens,
+                            "total_tokens": response.usage.total_tokens
+                        }
+                        span["attributes"]["tokens"] = usage.get("total_tokens", 0)
 
-                # 尝试解析 JSON 响应
-                return self._parse_response(content), usage
+                    # 尝试解析 JSON 响应
+                    parsed = self._parse_response(content)
+                    span["attributes"]["success"] = True
+                    return parsed, usage
 
-            except Exception as e:
-                last_error = e
-                wait_time = (2 ** attempt) + random.uniform(0, 1)
-                log.warning(f"LLM API 调用失败 (尝试 {attempt + 1}/{self.max_retries}): {e}")
+                except Exception as e:
+                    last_error = e
+                    span["attributes"]["error"] = str(e)
+                    wait_time = (2 ** attempt) + random.uniform(0, 1)
+                    log.warning(
+                        f"LLM API 调用失败 (尝试 {attempt + 1}/{self.max_retries}): {e}",
+                        extra={"trace_id": trace_id}
+                    )
 
-                if attempt < self.max_retries - 1:
-                    log.info(f"等待 {wait_time:.1f}s 后重试...")
-                    time.sleep(wait_time)
+                    if attempt < self.max_retries - 1:
+                        log.info(f"等待 {wait_time:.1f}s 后重试...", extra={"trace_id": trace_id})
+                        time.sleep(wait_time)
 
         raise last_error
 
-    def _parse_response(self, content: str) -> dict:
-        """解析 LLM 响应，提取 JSON 结构"""
-        # 尝试直接解析
-        try:
-            return json.loads(content)
-        except json.JSONDecodeError:
-            pass
+    def _parse_response(self, content: str) -> Dict[str, Any]:
+        """
+        [Optimization Iteration 5] 优化的 JSON 解析逻辑
+        消除重复的 try-except 块，使用统一的解析策略
+        """
+        # 定义解析策略列表
+        extraction_strategies = [
+            # 策略 1: 直接解析
+            lambda c: c,
+            # 策略 2: 提取 markdown 代码块
+            lambda c: re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', c).group(1) if re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', c) else None,
+            # 策略 3: 提取 {...} 部分
+            lambda c: re.search(r'\{[\s\S]*\}', c).group(0) if re.search(r'\{[\s\S]*\}', c) else None,
+        ]
 
-        # 尝试提取 JSON 块 (处理 markdown 代码块)
-        import re
-        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', content)
-        if json_match:
+        for strategy in extraction_strategies:
             try:
-                return json.loads(json_match.group(1))
-            except json.JSONDecodeError:
-                pass
+                extracted = strategy(content)
+                if extracted:
+                    return json.loads(extracted)
+            except (json.JSONDecodeError, AttributeError):
+                continue
 
-        # 尝试提取 {...} 部分
-        brace_match = re.search(r'\{[\s\S]*\}', content)
-        if brace_match:
-            try:
-                return json.loads(brace_match.group(0))
-            except json.JSONDecodeError:
-                pass
-
-        # 解析失败，返回默认结构
+        # 所有策略都失败，返回默认结构
         log.warning(f"无法解析 LLM 响应为 JSON: {content[:100]}...")
         return {
             "category": "待人工确认",
@@ -322,77 +346,93 @@ class OpenAICompatibleLLM(BaseLLM):
             "confidence": 0.3
         }
 
-    def generate_response(self, prompt: str, system_role: str = "assistant") -> dict:
+    def generate_response(self, prompt: str, system_role: str = "assistant") -> Dict[str, Any]:
         """
         调用真实 LLM API 生成分类响应
         [Optimization Iteration 3] 集成缓存与预算控制
+        [Optimization Iteration 5] 集成分布式追踪
         """
+        trace_id = TraceContext.get_trace_id()
+
         # 1. 检查缓存
         if self.enable_cache:
             cached = _response_cache.get(prompt, self.model)
             if cached:
                 self._budget_manager.record_cache_hit()
                 cached["from_cache"] = True
-                log.info(f"LLM 缓存命中，跳过 API 调用")
+                log.info(f"LLM 缓存命中，跳过 API 调用", extra={"trace_id": trace_id})
                 return cached
 
         # 2. 检查预算
         allowed, reason = self._budget_manager.check_budget()
         if not allowed:
-            log.warning(f"LLM 预算超限: {reason}，降级到 Mock 模式")
+            log.warning(f"LLM 预算超限: {reason}，降级到 Mock 模式", extra={"trace_id": trace_id})
             return MockOpenManusLLM().generate_response(prompt, system_role)
 
         # 3. 检查客户端
         if not self._client:
-            log.error("LLM 客户端未初始化，回退到 Mock 模式")
+            log.error("LLM 客户端未初始化，回退到 Mock 模式", extra={"trace_id": trace_id})
             return MockOpenManusLLM().generate_response(prompt, system_role)
 
-        start_time = time.time()
-        log.info(f"调用 LLM API: {prompt[:50]}...")
+        # 4. 使用 Span 包裹整个 LLM 调用流程
+        with TraceContext.start_span("llm_generate_response", {
+            "model": self.model,
+            "prompt_length": len(prompt)
+        }) as span:
+            start_time = time.time()
+            log.info(f"调用 LLM API: {prompt[:50]}...", extra={"trace_id": trace_id})
 
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": prompt}
-        ]
+            messages = [
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": prompt}
+            ]
 
-        try:
-            result, usage = self._call_api_with_retry(messages)
-            elapsed = time.time() - start_time
+            try:
+                result, usage = self._call_api_with_retry(messages)
+                elapsed = time.time() - start_time
 
-            # 4. 记录 Token 使用量
-            if usage:
-                self._budget_manager.record_usage(
-                    usage.get("prompt_tokens", 0),
-                    usage.get("completion_tokens", 0)
+                # 5. 记录 Token 使用量
+                if usage:
+                    self._budget_manager.record_usage(
+                        usage.get("prompt_tokens", 0),
+                        usage.get("completion_tokens", 0)
+                    )
+                    span["attributes"]["total_tokens"] = usage.get("total_tokens", 0)
+
+                # 标准化响应格式
+                response = {
+                    "reasoning": f"LLM Analysis via {self.model}",
+                    "result": {
+                        "category": result.get("category", "待人工确认"),
+                        "reason": result.get("reason", "Unknown")
+                    },
+                    "confidence": float(result.get("confidence", 0.5)),
+                    "latency_ms": int(elapsed * 1000),
+                    "model": self.model,
+                    "from_cache": False
+                }
+
+                span["attributes"]["latency_ms"] = response["latency_ms"]
+                span["attributes"]["confidence"] = response["confidence"]
+
+                # 6. 存入缓存
+                if self.enable_cache:
+                    _response_cache.set(prompt, self.model, response)
+
+                log.info(
+                    f"LLM 响应成功: {response['result']['category']} (Conf: {response['confidence']:.2f}, Latency: {response['latency_ms']}ms)",
+                    extra={"trace_id": trace_id}
                 )
+                return response
 
-            # 标准化响应格式
-            response = {
-                "reasoning": f"LLM Analysis via {self.model}",
-                "result": {
-                    "category": result.get("category", "待人工确认"),
-                    "reason": result.get("reason", "Unknown")
-                },
-                "confidence": float(result.get("confidence", 0.5)),
-                "latency_ms": int(elapsed * 1000),
-                "model": self.model,
-                "from_cache": False
-            }
+            except Exception as e:
+                elapsed = time.time() - start_time
+                span["attributes"]["error"] = str(e)
+                log.error(f"LLM API 调用最终失败 ({elapsed:.1f}s): {e}", extra={"trace_id": trace_id})
 
-            # 5. 存入缓存
-            if self.enable_cache:
-                _response_cache.set(prompt, self.model, response)
-
-            log.info(f"LLM 响应成功: {response['result']['category']} (Conf: {response['confidence']:.2f}, Latency: {response['latency_ms']}ms)")
-            return response
-
-        except Exception as e:
-            elapsed = time.time() - start_time
-            log.error(f"LLM API 调用最终失败 ({elapsed:.1f}s): {e}")
-
-            # 降级到 Mock 模式
-            log.warning("降级到 Mock 模式进行分类...")
-            return MockOpenManusLLM().generate_response(prompt, system_role)
+                # 降级到 Mock 模式
+                log.warning("降级到 Mock 模式进行分类...", extra={"trace_id": trace_id})
+                return MockOpenManusLLM().generate_response(prompt, system_role)
 
 
 class MockOpenManusLLM(BaseLLM):

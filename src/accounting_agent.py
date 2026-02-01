@@ -38,13 +38,21 @@ class AccountingAgent(AgentBase):
         }
 
     def _get_file_hash(self):
+        """[Iteration 8] 增强错误处理"""
         try:
             return hashlib.md5(self.rules_path.read_bytes()).hexdigest()
-        except:
+        except FileNotFoundError:
+            log.warning(f"规则文件不存在: {self.rules_path}")
+            return None
+        except PermissionError as e:
+            log.error(f"规则文件权限错误: {self.rules_path} - {e}")
+            return None
+        except Exception as e:
+            log.error(f"计算规则文件哈希失败: {e}", exc_info=True)
             return None
 
     def _load_rules(self):
-        """仅在文件变化时加载规则"""
+        """[Iteration 8] 仅在文件变化时加载规则，增强错误处理"""
         current_hash = self._get_file_hash()
         if current_hash == self._rules_hash and self.rules:
             return
@@ -70,9 +78,17 @@ class AccountingAgent(AgentBase):
                         rule["_regex"] = re.compile(rule["keyword"], re.IGNORECASE)
 
                 self._rules_hash = current_hash
-                log.info(f"规则库已更新: {self.rules_path}")
+                log.info(f"规则库已更新: {self.rules_path} (共 {len(self.rules)} 条规则)")
+        except FileNotFoundError:
+            log.error(f"规则文件不存在: {self.rules_path}")
+            if not self.rules:
+                self.rules = []
+        except yaml.YAMLError as e:
+            log.error(f"规则文件 YAML 解析失败: {e}", exc_info=True)
+            if not self.rules:
+                self.rules = []
         except Exception as e:
-            log.error(f"规则库加载失败: {e}")
+            log.error(f"规则库加载失败: {e}", exc_info=True)
             if not self.rules:
                 self.rules = []
 
@@ -89,7 +105,8 @@ class AccountingAgent(AgentBase):
         return True
 
     def _semantic_match(self, text):
-        """[Optimization 1] 语义相似度探测 (F3.2.1)"""
+        """[Iteration 8] 语义相似度探测 - 使用可配置阈值"""
+        semantic_min = ConfigManager.get_float("threshold.semantic_match_min", 0.7)
         text_set = set(re.findall(r"\w+", text.lower()))
         best_rule, max_overlap = None, 0
         for rule in self.rules:
@@ -98,17 +115,18 @@ class AccountingAgent(AgentBase):
             if not kw_set:
                 continue
             overlap = len(text_set & kw_set) / (len(kw_set) + 1e-9)
-            if overlap > 0.7 and overlap > max_overlap:
+            if overlap > semantic_min and overlap > max_overlap:
                 max_overlap = overlap
                 best_rule = rule
         return best_rule, max_overlap
 
     def _extract_semantic_dimensions(self, text, amount):
-        """[Optimization 1] 语义维度结构化提取 (F3.2.3)"""
+        """[Iteration 8] 语义维度结构化提取 - 使用可配置阈值"""
+        capex_threshold = ConfigManager.get_float("threshold.capex_amount", 5000)
         dimensions = {}
         if any(k in text for k in ["研发", "项目", "迭代"]):
             dimensions["accounting_type"] = (
-                "CAPITAL_EXPENDITURE" if amount > 5000 else "OPERATING_EXPENSE"
+                "CAPITAL_EXPENDITURE" if amount > capex_threshold else "OPERATING_EXPENSE"
             )
 
         dept_rules = {
@@ -162,9 +180,11 @@ class AccountingAgent(AgentBase):
             )
         else:
             # 语义匹配
+            semantic_high = ConfigManager.get_float("threshold.semantic_match_high", 0.8)
+            default_confidence = ConfigManager.get_float("agents.accounting.default_confidence", 0.95)
             rule, score = self._semantic_match(raw_text)
-            if rule and score > 0.8:
-                category, confidence = rule["category"], score * 0.95
+            if rule and score > semantic_high:
+                category, confidence = rule["category"], score * default_confidence
                 matched_rule_id = rule.get("id")
             else:
                 # 迭代正则匹配
@@ -265,16 +285,18 @@ class RecoveryWorker(threading.Thread):
         self.db = DBHelper()
 
     def run(self):
-        log.info("RecoveryWorker 启动: 监听 REJECTED 队列...")
+        """[Iteration 8] 使用可配置的扫描间隔"""
+        recovery_interval = ConfigManager.get_int("intervals.recovery_scan", 60)
+        log.info(f"RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: {recovery_interval}s)...")
         while True:
             try:
                 # 1. 扫描被驳回的交易
                 with self.db.transaction("DEFERRED") as conn:
                     # 查找最近 24 小时内被驳回且未尝试过恢复的记录
                     sql = """
-                        SELECT id, vendor, amount, inference_log 
-                        FROM transactions 
-                        WHERE status = 'REJECTED' 
+                        SELECT id, vendor, amount, inference_log
+                        FROM transactions
+                        WHERE status = 'REJECTED'
                         AND created_at > datetime('now', '-1 day')
                         AND inference_log NOT LIKE '%RECOVERY_ATTEMPT%'
                     """
@@ -283,10 +305,10 @@ class RecoveryWorker(threading.Thread):
                 for task in tasks:
                     self._attempt_recovery(dict(task))
 
-                time.sleep(60)  # 每分钟扫描一次
+                time.sleep(recovery_interval)
             except Exception as e:
-                log.error(f"自愈扫描异常: {e}")
-                time.sleep(60)
+                log.error(f"自愈扫描异常: {e}", exc_info=True)
+                time.sleep(recovery_interval)
 
     def _attempt_recovery(self, task):
         tid = task["id"]
@@ -297,31 +319,36 @@ class RecoveryWorker(threading.Thread):
         new_category = "待人工确认"
         reason = "L2无法确定"
         confidence = 0.0
-        response = {}  # Initialize response to avoid UnboundLocalError
+        response = {}
 
         try:
-            # [Optimization] Use LLMConnector to simulate OpenManus autonomous reasoning
-            # instead of simple regex matching.
-            llm = LLMFactory.get_llm("MOCK")
-            prompt = f"Analyze vendor '{vendor}' with amount {amount}. Classify into accounting category."
-
-            response = llm.generate_response(prompt)
-
-            result = response.get("result", {})
+            # [Optimization Round 2] 使用 OpenManus ReAct 循环进行深度推理
+            from manus_wrapper import OpenManusAnalyst
+            analyst = OpenManusAnalyst()
+            
+            task_desc = f"Analyze accounting category for vendor '{vendor}' with amount {amount}."
+            context = {"vendor": vendor, "amount": amount, "tid": tid}
+            
+            # 启动 ReAct 循环
+            result = analyst.investigate(task_desc, context_data=context)
+            
             new_category = result.get("category", "待人工确认")
-            reason = f"L2 AI Reasoning: {result.get('reason', 'Unknown')}"
-            confidence = response.get("confidence", 0.0)
+            reason = result.get("reason", "L2 ReAct Conclusion")
+            confidence = float(result.get("confidence", 0.0))
+            response = result # 保存完整的推理图
 
-            log.info(f"L2 reasoning result: {new_category} (Conf: {confidence})")
+            log.info(f"L2 ReAct reasoning result: {new_category} (Conf: {confidence})")
 
         except Exception as e:
-            log.error(f"L2 Reasoning Error: {e}")
+            log.error(f"L2 ReAct Error: {e}", exc_info=True)
 
-        # Fallback logic if KB fails but amount is tiny
-        if confidence == 0.0 and amount < 50:
+        # [Iteration 8] Fallback logic with configurable micro-payment threshold
+        micro_payment_threshold = ConfigManager.get_float("threshold.micro_payment_waiver", 50)
+        fallback_confidence = ConfigManager.get_float("agents.accounting.fallback_confidence", 0.7)
+        if confidence == 0.0 and amount < micro_payment_threshold:
             new_category = "杂项费用"
             reason = "L2 Micro-Payment Waiver"
-            confidence = 0.7
+            confidence = fallback_confidence
 
         # 更新数据库
         try:
@@ -338,14 +365,21 @@ class RecoveryWorker(threading.Thread):
                     "raw_llm_response": response,
                 }
 
-                # 尝试追加日志
+                # [Iteration 8] 增强 JSON 解析错误处理
                 try:
                     log_obj = json.loads(old_log) if old_log else {}
                     if "recovery_trace" not in log_obj:
                         log_obj["recovery_trace"] = []
                     log_obj["recovery_trace"].append(new_log_entry)
                     final_log = json.dumps(log_obj, ensure_ascii=False)
-                except:
+                except json.JSONDecodeError as e:
+                    log.warning(f"交易 {tid} 的 inference_log 非法 JSON: {e}")
+                    final_log = json.dumps({
+                        "original_log": str(old_log),
+                        "recovery_trace": [new_log_entry]
+                    }, ensure_ascii=False)
+                except (TypeError, ValueError) as e:
+                    log.warning(f"交易 {tid} 日志序列化失败: {e}")
                     final_log = str(old_log) + " | RECOVERY: " + str(new_log_entry)
 
                 conn.execute(

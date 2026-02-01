@@ -1,30 +1,168 @@
-from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Request, BackgroundTasks, Header, status
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any
 import uvicorn
 import os
 import json
 import hashlib
 import hmac
+from datetime import datetime
 from logger import get_logger
 from interaction_hub import InteractionHub
 from db_helper import DBHelper
 from config_manager import ConfigManager
+from trace_context import TraceContext
 
 log = get_logger("APIServer")
-app = FastAPI(title="LedgerAlpha API", version="v1.0")
+app = FastAPI(
+    title="LedgerAlpha API",
+    version="v1.0",
+    description="AI-Powered Accounting Automation System"
+)
+
+
+# ==================== [Optimization Iteration 7] 结构化响应模型 ====================
+
+class APIResponse(BaseModel):
+    """统一 API 响应格式"""
+    code: int = Field(0, description="状态码，0 表示成功")
+    msg: str = Field("Success", description="状态消息")
+    data: Optional[Dict[str, Any]] = Field(None, description="响应数据")
+    trace_id: Optional[str] = Field(None, description="请求追踪 ID")
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+
+
+class HealthResponse(BaseModel):
+    """健康检查响应"""
+    status: str
+    db_integrity: bool
+    uptime_seconds: Optional[float] = None
+    version: str = "v1.0"
+
+
+class ErrorResponse(BaseModel):
+    """错误响应格式"""
+    code: int
+    msg: str
+    detail: Optional[str] = None
+    trace_id: Optional[str] = None
+
+
+# ==================== [Optimization Iteration 7] 异步任务处理器 ====================
+
+class AsyncTaskProcessor:
+    """
+    异步任务处理器 - 将耗时操作放入后台执行
+    """
+
+    @staticmethod
+    def process_webhook_action(
+        trans_id: int,
+        action_val: str,
+        trace_id: str,
+        user_role: str = "ADMIN"
+    ):
+        """后台处理 Webhook 回调动作"""
+        with TraceContext.start_trace(trace_id):
+            with TraceContext.start_span("webhook_action_processing", {
+                "trans_id": trans_id,
+                "action": action_val
+            }):
+                try:
+                    hub = InteractionHub()
+                    success = hub.handle_callback(
+                        transaction_id=trans_id,
+                        action_value=action_val,
+                        provided_trace_id=trace_id,
+                        original_trace_id=trace_id,
+                        user_role=user_role,
+                    )
+                    if success:
+                        log.info(f"Webhook 动作处理成功: trans_id={trans_id}, action={action_val}",
+                                extra={"trace_id": trace_id})
+                    else:
+                        log.warning(f"Webhook 动作处理失败: trans_id={trans_id}",
+                                   extra={"trace_id": trace_id})
+                except Exception as e:
+                    log.error(f"Webhook 后台处理异常: {e}", extra={"trace_id": trace_id})
+
+
+# ==================== [Optimization Iteration 7] 全局异常处理 ====================
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """统一 HTTP 异常处理"""
+    trace_id = TraceContext.get_trace_id() or "N/A"
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            code=exc.status_code,
+            msg=exc.detail,
+            trace_id=trace_id
+        ).model_dump()
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """统一通用异常处理"""
+    trace_id = TraceContext.get_trace_id() or "N/A"
+    log.error(f"未处理异常: {exc}", extra={"trace_id": trace_id}, exc_info=True)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=ErrorResponse(
+            code=500,
+            msg="Internal Server Error",
+            detail=str(exc) if ConfigManager.get_bool("api.expose_errors", False) else None,
+            trace_id=trace_id
+        ).model_dump()
+    )
+
+
+# ==================== [Optimization Iteration 7] 请求中间件 ====================
+
+@app.middleware("http")
+async def trace_middleware(request: Request, call_next):
+    """为每个请求注入 TraceContext"""
+    # 从请求头获取或生成 trace_id
+    trace_id = request.headers.get("X-Trace-ID") or TraceContext._generate_trace_id()
+
+    with TraceContext.start_trace(trace_id):
+        TraceContext.set_attribute("http.method", request.method)
+        TraceContext.set_attribute("http.path", request.url.path)
+
+        start_time = datetime.now()
+        response = await call_next(request)
+        duration_ms = (datetime.now() - start_time).total_seconds() * 1000
+
+        TraceContext.set_attribute("http.status_code", response.status_code)
+        TraceContext.set_attribute("http.duration_ms", duration_ms)
+
+        # 在响应头中返回 trace_id
+        response.headers["X-Trace-ID"] = trace_id
+
+        log.info(f"{request.method} {request.url.path} -> {response.status_code} ({duration_ms:.1f}ms)",
+                extra={"trace_id": trace_id})
+
+        return response
 
 
 class WebhookPayload(BaseModel):
-    # 适配飞书/Slack 的通用 Webhook 结构
-    uuid: str = None
-    token: str = None
-    challenge: str = None
-    type: str = None
-    event: dict = None
-    action: dict = None  # 飞书卡片回调
+    """适配飞书/Slack 的通用 Webhook 结构"""
+    uuid: Optional[str] = None
+    token: Optional[str] = None
+    challenge: Optional[str] = None
+    type: Optional[str] = None
+    event: Optional[Dict[str, Any]] = None
+    action: Optional[Dict[str, Any]] = None  # 飞书卡片回调
 
 
-def verify_feishu_signature(timestamp: str, nonce: str, body: bytes, signature: str):
+# ==================== 服务启动时间记录 ====================
+_server_start_time = datetime.now()
+
+
+def verify_feishu_signature(timestamp: str, nonce: str, body: bytes, signature: str) -> bool:
     """
     [Security] Verify Feishu/Lark webhook signature (HMAC-SHA256)
     """
@@ -43,20 +181,83 @@ def verify_feishu_signature(timestamp: str, nonce: str, body: bytes, signature: 
     return True
 
 
-@app.get("/health")
-def health_check():
-    db = DBHelper()
-    db_healthy = db.integrity_check()
-    return {"status": "ok", "db_integrity": db_healthy}
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """
+    [Optimization Iteration 7] 增强健康检查端点
+    """
+    trace_id = TraceContext.get_trace_id()
+    with TraceContext.start_span("health_check"):
+        db = DBHelper()
+        db_healthy = db.integrity_check()
+        uptime = (datetime.now() - _server_start_time).total_seconds()
+
+        return HealthResponse(
+            status="ok" if db_healthy else "degraded",
+            db_integrity=db_healthy,
+            uptime_seconds=uptime,
+            version="v1.0"
+        )
 
 
-@app.get("/stats")
-def get_stats():
-    db = DBHelper()
-    return db.get_ledger_stats()
+@app.get("/stats", response_model=APIResponse)
+async def get_stats():
+    """
+    [Optimization Iteration 7] 增强统计端点
+    """
+    trace_id = TraceContext.get_trace_id()
+    with TraceContext.start_span("get_stats"):
+        db = DBHelper()
+        stats = db.get_ledger_stats()
+
+        return APIResponse(
+            code=0,
+            msg="Success",
+            data=stats,
+            trace_id=trace_id
+        )
 
 
-@app.post("/webhook/feishu")
+@app.get("/metrics/summary", response_model=APIResponse)
+async def get_metrics_summary():
+    """
+    [Optimization Iteration 7] 系统指标摘要端点
+    """
+    trace_id = TraceContext.get_trace_id()
+    with TraceContext.start_span("get_metrics_summary"):
+        try:
+            from metrics_exporter import MetricsCollector
+            from llm_connector import TokenBudgetManager
+
+            collector = MetricsCollector()
+            budget_mgr = TokenBudgetManager()
+
+            db = DBHelper()
+            db_stats = db.get_connection_stats()
+            trace_stats = TraceContext.get_stats()
+            llm_stats = budget_mgr.get_stats()
+
+            return APIResponse(
+                code=0,
+                msg="Success",
+                data={
+                    "database": db_stats,
+                    "tracing": trace_stats,
+                    "llm": llm_stats,
+                    "uptime_seconds": (datetime.now() - _server_start_time).total_seconds()
+                },
+                trace_id=trace_id
+            )
+        except Exception as e:
+            log.warning(f"获取指标摘要失败: {e}", extra={"trace_id": trace_id})
+            return APIResponse(
+                code=500,
+                msg="Failed to collect metrics",
+                trace_id=trace_id
+            )
+
+
+@app.post("/webhook/feishu", response_model=APIResponse)
 async def feishu_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
@@ -65,22 +266,27 @@ async def feishu_webhook(
     x_lark_signature: str = Header(None),
 ):
     """
-    处理飞书卡片交互回调
+    [Optimization Iteration 7] 增强飞书卡片交互回调处理
+    - 使用 BackgroundTasks 异步处理耗时操作
+    - 结构化响应格式
+    - 完整的 TraceContext 集成
     """
+    trace_id = TraceContext.get_trace_id()
     body_bytes = await request.body()
+
     try:
         payload = json.loads(body_bytes)
     except json.JSONDecodeError:
-        return {"code": 400, "msg": "Invalid JSON"}
+        return APIResponse(code=400, msg="Invalid JSON", trace_id=trace_id)
 
     # 1. Security Check
     if x_lark_signature:
         if not verify_feishu_signature(
             x_lark_request_timestamp, x_lark_request_nonce, body_bytes, x_lark_signature
         ):
-            return {"code": 403, "msg": "Invalid Signature"}
+            return APIResponse(code=403, msg="Invalid Signature", trace_id=trace_id)
 
-    log.info(f"收到 Webhook 回调: {payload}")
+    log.info(f"收到 Webhook 回调: {payload}", extra={"trace_id": trace_id})
 
     # 2. URL 验证 (Feishu Challenge)
     if "challenge" in payload:
@@ -92,35 +298,28 @@ async def feishu_webhook(
         params = payload["action"].get("parameters", {})  # e.g. {"trans_id": 123}
 
         trans_id = params.get("trans_id")
-        trace_id = params.get("trace_id")
+        action_trace_id = params.get("trace_id", trace_id)
 
         if not trans_id:
-            return {"code": 400, "msg": "Missing transaction_id"}
+            return APIResponse(code=400, msg="Missing transaction_id", trace_id=trace_id)
 
-        hub = InteractionHub()
-        # 异步处理，避免阻塞 Webhook 响应
-        success = hub.handle_callback(
-            transaction_id=trans_id,
-            action_value=action_val,
-            provided_trace_id=trace_id,
-            original_trace_id=trace_id,  # 简化校验
-            user_role="ADMIN",  # 假设来自飞书的都是 Admin
+        # [Optimization Iteration 7] 使用 BackgroundTasks 异步处理
+        background_tasks.add_task(
+            AsyncTaskProcessor.process_webhook_action,
+            trans_id=trans_id,
+            action_val=action_val,
+            trace_id=action_trace_id,
+            user_role="ADMIN"
         )
 
-        if success:
-            return {
-                "code": 0,
-                "msg": "Success",
-                "toast": {"content": "LedgerAlpha 已收到您的指令"},
-            }
-        else:
-            return {
-                "code": 500,
-                "msg": "Failed",
-                "toast": {"content": "处理失败，请查看日志"},
-            }
+        return APIResponse(
+            code=0,
+            msg="Accepted",
+            data={"toast": {"content": "LedgerAlpha 已收到您的指令，正在处理中..."}},
+            trace_id=trace_id
+        )
 
-    return {"code": 0}
+    return APIResponse(code=0, msg="No action required", trace_id=trace_id)
 
 
 def start_server(host="0.0.0.0", port=8000):

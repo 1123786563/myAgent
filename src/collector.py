@@ -57,7 +57,8 @@ class AliPayParser(BankStatementParser):
                             "source": "ALIPAY",
                         }
                     )
-            except:
+            except (ValueError, TypeError, KeyError) as e:
+                log.debug(f"AliPay 行解析跳过: {e}")
                 continue
         return batch
 
@@ -85,7 +86,8 @@ class WeChatParser(BankStatementParser):
                             "source": "WECHAT",
                         }
                     )
-            except:
+            except (ValueError, TypeError, KeyError) as e:
+                log.debug(f"WeChat 行解析跳过: {e}")
                 continue
         return batch
 
@@ -124,7 +126,8 @@ class GenericParser(BankStatementParser):
                         "source": "BANK_FLOW",
                     }
                 )
-            except:
+            except (ValueError, TypeError, KeyError) as e:
+                log.debug(f"Generic 行解析跳过: {e}")
                 continue
         return batch
 
@@ -135,12 +138,15 @@ class CollectorWorker(threading.Thread):
         self.task_queue = task_queue
         self.db = DBHelper()
         self.allowed_exts = {".pdf", ".jpg", ".jpeg", ".png", ".csv", ".xlsx"}
-        # [Optimization 1] 时空关联缓冲区 (Temporal-Spatial Buffer)
+        # [Iteration 8] 使用可配置的缓冲区参数
         self.batch_buffer = []
         self.last_buffer_flush = time.time()
+        self.buffer_size = ConfigManager.get_int("collector.batch_buffer_size", 100)
+        self.flush_interval = ConfigManager.get_int("collector.flush_interval", 30)
+        self.min_file_size = ConfigManager.get_int("collector.min_file_size", 10)
 
     def run(self):
-        log.info(f"{self.name} 已启动...")
+        log.info(f"{self.name} 已启动 (缓冲区: {self.buffer_size}, 刷新间隔: {self.flush_interval}s)...")
         process_timeout = ConfigManager.get("collector.process_timeout", 30)
 
         while not should_exit():
@@ -152,10 +158,10 @@ class CollectorWorker(threading.Thread):
                 except queue.Empty:
                     pass
 
-                # 缓冲区满或超过 5 秒未刷新则处理 (F3.1.3)
+                # [Iteration 8] 使用可配置的缓冲区阈值
                 if self.batch_buffer and (
-                    len(self.batch_buffer) >= 5
-                    or (time.time() - self.last_buffer_flush > 5)
+                    len(self.batch_buffer) >= self.buffer_size
+                    or (time.time() - self.last_buffer_flush > self.flush_interval)
                 ):
                     self._flush_buffer()
 
@@ -165,7 +171,7 @@ class CollectorWorker(threading.Thread):
                 self.db.update_heartbeat(self.name, "IDLE")
                 time.sleep(1)
             except Exception as e:
-                log.error(f"{self.name} 主循环异常: {e}")
+                log.error(f"{self.name} 主循环异常: {e}", exc_info=True)
                 time.sleep(1)
 
     def _flush_buffer(self):

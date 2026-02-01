@@ -195,7 +195,11 @@ class InteractionHub:
                 vendor = extra_payload.get('vendor', 'Unknown')
                 log.info(f"检测到老板手动修正科目: {vendor} -> {new_cat}，启动知识回流...")
                 
+                # [Round 4] 知识回流触发点
                 from knowledge_bridge import KnowledgeBridge
+                # 注意：这里我们明确指定 source="MANUAL"，以便 KnowledgeBridge 知道这是高优先级的用户输入
+                # 如果我们想通过 GRAY 机制来观察，可以设为 "USER_FEEDBACK" 并在 learn_new_rule 里映射
+                # 但根据需求，用户手动修正通常被视为 Truth，所以这里传递 MANUAL 让其可能成为 STABLE 或高权重 GRAY
                 KnowledgeBridge().learn_new_rule(vendor, new_cat, source="MANUAL")
 
             with self.db.transaction("IMMEDIATE") as conn:

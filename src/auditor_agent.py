@@ -485,12 +485,162 @@ class AuditorAgent(AgentBase):
                         "consecutive_success": 0,
                     }
                 )
-        except:
+        except Exception as e:
+            log.debug(f"获取供应商审计信息失败: {e}")
             return {
                 "audit_status": "GRAY",
                 "audit_level": "NORMAL",
                 "consecutive_success": 0,
             }
+
+    # ==================== [Optimization Iteration 7] 模块化审计方法 ====================
+
+    def _assess_price_benchmark_risk(self, category: str, amount: float, vendor: str) -> tuple:
+        """
+        [Optimization Iteration 7] 价格基准风险评估
+        检查交易金额是否显著偏离该科目历史中位数
+
+        Returns:
+            (risk_delta, reasons): 风险分增量和原因列表
+        """
+        risk_delta = 0.0
+        reasons = []
+
+        avg_sector_price = self.db.get_category_median_price(category)
+        if avg_sector_price > 0 and amount > avg_sector_price * 1.5:
+            log.warning(
+                f"价格偏离行业基准: {amount} > {avg_sector_price:.2f} * 1.5 | Vendor={vendor}"
+            )
+            reasons.append("价格显著高于该科目历史采购基准，建议进行比价审核")
+            risk_delta = 0.2
+
+        return risk_delta, reasons
+
+    def _assess_vendor_risk(self, vendor: str, category: str, audit_info: dict) -> tuple:
+        """
+        [Optimization Iteration 7] 供应商风险评估
+        基于供应商审计状态和历史偏好进行风险评估
+
+        Returns:
+            (risk_delta, reasons, is_blocked): 风险分增量、原因列表、是否被阻断
+        """
+        risk_delta = 0.0
+        reasons = []
+        is_blocked = False
+
+        audit_status = audit_info.get("audit_status", "GRAY")
+
+        # 供应商黑名单检查
+        if audit_status == "BLOCKED":
+            is_blocked = True
+            risk_delta = 1.0
+            reasons.append("该供应商已被审计阻断器(Blocked)拉黑")
+            return risk_delta, reasons, is_blocked
+
+        # 高风险供应商检查
+        if audit_info.get("audit_level") == "HIGH_RISK":
+            risk_delta += 0.3
+            reasons.append("该供应商有历史驳回记录，风险评级：HIGH_RISK")
+
+        # 历史一致性检查
+        history_category = self._get_historical_preference_fts(vendor)
+        if history_category and history_category != category:
+            risk_delta += 0.2
+            reasons.append(f"与历史入账习惯不符(历史常入: {history_category})")
+
+        return risk_delta, reasons, is_blocked
+
+    def _assess_amount_risk(self, amount: float) -> tuple:
+        """
+        [Optimization Iteration 7] 金额风险评估
+
+        Returns:
+            (risk_delta, reasons, requires_manual): 风险分增量、原因列表、是否需要人工审核
+        """
+        risk_delta = 0.0
+        reasons = []
+        requires_manual = False
+
+        if amount > self.force_manual_amount:
+            requires_manual = True
+            risk_delta = 0.9
+            reasons.append(f"触发大额支付风控({amount} > {self.force_manual_amount})")
+
+        return risk_delta, reasons, requires_manual
+
+    def _assess_category_format(self, category: str) -> tuple:
+        """
+        [Optimization Iteration 7] 科目格式校验
+
+        Returns:
+            (is_valid, reason): 格式是否有效、无效原因
+        """
+        if not self.category_pattern.search(category):
+            return False, f"科目编码格式错误: {category}"
+        return True, None
+
+    def _perform_compliance_check(self, proposal: dict, trace_id: str) -> tuple:
+        """
+        [Optimization Iteration 7] 合规性预检
+        调用 Sentinel 进行税务与预算合规性检查
+
+        Returns:
+            (passed, reasons, risk_delta): 是否通过、原因列表、风险分增量
+        """
+        from sentinel_agent import SentinelAgent
+
+        sentinel = SentinelAgent("Sentinel-Audit-Hook")
+        compliance_passed, compliance_reason = sentinel.check_transaction_compliance(proposal)
+
+        if not compliance_passed:
+            log.warning(f"Sentinel 合规阻断: {compliance_reason} | TraceID={trace_id}")
+            return False, [f"[Sentinel] {compliance_reason}"], 1.0
+
+        return True, [], 0.0
+
+    def _build_decision_matrix(self, confidence: float, rule_quality: bool,
+                                history_category: str, category: str,
+                                audit_status: str) -> dict:
+        """
+        [Optimization Iteration 7] 构建决策矩阵
+        用于 L2 可解释性增强
+        """
+        return {
+            "confidence_score": confidence,
+            "rule_quality": rule_quality,
+            "historical_match": 1.0 if history_category == category else 0.5,
+            "vendor_risk": 1.0 if audit_status == "STABLE" else 0.4,
+        }
+
+    def _make_final_decision(self, is_rejected: bool, risk_score: float,
+                              reasons: list, proposal: dict, trace_id: str) -> tuple:
+        """
+        [Optimization Iteration 7] 最终决策逻辑
+        整合所有风险评估结果，生成最终审计决策
+
+        Returns:
+            (decision, final_reason, adjusted_risk_score)
+        """
+        decision = "APPROVED"
+        final_reason = "符合财务准则与历史习惯"
+        adjusted_risk_score = risk_score
+
+        if is_rejected or risk_score > 0.15:
+            decision = "REJECT"
+
+            # 异构逻辑补救
+            if 0.15 < risk_score < 0.4 and not is_rejected:
+                log.info(f"触发异构逻辑补救: {trace_id}")
+                if self._trigger_l2_heterogeneous_audit(proposal):
+                    decision = "APPROVED"
+                    final_reason = "L1 存疑，但 L2 异构审计(Heterogeneous Consensus)通过"
+                    adjusted_risk_score = 0.1
+                else:
+                    final_reason = "L1 存疑且 L2 异构审计未通过"
+            else:
+                final_reason = " | ".join(reasons) if reasons else "综合置信度不足"
+
+        return decision, final_reason, adjusted_risk_score
 
     def _trigger_l2_heterogeneous_audit(self, proposal):
         """

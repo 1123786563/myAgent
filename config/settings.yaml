@@ -12,15 +12,24 @@ intervals:
   collector_scan: 60
   match_engine_loop: 30
   retry_backoff_base: 2
+  recovery_scan: 60              # [Iteration 8] 自愈扫描间隔 (秒)
+  sighup_debounce: 5             # [Iteration 8] SIGHUP 防抖时间 (秒)
+  shutdown_grace_period: 10      # [Iteration 8] 进程关闭宽限期 (秒)
+  max_backoff_wait: 300          # [Iteration 8] 最大退避等待时间 (秒)
 
 db:
   retry_count: 3
   retry_delay: 0.5
+  wal_size_warning_mb: 100       # [Iteration 8] WAL 文件大小告警阈值 (MB)
 
 threshold:
   confidence_high: 0.95
   confidence_low: 0.5
   token_budget_per_task: 2.0
+  semantic_match_min: 0.7        # [Iteration 8] 语义匹配最低阈值
+  semantic_match_high: 0.8       # [Iteration 8] 语义高置信度阈值
+  capex_amount: 5000             # [Iteration 8] 资本支出金额分界线
+  micro_payment_waiver: 50       # [Iteration 8] 微额支付豁免阈值
 
 # [Optimization Iteration 2] LLM 配置
 llm:
@@ -35,6 +44,8 @@ llm:
 agents:
   accounting:
     model: "gpt-4o-mini"
+    default_confidence: 0.95     # [Iteration 8] 默认置信度
+    fallback_confidence: 0.7     # [Iteration 8] 回退置信度
   auditor:
     model: "gpt-4o"
   manus:
@@ -43,6 +54,10 @@ agents:
 collector:
   worker_threads: 3
   initial_scan_enabled: true
+  batch_buffer_size: 100         # [Iteration 8] 批量缓冲区大小
+  flush_interval: 30             # [Iteration 8] 刷新间隔 (秒)
+  file_grouping_window: 300      # [Iteration 8] 文件分组时间窗口 (秒)
+  min_file_size: 10              # [Iteration 8] 最小文件大小 (字节)
 
 audit:
   outlier_factor: 5.0
@@ -54,6 +69,10 @@ tax:
 
 enterprise:
   sector: "SOFTWARE"
+
+# [Iteration 8] API 服务配置
+api:
+  expose_errors: false           # 是否在响应中暴露详细错误信息
 
 bank_mapping:
   default:
