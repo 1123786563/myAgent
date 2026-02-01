@@ -1,23 +1,73 @@
 version: '3.8'
 
 services:
-  ledger-alpha:
-    build: .
-    container_name: ledger_alpha
+  app:
+    build:
+      context: .
+      target: runtime
+    container_name: ledger_alpha_app
     restart: always
+    env_file:
+      - .env
     environment:
-      - LEDGER_DATA_ROOT=/app
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - AGENTSCOPE_LOG_LEVEL=INFO
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./workspace:/app/workspace
       - ./logs:/app/logs
       - ./config:/app/config
-      - ./ledger_alpha.db:/app/ledger_alpha.db
     ports:
       - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - ledger_network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+  db:
+    image: postgres:15-alpine
+    container_name: ledger_alpha_db
+    restart: always
+    environment:
+      - POSTGRES_USER=${DB_USER:-ledger_admin}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-ledger_password}
+      - POSTGRES_DB=${DB_NAME:-ledger_alpha}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ledger_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledger_alpha_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - ledger_network
+    volumes:
+      - redis_data:/data
+
+networks:
+  ledger_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

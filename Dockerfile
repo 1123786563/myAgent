@@ -1,32 +1,50 @@
-FROM python:3.10-slim
+# Stage 1: Builder
+FROM python:3.10-slim AS builder
 
 WORKDIR /app
 
-# 设置时区
-ENV TZ=Asia/Shanghai
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# 安装基础依赖
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
-    sqlite3 \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制依赖并安装
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-# 复制项目代码
+# Stage 2: Runtime
+FROM python:3.10-slim AS runtime
+
+WORKDIR /app
+
+# Install runtime dependencies (libpq is needed for psycopg2)
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+COPY --from=builder /app/requirements.txt .
+
+# Update PATH to include user-installed binaries
+ENV PATH=/root/.local/bin:$PATH
+ENV TZ=Asia/Shanghai
+ENV PYTHONUNBUFFERED=1
+
+# Create necessary directories
+RUN mkdir -p logs workspace/input config
+
+# Copy project code
 COPY . .
 
-# 创建必要的目录
-RUN mkdir -init -p logs workspace/input
+# Use a non-root user for security (optional but recommended)
+# RUN useradd -m appuser && chown -R appuser:appuser /app
+# USER appuser
 
-# 声明挂载点
+# Volumes for persistence
 VOLUME ["/app/workspace", "/app/logs", "/app/config"]
 
-# 暴露 API 端口
 EXPOSE 8000
 
-# 启动命令
 CMD ["python", "src/main.py"]
