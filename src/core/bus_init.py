@@ -89,12 +89,13 @@ class ManagerAgent(AgentBase):
     def _load_permissions(self):
         """[Optimization 1] 从数据库动态加载权限矩阵"""
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                rows = conn.execute("SELECT role_name, action_name FROM sys_permissions").fetchall()
+            from sqlalchemy import text
+            with self.db.transaction() as session:
+                rows = session.execute(text("SELECT role_name, action_name FROM sys_permissions")).fetchall()
                 self.role_permissions = {}
                 for row in rows:
-                    role = row['role_name']
-                    action = row['action_name']
+                    role = row[0] # SQLAlchemy row access by index
+                    action = row[1]
                     if role not in self.role_permissions:
                         self.role_permissions[role] = []
                     self.role_permissions[role].append(action)

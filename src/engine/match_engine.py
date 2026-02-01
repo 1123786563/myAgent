@@ -5,9 +5,11 @@ import json
 from difflib import SequenceMatcher
 from decimal import Decimal
 from core.db_helper import DBHelper
+from core.db_models import Transaction, PendingEntry
 from utils.decimal_utils import to_decimal
 from infra.logger import get_logger
 from core.config_manager import ConfigManager
+from sqlalchemy import func, text
 
 log = get_logger("MatchEngine")
 
@@ -37,16 +39,14 @@ class MatchEngine:
             task = self.task_queue.get()
             if task is None: break
             
-            shadow, potential_matches = task
+            shadow_data, potential_matches = task
             try:
                 best_match = None
                 max_score = 0.0
                 
                 for c in potential_matches:
-                    # 计算匹配分 (使用 MatchStrategy)
-                    score = MatchStrategy.get_fuzzy_ratio(shadow['vendor_keyword'], c['vendor'])
+                    score = MatchStrategy.get_fuzzy_ratio(shadow_data['vendor_keyword'], c['vendor'])
                     
-                    # [Round 13/18] 状态权重：优先匹配未对账的
                     if c['status'] != 'MATCHED':
                         score += 0.1
                         
@@ -55,21 +55,24 @@ class MatchEngine:
                         best_match = c
                 
                 if best_match:
-                    log.info(f"消消乐并行匹配成功 (Score: {max_score:.2f}): {shadow['vendor_keyword']} <-> {best_match['vendor']}")
+                    log.info(f"消消乐并行匹配成功 (Score: {max_score:.2f}): {shadow_data['vendor_keyword']} <-> {best_match['vendor']}")
                     
-                    # 异步任务中的写回逻辑
-                    with self.db.transaction("IMMEDIATE") as conn:
-                        # 再次检查冲突
-                        if best_match['status'] == 'MATCHED':
+                    with self.db.transaction() as session:
+                        # 重新查询获取 ORM 对象以避免 Session 冲突
+                        target_trans = session.query(Transaction).get(best_match['id'])
+                        if not target_trans:
+                            return
+                            
+                        if target_trans.status == 'MATCHED':
                             self.db.log_system_event("MATCH_CONFLICT", "MatchEngine", f"Parallel shadow match conflict at {best_match['id']}")
                         
                         target_status = 'MATCHED'
-                        if best_match.get('group_id'):
-                            conn.execute("UPDATE transactions SET status = ? WHERE group_id = ?", (target_status, best_match['group_id']))
+                        if target_trans.group_id:
+                            session.query(Transaction).filter(Transaction.group_id == target_trans.group_id).update({"status": target_status}, synchronize_session=False)
                         else:
-                            conn.execute("UPDATE transactions SET status = ? WHERE id = ?", (target_status, best_match['id']))
+                            target_trans.status = target_status
                                 
-                        conn.execute("UPDATE pending_entries SET status = 'MATCHED' WHERE id = ?", (shadow['id'],))
+                        session.query(PendingEntry).filter(PendingEntry.id == shadow_data['id']).update({"status": 'MATCHED'}, synchronize_session=False)
             except Exception as e:
                 log.error(f"Worker 并行匹配异常: {e}")
             finally:
@@ -77,24 +80,22 @@ class MatchEngine:
 
     def run_matching(self):
         """
-        [Optimization 1] 增强多模态逻辑成组匹配 (F3.1.3)
-        [Optimization Round 13] 增加批量匹配优化与冲突检测
-        [Optimization Round 18] 并行化匹配引擎，使用 Worker 线程池
+        [Optimization SQLAlchemy] 增强多模态逻辑成组匹配
         """
         log.info("执行多模态并行对账匹配任务...")
         self.db.update_heartbeat("MatchEngine-Master", "ACTIVE")
         
         try:
-            # 1. 逻辑聚合 (保持原有逻辑)
-            with self.db.transaction("IMMEDIATE") as conn:
-                conn.execute("""
-                    UPDATE transactions 
-                    SET status = 'GROUPED' 
-                    WHERE group_id IS NOT NULL AND status = 'PENDING'
-                    AND group_id IN (SELECT group_id FROM transactions GROUP BY group_id HAVING COUNT(*) > 1)
-                """)
+            # 1. 逻辑聚合
+            with self.db.transaction() as session:
+                # 查找 group_id 数量大于 1 的组
+                subq = session.query(Transaction.group_id).group_by(Transaction.group_id).having(func.count(Transaction.id) > 1).subquery()
+                session.query(Transaction).filter(
+                    Transaction.group_id != None,
+                    Transaction.status == 'PENDING',
+                    Transaction.group_id.in_(subq)
+                ).update({"status": "GROUPED"}, synchronize_session=False)
 
-            # 启动并行的 Worker (如果尚未启动)
             if not hasattr(self, '_workers_started'):
                 for _ in range(self.worker_count):
                     t = threading.Thread(target=self._match_worker, daemon=True)
@@ -102,24 +103,24 @@ class MatchEngine:
                 self._workers_started = True
 
             # 2. 查找影子分录与潜在匹配项
-            with self.db.transaction("DEFERRED") as conn:
-                cursor = conn.execute("SELECT id, amount, vendor_keyword, created_at FROM pending_entries WHERE status = 'PENDING'")
-                shadows = [dict(row) for row in cursor.fetchall()]
+            with self.db.transaction() as session:
+                shadows_objs = session.query(PendingEntry).filter(PendingEntry.status == 'PENDING').all()
                 
-                # 为每一笔流水预加载潜在匹配项以减少锁竞争
-                for s in shadows:
-                    cursor = conn.execute("""
-                        SELECT id, vendor, group_id, status FROM transactions 
-                        WHERE status IN ('PENDING', 'GROUPED', 'MATCHED') 
-                        AND amount = %s 
-                        AND ABS(extract(epoch from %s) - extract(epoch from created_at)) < 604800
-                    """, (s['amount'], s['created_at']))
-                    candidates = [dict(row) for row in cursor.fetchall()]
+                for s in shadows_objs:
+                    shadow_data = {"id": s.id, "amount": float(s.amount), "vendor_keyword": s.vendor_keyword, "created_at": s.created_at}
                     
-                    # 将任务投入队列
-                    self.task_queue.put((s, candidates))
+                    # 查找潜在匹配项
+                    # SQLAlchemy 中的时间差计算通常依赖具体方言，PG 使用 extract(epoch from ...)
+                    candidates_objs = session.query(Transaction).filter(
+                        Transaction.status.in_(['PENDING', 'GROUPED', 'MATCHED']),
+                        Transaction.amount == s.amount,
+                        func.abs(func.extract('epoch', shadow_data['created_at']) - func.extract('epoch', Transaction.created_at)) < 604800
+                    ).all()
+                    
+                    candidates = [{"id": c.id, "vendor": c.vendor, "group_id": c.group_id, "status": c.status} for c in candidates_objs]
+                    
+                    self.task_queue.put((shadow_data, candidates))
 
-            # 等待本批次处理完成
             self.task_queue.join()
             
         except Exception as e:
@@ -145,31 +146,29 @@ class MatchEngine:
     def run_proactive_reminders(self):
         """
         [Optimization 5] 主动证据追索 (Evidence Hunter)
-        逻辑：网银流水产生 > 48h 且未对冲，推送催办卡片 (F4.5)
         """
         log.info("执行主动证据追索扫描 (Hunter Mode)...")
         try:
-            with self.db.transaction("DEFERRED") as conn:
-                # 查找 48 小时前创建且仍为 PENDING 的影子分录 (Shadow Entries)
-                sql = """
-                    SELECT id, amount, vendor_keyword, created_at 
-                    FROM pending_entries 
-                    WHERE status = 'PENDING' 
-                    AND created_at < NOW() - INTERVAL '2 days'
-                """
-                reminders = [dict(row) for row in conn.execute(sql).fetchall()]
+            with self.db.transaction() as session:
+                # 查找 48 小时前创建且仍为 PENDING 的影子分录
+                cutoff = func.now() - text("INTERVAL '2 days'")
+                reminders_objs = session.query(PendingEntry).filter(
+                    PendingEntry.status == 'PENDING',
+                    PendingEntry.created_at < cutoff
+                ).all()
                 
-            for r in reminders:
-                log.warning(f"证据链断裂！向老板追索凭证: {r['vendor_keyword']} (￥{r['amount']})")
-                payload = {
-                    "type": "EVIDENCE_REQUEST",
-                    "data": {
-                        "trans_id": r['id'],
-                        "vendor": r['vendor_keyword'],
-                        "amount": float(r['amount'])
+                for r in reminders_objs:
+                    log.warning(f"证据链断裂！向老板追索凭证: {r.vendor_keyword} (￥{r.amount})")
+                    payload = {
+                        "type": "EVIDENCE_REQUEST",
+                        "data": {
+                            "trans_id": r.id,
+                            "vendor": r.vendor_keyword,
+                            "amount": float(r.amount)
+                        }
                     }
-                }
-                self.db.log_system_event("EVIDENCE_REQUEST", "MatchEngine", json.dumps(payload, ensure_ascii=False))
+                    # 也可以在这里直接 session.add(SystemEvent(...))
+                    self.db.log_system_event("EVIDENCE_REQUEST", "MatchEngine", json.dumps(payload, ensure_ascii=False))
         except Exception as e:
             log.error(f"证据追索任务异常: {e}")
 
@@ -177,22 +176,18 @@ class MatchEngine:
         log.info("MatchEngine 守护进程模式启动 (并发模式)...")
         loop_interval = ConfigManager.get("intervals.match_engine_loop", 30)
         
-        # [Optimization 2] 初始化完整性校验计数器
         last_integrity_check = 0
-        integrity_check_interval = 3600 # 每小时一次
+        integrity_check_interval = 3600 
         
-        # [Optimization 3] 提醒任务计数器
         last_reminder_check = 0
-        reminder_interval = 14400 # 每 4 小时一次
+        reminder_interval = 14400 
         
         from infra.graceful_exit import should_exit
         while not should_exit():
             self.run_matching()
             
             now = time.time()
-            # 1. 周期性验证区块链证据链完整性 (Suggestion 5)
             if now - last_integrity_check > integrity_check_interval:
-                # ... (保持原有校验逻辑)
                 log.info("启动周期性账本完整性校验...")
                 success, msg = self.db.verify_chain_integrity()
                 if success:
@@ -203,7 +198,6 @@ class MatchEngine:
                     self.db.log_system_event("INTEGRITY_FAILURE", "MatchEngine", msg)
                 last_integrity_check = now
 
-            # 2. [Optimization 3] 执行主动证据追索
             if now - last_reminder_check > reminder_interval:
                 self.run_proactive_reminders()
                 last_reminder_check = now
