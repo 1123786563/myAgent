@@ -5,10 +5,98 @@ from core.db_models import SystemEvent, Transaction
 from api.interaction_hub import InteractionHub
 from infra.logger import get_logger
 import json
+from datetime import datetime, timedelta
 
 router = APIRouter()
 log = get_logger("UIRoutes")
 hub = InteractionHub()
+
+
+@router.get("/dashboard/metrics")
+async def get_dashboard_metrics():
+    """Get dashboard key metrics"""
+    db = DBHelper()
+    try:
+        stats = db.get_ledger_stats()  # list of dicts: status, count, total_amount
+        monthly = db.get_monthly_stats()  # revenue, total_expense
+
+        # Process stats
+        pending = next(
+            (item["count"] for item in stats if item["status"] == "PENDING"), 0
+        )
+        matched = next(
+            (item["count"] for item in stats if item["status"] == "MATCHED"), 0
+        )
+
+        # Calculate health score
+        total = sum(item["count"] for item in stats)
+        rejected = next(
+            (item["count"] for item in stats if item["status"] == "REJECTED"), 0
+        )
+        health_score = 100
+        if total > 0:
+            health_score = 100 - int((rejected / total) * 100)
+        health_score = max(0, min(100, health_score))
+
+        balance = monthly.get("revenue", 0) - monthly.get("total_expense", 0)
+
+        return {
+            "metrics": {
+                "balance": balance,
+                "pending_vouchers": pending,
+                "matched_invoices": matched,
+                "health_score": health_score,
+            }
+        }
+    except Exception as e:
+        log.error(f"Error fetching dashboard metrics: {e}")
+        return {
+            "metrics": {
+                "balance": 0,
+                "pending_vouchers": 0,
+                "matched_invoices": 0,
+                "health_score": 0,
+            }
+        }
+
+
+@router.get("/dashboard/chart")
+async def get_dashboard_chart():
+    """Get dashboard trend chart data"""
+    db = DBHelper()
+    try:
+        with db.transaction() as session:
+            # Query last 14 days transaction amount
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=14)
+
+            results = (
+                session.query(
+                    func.date(Transaction.created_at).label("date"),
+                    func.sum(Transaction.amount).label("amount"),
+                )
+                .filter(Transaction.created_at >= start_date)
+                .group_by(func.date(Transaction.created_at))
+                .order_by(func.date(Transaction.created_at))
+                .all()
+            )
+
+            data = []
+            for r in results:
+                data.append(
+                    {
+                        "date": str(r.date),
+                        "value": float(r.amount or 0),
+                        "category": "交易额",
+                    }
+                )
+            
+            # If no data, return empty list or mock for demo if DB is empty?
+            # Let's return actual data.
+            return {"data": data}
+    except Exception as e:
+        log.error(f"Error fetching dashboard chart: {e}")
+        return {"data": []}
 
 
 @router.get("/cards/pending")

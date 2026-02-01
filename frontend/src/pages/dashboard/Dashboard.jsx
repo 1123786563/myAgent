@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer, StatisticCard } from '@ant-design/pro-components';
-import { Row, Col, Card, List, Typography, Space, Badge } from 'antd';
+import { Row, Col, Card, List, Typography, Space, Badge, message } from 'antd';
 import {
   LineChartOutlined,
   AccountBookOutlined,
   TransactionOutlined,
   SafetyOutlined
 } from '@ant-design/icons';
+import { Line } from '@ant-design/plots';
 import ActionCard from '../../components/ProactiveHub/ActionCard';
 import request from '../../utils/request';
 
@@ -19,34 +20,70 @@ const Dashboard = () => {
     metrics: { balance: 0, pending_vouchers: 0, matched_invoices: 0, health_score: 0 },
     actions: []
   });
+  const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
-    // 模拟获取看板数据
     const fetchData = async () => {
-      setLoading(false);
-      // 这里的 mock 数据反映了系统目前的业务深度
-      setData({
-        metrics: { balance: 1258400.50, pending_vouchers: 12, matched_invoices: 45, health_score: 98 },
-        actions: [
-          {
-            id: 1,
-            title: '对账差异提醒',
-            description: '发现在“支付宝”流水中有一笔 500.00 元的款项未找到对应的记账凭证，建议核对。',
-            type: 'WARNING',
-            date: '10分钟前'
-          },
-          {
-            id: 2,
-            title: '发票自动勾稽完成',
-            description: '系统已自动为 24 张进项发票匹配了银行流水，请进入工作台进行最终确认。',
-            type: 'SUCCESS',
-            date: '1小时前'
-          }
-        ]
-      });
+      try {
+        setLoading(true);
+        // Fetch metrics
+        const metricsRes = await request.get('/ui/dashboard/metrics');
+        // Fetch chart data
+        const chartRes = await request.get('/ui/dashboard/chart');
+        
+        setData({
+          metrics: metricsRes.metrics || { balance: 0, pending_vouchers: 0, matched_invoices: 0, health_score: 0 },
+          actions: [
+            {
+              id: 1,
+              title: '对账差异提醒',
+              description: '发现在“支付宝”流水中有一笔 500.00 元的款项未找到对应的记账凭证，建议核对。',
+              type: 'WARNING',
+              date: '10分钟前'
+            },
+            {
+              id: 2,
+              title: '发票自动勾稽完成',
+              description: '系统已自动为 24 张进项发票匹配了银行流水，请进入工作台进行最终确认。',
+              type: 'SUCCESS',
+              date: '1小时前'
+            }
+          ]
+        });
+        
+        setChartData(chartRes.data || []);
+      } catch (error) {
+        console.error("Dashboard fetch error", error);
+        message.error("获取看板数据失败");
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
   }, []);
+
+  const chartConfig = {
+    data: chartData,
+    xField: 'date',
+    yField: 'value',
+    seriesField: 'category',
+    smooth: true,
+    animation: {
+      appear: {
+        animation: 'path-in',
+        duration: 1000,
+      },
+    },
+    point: {
+      size: 5,
+      shape: 'diamond',
+    },
+    label: {
+      style: {
+        fill: '#aaa',
+      },
+    },
+  };
 
   return (
     <PageContainer title="财务智能看板">
@@ -89,10 +126,14 @@ const Dashboard = () => {
             />
           </StatisticCard.Group>
 
-          <Card title="收支趋势 (核心图表占位)" style={{ marginTop: 24, height: 400 }}>
-            <div style={{ textAlign: 'center', paddingTop: 100, color: '#999' }}>
-              [此处集成 @ant-design/plots 动态图表]
-            </div>
+          <Card title="收支趋势 (最近 14 天)" style={{ marginTop: 24, height: 400 }}>
+             {chartData.length > 0 ? (
+               <Line {...chartConfig} style={{ height: 320 }} />
+             ) : (
+               <div style={{ textAlign: 'center', paddingTop: 100, color: '#999' }}>
+                 暂无趋势数据，等待交易产生...
+               </div>
+             )}
           </Card>
         </Col>
 

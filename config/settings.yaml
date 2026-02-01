@@ -19,6 +19,11 @@ intervals:
   max_backoff_wait: 300          # [Iteration 8] 最大退避等待时间 (秒)
 
 db:
+  host: "${DB_HOST}"
+  port: "${DB_PORT}"
+  user: "${DB_USER}"
+  password: "${DB_PASSWORD}"
+  name: "${DB_NAME}"
   retry_count: 3
   retry_delay: 0.5
   wal_size_warning_mb: 100       # [Iteration 8] WAL 文件大小告警阈值 (MB)

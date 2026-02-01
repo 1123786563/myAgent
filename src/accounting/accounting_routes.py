@@ -40,6 +40,8 @@ class AccountResponse(BaseModel):
     level: int
     is_leaf: bool
     is_system: bool
+    enable_auxiliary: bool = False
+    auxiliary_types: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -54,6 +56,7 @@ class VoucherItemRequest(BaseModel):
     supplier: Optional[str] = None
     project: Optional[str] = None
     department: Optional[str] = None
+    employee: Optional[str] = None
 
 
 class VoucherCreateRequest(BaseModel):
@@ -136,7 +139,9 @@ async def list_accounts(
             balance_direction=acc.balance_direction.value,
             level=acc.level,
             is_leaf=acc.is_leaf,
-            is_system=acc.is_system
+            is_system=acc.is_system,
+            enable_auxiliary=acc.enable_auxiliary,
+            auxiliary_types=acc.auxiliary_types
         ) for acc in accounts]
 
 
@@ -188,7 +193,9 @@ async def create_account(
         balance_direction=account.balance_direction.value,
         level=account.level,
         is_leaf=account.is_leaf,
-        is_system=account.is_system
+        is_system=account.is_system,
+        enable_auxiliary=account.enable_auxiliary,
+        auxiliary_types=account.auxiliary_types
     )
 
 

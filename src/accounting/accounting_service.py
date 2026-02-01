@@ -139,6 +139,8 @@ class AccountingService:
         parent_code: Optional[str] = None,
         category: Optional[AccountCategory] = None,
         description: Optional[str] = None,
+        enable_auxiliary: bool = False,
+        auxiliary_types: Optional[str] = None,
         user_id: Optional[int] = None
     ) -> Tuple[Optional[Account], Optional[str]]:
         """创建科目"""
@@ -182,6 +184,8 @@ class AccountingService:
                 parent_id=parent.id if parent else None,
                 is_leaf=True,
                 description=description,
+                enable_auxiliary=enable_auxiliary,
+                auxiliary_types=auxiliary_types,
                 is_active=True
             )
             session.add(account)
@@ -193,7 +197,7 @@ class AccountingService:
                 organization_id=organization_id,
                 resource_type="Account",
                 resource_id=str(account.id),
-                new_values={"code": code, "name": name}
+                new_values={"code": code, "name": name, "auxiliary": auxiliary_types}
             )
 
             return account, None
@@ -221,6 +225,8 @@ class AccountingService:
                     "level": acc.level,
                     "is_leaf": acc.is_leaf,
                     "is_system": acc.is_system,
+                    "enable_auxiliary": acc.enable_auxiliary,
+                    "auxiliary_types": acc.auxiliary_types,
                     "children": []
                 }
                 account_map[acc.id] = node
