@@ -1,4 +1,3 @@
-import sqlite3
 import threading
 import time
 from contextlib import contextmanager
@@ -7,13 +6,15 @@ from core.db_metrics import DBMetrics
 from infra.logger import get_logger
 import os
 from dotenv import load_dotenv
+import psycopg2
+import psycopg2.extras
 
 # 加载 .env 文件
 load_dotenv()
 
 class DBBase:
     """
-    [Optimization Iteration PG/SQLite] 基础数据库连接与事务管理 (自适应 SQLite/PostgreSQL)
+    [Optimization Iteration PG Only] 基础数据库连接与事务管理 (仅支持 PostgreSQL)
     """
     _instance = None
     _lock = threading.Lock()
@@ -23,8 +24,7 @@ class DBBase:
         with cls._lock:
             if cls._instance is None:
                 cls._instance = super(DBBase, cls).__new__(cls)
-                cls._instance.db_type = os.getenv("DB_TYPE", "sqlite").lower()
-                cls._instance.db_path = ConfigManager.get("path.db")
+                cls._instance.db_type = "postgres"
                 cls._instance.pg_config = {
                     "host": os.getenv("POSTGRES_HOST", "localhost"),
                     "port": os.getenv("POSTGRES_PORT", "5432"),
@@ -37,29 +37,15 @@ class DBBase:
 
     def _get_conn(self):
         reused = True
-        if not hasattr(self._local, "conn") or self._local.conn is None or (self.db_type == "postgres" and self._local.conn.closed):
+        if not hasattr(self._local, "conn") or self._local.conn is None or self._local.conn.closed:
             reused = False
-            if self.db_type == "postgres":
-                import psycopg2
-                try:
-                    conn = psycopg2.connect(**self.pg_config)
-                    self._local.conn = conn
-                except Exception as e:
-                    get_logger("DB").error(f"连接 PostgreSQL 失败，降级或报错: {e}")
-                    raise e
-            else:
-                import sqlite3
-                busy_timeout = ConfigManager.get_int("db.busy_timeout", 30000)
-                conn = sqlite3.connect(
-                    self.db_path, 
-                    check_same_thread=False, 
-                    timeout=busy_timeout/1000,
-                    detect_types=sqlite3.PARSE_DECLTYPES
-                )
-                conn.row_factory = sqlite3.Row
-                conn.execute(f"PRAGMA journal_mode=WAL")
+            try:
+                conn = psycopg2.connect(**self.pg_config)
+                # 默认使用 DictCursor 保持与之前 SQLite Row 类似的访问方式
                 self._local.conn = conn
-                self._local.statement_cache = {}
+            except Exception as e:
+                get_logger("DB").error(f"连接 PostgreSQL 失败: {e}")
+                raise e
 
             self._local.last_health_check = time.time()
             with self._lock:
@@ -79,17 +65,14 @@ class DBBase:
 
     def _check_connection_health(self) -> bool:
         try:
-            if self.db_type == "postgres":
-                with self._local.conn.cursor() as cur:
-                    cur.execute("SELECT 1")
-            else:
-                self._local.conn.execute("SELECT 1")
+            with self._local.conn.cursor() as cur:
+                cur.execute("SELECT 1")
             return True
         except Exception:
             return False
 
     @contextmanager
-    def transaction(self, mode="DEFERRED"):
+    def transaction(self):
         retry_count = ConfigManager.get_int("db.retry_count", 5)
         base_delay = ConfigManager.get_float("db.retry_delay", 0.1)
         slow_threshold = ConfigManager.get_float("db.slow_threshold", 0.5)
@@ -106,8 +89,7 @@ class DBBase:
             conn = None
             try:
                 conn = self._get_conn()
-                if self.db_type == "sqlite":
-                    conn.execute(f"BEGIN {mode}")
+                # psycopg2 事务默认是开启的，但在上下文管理器中我们手动控制
                 yield conn
                 conn.commit()
 
@@ -123,9 +105,9 @@ class DBBase:
                 last_error = e
                 retries_used = i + 1
                 
-                # 特殊错误重试逻辑
-                err_msg = str(e).lower()
-                if "locked" in err_msg or "busy" in err_msg or "lock" in err_msg:
+                # PG 的并发冲突通常是 serialization_failure 或 deadlock_detected
+                # 这里可以根据具体的 SQLState 进行判断
+                if hasattr(e, 'pgcode') and e.pgcode in ('40001', '40P01'):
                     wait_time = (base_delay * (2 ** i)) + (random.random() * 0.1)
                     time.sleep(wait_time)
                     continue

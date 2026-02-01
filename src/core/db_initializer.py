@@ -8,15 +8,11 @@ load_dotenv()
 
 class DBInitializer:
     """
-    [Optimization PG/SQLite] 数据库初始化逻辑 (自适应)
+    [Optimization PG Only] 数据库初始化逻辑 (仅支持 PostgreSQL)
     """
     @staticmethod
-    def init_db(db_path=None):
-        db_type = os.getenv("DB_TYPE", "sqlite").lower()
-        if db_type == "postgres":
-            DBInitializer._init_postgres()
-        else:
-            DBInitializer._init_sqlite(db_path or ConfigManager.get("path.db"))
+    def init_db():
+        DBInitializer._init_postgres()
 
     @staticmethod
     def _init_postgres():
@@ -30,6 +26,7 @@ class DBInitializer:
         }
         
         try:
+            # 建立到默认数据库 'postgres' 的连接，以确保目标数据库存在
             temp_conn = psycopg2.connect(host=pg_config["host"], port=pg_config["port"], 
                                          user=pg_config["user"], password=pg_config["password"], dbname="postgres")
             temp_conn.autocommit = True
@@ -39,14 +36,16 @@ class DBInitializer:
                     cur.execute(f"CREATE DATABASE {pg_config['dbname']}")
             temp_conn.close()
         except Exception as e:
-            get_logger("DB-Init").warning(f"创建 PG 数据库失败: {e}")
+            get_logger("DB-Init").warning(f"确保 PG 数据库存在时遇到问题: {e}")
 
         conn = psycopg2.connect(**pg_config)
         cursor = conn.cursor()
         try:
-            # 基础表结构定义 (省略重复的 CREATE TABLE，实际应用中应保持完整)
+            # 基础表结构定义
             cursor.execute("CREATE TABLE IF NOT EXISTS sys_config (key TEXT PRIMARY KEY, value TEXT)")
-            # ... 其他表结构 ...
+            cursor.execute("CREATE TABLE IF NOT EXISTS sys_status (service_name TEXT PRIMARY KEY, last_heartbeat TIMESTAMP, status TEXT, metrics JSONB, lock_owner TEXT)")
+            cursor.execute("CREATE TABLE IF NOT EXISTS system_events (id SERIAL PRIMARY KEY, event_type TEXT, service_name TEXT, message TEXT, trace_id TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+            
             cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
                 id SERIAL PRIMARY KEY,
                 status TEXT,
@@ -55,30 +54,26 @@ class DBInitializer:
                 category TEXT,
                 trace_id TEXT UNIQUE, 
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                logical_revert INTEGER DEFAULT 0
+                logical_revert INTEGER DEFAULT 0,
+                prev_hash TEXT,
+                chain_hash TEXT,
+                inference_log JSONB,
+                group_id TEXT
             )''')
-            # ...
+            
+            cursor.execute("CREATE TABLE IF NOT EXISTS transaction_tags (id SERIAL PRIMARY KEY, transaction_id INTEGER REFERENCES transactions(id), tag_key TEXT, tag_value TEXT)")
+            cursor.execute("CREATE TABLE IF NOT EXISTS pending_entries (id SERIAL PRIMARY KEY, amount DECIMAL(10, 2), vendor_keyword TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+            cursor.execute("CREATE TABLE IF NOT EXISTS trial_balance (account_code TEXT PRIMARY KEY, debit_total DECIMAL(15, 2) DEFAULT 0, credit_total DECIMAL(15, 2) DEFAULT 0, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+            cursor.execute("CREATE TABLE IF NOT EXISTS roi_metrics_history (report_date DATE PRIMARY KEY, human_hours_saved DECIMAL(10, 2), token_spend_usd DECIMAL(10, 4), roi_ratio DECIMAL(10, 2))")
+            cursor.execute("CREATE TABLE IF NOT EXISTS knowledge_base (entity_name TEXT PRIMARY KEY, consecutive_success INTEGER DEFAULT 0, hit_count INTEGER DEFAULT 0, quality_score DECIMAL(3, 2) DEFAULT 1.0)")
+            
+            # 索引
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_trans_status ON transactions (status)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_trans_vendor ON transactions (vendor)")
+            
             conn.commit()
-        finally:
-            conn.close()
-
-    @staticmethod
-    def _init_sqlite(db_path):
-        import sqlite3
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        try:
-            cursor.execute("CREATE TABLE IF NOT EXISTS sys_config (key TEXT PRIMARY KEY, value TEXT)")
-            cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                status TEXT,
-                amount DECIMAL(10, 2),
-                vendor TEXT,
-                category TEXT,
-                trace_id TEXT UNIQUE, 
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                logical_revert INTEGER DEFAULT 0
-            )''')
-            conn.commit()
+        except Exception as e:
+            get_logger("DB-Init").error(f"初始化 PG 表结构失败: {e}")
+            conn.rollback()
         finally:
             conn.close()
