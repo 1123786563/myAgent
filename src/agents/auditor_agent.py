@@ -75,9 +75,11 @@ class AuditorAgent(AgentBase):
             reasons.extend(c_reasons)
             risk_score += c_risk
 
+        # [Iteration 4] 多轮投票逻辑修正
         if (risk_score > 0.3) or (amount > self.force_manual_amount * ConfigManager.get_float("audit.consensus_trigger_ratio", 0.5)):
-            success, _ = self.consensus_engine.vote(x), self.consensus_engine.decide(self.consensus_engine.vote(x))
-            if not success: return self._reject(x, "共识审计未通过")
+            votes = self.consensus_engine.vote(x)
+            success, decision_reason = self.consensus_engine.decide(votes)
+            if not success: return self._reject(x, f"共识审计未通过: {decision_reason}")
 
         if group_id:
             group_data = self._aggregate_group_context(group_id)

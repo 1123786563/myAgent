@@ -47,9 +47,15 @@ class ConsensusEngine:
     def decide(self, votes):
         pass_count = sum(1 for v in votes.values() if v["pass"])
         total = len(votes)
+        
+        # [Iteration 4] 极端异常场景保护：如果超过 50% 的投票者提到“CRITICAL”或“BLOCK”，则强制一票否决
+        critical_voters = [name for name, v in votes.items() if "CRITICAL" in v.get("reason", "").upper() or "BLOCK" in v.get("reason", "").upper()]
+        if critical_voters:
+            return False, f"CRITICAL BLOCK by {', '.join(critical_voters)}"
+
         if self.strategy == ConsensusStrategy.STRICT:
-            return pass_count == total
+            return pass_count == total, "Strict strategy requirement"
         elif self.strategy == ConsensusStrategy.GROWTH:
-            return pass_count >= 1
+            return pass_count >= 1, "Growth strategy requirement"
         else:  # BALANCED
-            return pass_count >= (total / 2)
+            return pass_count >= (total / 2), "Balanced strategy requirement"

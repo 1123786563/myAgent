@@ -41,6 +41,9 @@ class AuditorRiskAssessment:
 
     def assess_amount_risk(self, amount: Decimal) -> tuple:
         if amount > self.force_manual_amount:
+            # [Iteration 4] 极端异常场景：若金额超出阈值 10 倍，标记为 CRITICAL BLOCK
+            if amount > self.force_manual_amount * 10:
+                return 1.0, [f"CRITICAL BLOCK: 极端大额支付风险({amount})"], True
             return 0.9, [f"触发大额支付风控({amount} > {self.force_manual_amount})"], True
         return 0.0, [], False
 
