@@ -1,10 +1,7 @@
 import re
+import time
 from functools import lru_cache
 from config_manager import ConfigManager
-from logger import get_logger
-
-log = get_logger("PrivacyGuard")
-
 
 class PrivacyGuard:
     """
@@ -103,7 +100,9 @@ class PrivacyGuard:
         self._stats["total_processed"] += 1
         if has_sensitive:
             self._stats["total_masked"] += 1
-            log.debug(f"LLM 请求脱敏: 检测到敏感信息并已处理")
+            # [Round 51] 动态获取 logger 避免循环导入
+            from logger import get_logger
+            get_logger("PrivacyGuard").debug(f"LLM 请求脱敏: 检测到敏感信息并已处理")
 
         return text, has_sensitive
 

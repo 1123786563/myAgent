@@ -16,7 +16,7 @@ log = get_logger("MasterDaemon")
 class MasterDaemon:
     def __init__(self):
         self.db = DBHelper()
-        self.version = "v1.3.1"
+        self.version = "v1.5.0-perfect"
         # 优化点：注册优雅退出清理回调
         register_cleanup(self.cleanup_processes)
         

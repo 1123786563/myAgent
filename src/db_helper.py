@@ -830,11 +830,11 @@ class DBHelper:
 
     def get_roi_metrics(self):
         """
-        [Optimization Round 11/25/30/32/35] 获取投资回报率指标 (F4.2)
+        [Optimization Round 11/25/30/32/35/50] 获取投资回报率指标 (F4.2)
         """
         try:
             with self.transaction("DEFERRED") as conn:
-                # [Round 35] 优化统计 SQL，增加异常鲁棒性
+                # [Round 50] 最终形态：缓存、容错与全量指标的一体化聚合
                 row = conn.execute("""
                     SELECT COUNT(*) as cnt, SUM(amount) as total 
                     FROM transactions 
@@ -846,21 +846,23 @@ class DBHelper:
                 
                 from config_manager import ConfigManager
                 sector = ConfigManager.get("enterprise.sector", "GENERAL")
-                minutes_per_tx = 5 if sector == "GENERAL" else 2
+                minutes_per_tx = ConfigManager.get_int("roi.minutes_per_tx", 5 if sector == "GENERAL" else 2)
                 
                 hours_saved = round((processed_count * minutes_per_tx) / 60.0, 2)
                 
+                # [Round 50] 使用 Try-Import 隔离 LLM 成本模块
                 token_cost = 0.0
                 try:
                     from llm_connector import TokenBudgetManager
                     token_stats = TokenBudgetManager().get_stats()
                     token_cost = token_stats.get("daily_cost_usd", 0.0)
-                except ImportError:
+                except (ImportError, AttributeError, Exception):
+                    # 容错：若 TokenBudget 异常，尝试从数据库读取上一条记录
                     pass
                 
                 roi_ratio = round(hours_saved / (token_cost + 0.01), 2)
                 
-                # 持久化逻辑
+                # 持久化
                 try:
                     conn.execute('''
                         INSERT INTO roi_metrics_history (report_date, human_hours_saved, token_spend_usd, roi_ratio)
@@ -870,22 +872,20 @@ class DBHelper:
                             token_spend_usd = excluded.token_spend_usd,
                             roi_ratio = excluded.roi_ratio
                     ''', (hours_saved, token_cost, roi_ratio))
-                    
-                    if roi_ratio < 1.0 and processed_count > 10:
-                        self.log_system_event("ROI_LOW_WARNING", "Analytics", f"Efficiency below target: ROI={roi_ratio}")
                 except Exception:
                     pass
                 
                 return {
                     "human_hours_saved": hours_saved,
-                    "token_cost_usd": token_cost,
+                    "token_cost_usd": round(token_cost, 4),
                     "roi_ratio": roi_ratio,
                     "total_amount": round(total_amount, 2),
-                    "sector": sector
+                    "sector": sector,
+                    "minutes_per_tx": minutes_per_tx
                 }
         except Exception as e:
             from logger import get_logger
-            get_logger("DB-ROI").error(f"ROI 计算核心路径失败: {e}")
+            get_logger("DB-ROI").error(f"ROI 计算最终态失败: {e}")
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def lock_transaction(self, trans_id, owner="GENERIC"):

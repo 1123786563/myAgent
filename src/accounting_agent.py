@@ -146,11 +146,12 @@ class AccountingAgent(AgentBase):
         self.db = DBHelper()
         self._load_rules()
         
-        # [Optimization Round 8/40/43/47] 输入文本归一化处理
+        # [Optimization Round 8/40/43/47/50] 输入文本归一化处理
         raw_text = str(x.get("content", ""))
-        # [Round 43/47] 移除 URL 和流水 ID
+        # [Round 43/47/50] 移除 URL、流水 ID 及 Markdown 装饰符
         clean_text = re.sub(r'https?://\S+|www\.\S+', '', raw_text)
         clean_text = re.sub(r'NO\.\d+|ID[:：]?\d+', '', clean_text)
+        clean_text = re.sub(r'[#\*_]{2,}', '', clean_text)
         normalized_text = re.sub(r'\s+', ' ', clean_text.strip())
         
         amount = float(x.get("amount", 0))

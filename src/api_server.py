@@ -446,7 +446,7 @@ async def get_dashboard(api_key: str = Depends(get_api_key)):
                 </table>
             </div>
 
-            <p style="text-align: center; color: #999;">系统版本: v1.3.1 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+            <p style="text-align: center; color: #999;">系统版本: v1.5.0-perfect | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </body>
     </html>
     """
