@@ -7157,3 +7157,2153 @@ TypeError: 'datetime.date' object is not subscriptable
 2026-02-01 15:40:28,097 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
 2026-02-01 15:40:28,100 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
 2026-02-01 15:40:28,100 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:01:17,105 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:17,494 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:17,954 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:18,602 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:19,634 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:21,470 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:24,930 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:01:31,607 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2026-02-01 16:05:46,064 [Global] - DB-Init - WARNING - 确保 PG 数据库存在时遇到问题: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+2026-02-01 16:06:28,013 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:06:28,028 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:06:29,603 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:06:29,645 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:06:29,645 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:29,652 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:29,658 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:29,664 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:29,670 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:29,677 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:29,684 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,747 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:06:29,751 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:29,760 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:06:29,806 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:06:29,806 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:29,820 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:06:29,820 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:29,832 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:06:29,832 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:29,844 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:06:29,844 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:29,857 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:06:29,857 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:29,870 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:06:29,870 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:29,885 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:06:29,886 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:29,901 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:06:29,901 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:30,146 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:06:30,147 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:30,147 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:06:30,170 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:06:30,173 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:06:30,200 [Global] - MatchEngine - ERROR - 并行匹配异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:30,201 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:06:30,205 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:06:30,211 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:06:30,212 [Global] - MatchEngine - ERROR - 证据追索任务异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:32,029 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:06:32,075 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:06:32,076 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:06:32,076 [Global] - AccountingAgent - ERROR - 自愈扫描异常: DBBase.transaction() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 330, in run
+    with self.db.transaction("DEFERRED") as conn:
+         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 305, in helper
+    return _GeneratorContextManager(func, args, kwds)
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 109, in __init__
+    self.gen = func(*args, **kwds)
+               ~~~~^^^^^^^^^^^^^^^
+TypeError: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:35,147 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:06:39,958 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:39,981 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:06:40,013 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:06:40,013 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:40,019 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:06:40,020 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:40,029 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:06:40,029 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:40,039 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:06:40,039 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:40,058 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:06:40,058 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:40,064 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:06:40,064 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:40,069 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:06:40,069 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:40,083 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:06:40,083 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:40,307 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:06:40,308 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:06:40,308 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:40,308 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:06:40,310 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:06:40,333 [Global] - MatchEngine - ERROR - 并行匹配异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:40,333 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:06:40,337 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:06:40,341 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:06:40,341 [Global] - MatchEngine - ERROR - 证据追索任务异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:41,781 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:06:41,828 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:06:41,828 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:06:41,828 [Global] - AccountingAgent - ERROR - 自愈扫描异常: DBBase.transaction() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 330, in run
+    with self.db.transaction("DEFERRED") as conn:
+         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 305, in helper
+    return _GeneratorContextManager(func, args, kwds)
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 109, in __init__
+    self.gen = func(*args, **kwds)
+               ~~~~^^^^^^^^^^^^^^^
+TypeError: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:45,309 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,124 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,124 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:06:50,124 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:06:50,125 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,125 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,125 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:06:50,127 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:50,151 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:06:50,188 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:06:50,188 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:50,197 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:06:50,197 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:50,206 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:06:50,206 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:50,216 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:06:50,217 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:50,235 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:06:50,235 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:50,241 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:06:50,241 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:50,246 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:06:50,246 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:50,259 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:06:50,259 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:50,464 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:06:50,465 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:06:50,473 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:06:50,476 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:06:50,479 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:50,498 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:50,498 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:06:50,502 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:06:50,506 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:06:50,506 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:55,213 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:06:55,222 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:06:56,444 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:06:56,487 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:06:56,487 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:56,493 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:56,498 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:56,503 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:56,508 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:56,513 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:56,518 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:56,563 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,564 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:06:56,564 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:06:56,564 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,565 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,566 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:06:56,569 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:56,577 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:06:56,615 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:06:56,615 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:56,625 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:06:56,625 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:06:56,635 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:06:56,635 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:06:56,645 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:06:56,645 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:06:56,655 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:06:56,655 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:06:56,664 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:06:56,665 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:06:56,674 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:06:56,674 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:06:56,684 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:06:56,685 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:06:56,882 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:06:56,883 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:06:56,890 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:06:56,893 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:06:56,898 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,916 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,916 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:06:56,919 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:06:56,924 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:06:56,924 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:58,148 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:06:58,195 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:06:58,195 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:06:58,212 [Global] - AccountingAgent - ERROR - 自愈扫描异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ^^^^^^^^^^^^
+AttributeError: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:01,920 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,790 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,790 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:06,792 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:06,815 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:06,845 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:06,845 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:06,852 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:07:06,852 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:06,862 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:07:06,862 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:06,872 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:07:06,873 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:06,890 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:07:06,890 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:06,896 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:07:06,896 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:06,901 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:07:06,902 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:06,914 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:07:06,915 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:07,104 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:07:07,104 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:07:07,118 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:07,124 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:07:07,127 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:07:07,149 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:07,149 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:07:07,153 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:07:07,157 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:07:07,158 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:08,433 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:07:08,482 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:07:08,482 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:07:08,500 [Global] - AccountingAgent - ERROR - 自愈扫描异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ^^^^^^^^^^^^
+AttributeError: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:12,118 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,961 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,961 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:16,961 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:16,962 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,962 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,962 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:16,964 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:16,989 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:17,020 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:17,020 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:17,028 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:07:17,028 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:17,038 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:07:17,039 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:17,049 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:07:17,050 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:17,067 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:07:17,067 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:17,072 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:07:17,072 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:17,078 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:07:17,078 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:17,090 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:07:17,090 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:19,495 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:07:19,504 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:07:20,440 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:07:20,453 [Global] - MasterDaemon - ERROR - 预检失败: 数据库连接或自愈异常: 'psycopg2.extensions.connection' object has no attribute 'execute' and no __dict__ for setting new attributes
+2026-02-01 16:07:20,453 [Global] - MasterDaemon - ERROR - 系统预检失败，程序退出。
+2026-02-01 16:07:26,271 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:07:26,280 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:07:27,177 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:07:27,219 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:07:27,219 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:27,226 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:27,231 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:27,236 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:27,241 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:27,246 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:27,251 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:27,297 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:27,297 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:27,297 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:27,300 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:27,302 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:27,303 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:27,306 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:27,312 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:27,351 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:27,351 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:27,362 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:07:27,362 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:27,372 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:07:27,372 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:27,382 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:07:27,382 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:27,392 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:07:27,392 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:27,403 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:07:27,403 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:27,414 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:07:27,414 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:27,424 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:07:27,424 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:27,612 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:07:27,612 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:07:27,630 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:27,633 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:07:27,636 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:07:27,667 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:27,667 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:07:27,669 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:07:27,674 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:07:27,675 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:28,904 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:07:28,952 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:07:28,952 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:07:28,970 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:32,701 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:37,537 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:37,537 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:37,537 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:37,539 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:37,540 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:37,541 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:37,542 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:37,546 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:37,578 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:37,578 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:37,586 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:07:37,586 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:37,596 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:07:37,597 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:37,607 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:07:37,607 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:37,625 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:07:37,625 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:37,631 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:07:37,631 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:37,636 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:07:37,637 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:37,649 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:07:37,650 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:37,866 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:07:37,867 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:07:37,881 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:07:37,884 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:07:37,885 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:37,917 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:37,917 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:07:37,921 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:07:37,927 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:07:37,929 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:39,166 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:07:39,213 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:07:39,213 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:07:39,231 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:42,887 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:47,691 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:47,691 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:47,691 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:47,693 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:47,694 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:47,694 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:47,696 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:47,720 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:47,749 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:47,750 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:47,757 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:07:47,757 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:47,767 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:07:47,767 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:47,778 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:07:47,778 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:47,795 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:07:47,795 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:47,800 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:07:47,800 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:47,806 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:07:47,806 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:47,818 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:07:47,818 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:48,040 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:07:48,040 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:07:48,058 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:48,059 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:07:48,062 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:07:48,091 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:48,091 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:07:48,094 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:07:48,098 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:07:48,100 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:49,344 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:07:49,375 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:07:49,376 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:07:49,387 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:53,062 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:57,945 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:57,945 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:07:57,945 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:07:57,948 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:57,950 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:57,950 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:07:57,952 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:57,976 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:07:58,007 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:07:58,007 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:58,014 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 8s...
+2026-02-01 16:07:58,014 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:07:58,025 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 8s...
+2026-02-01 16:07:58,025 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:07:58,035 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 8s...
+2026-02-01 16:07:58,035 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:07:58,053 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 8s...
+2026-02-01 16:07:58,054 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:07:58,060 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 8s...
+2026-02-01 16:07:58,060 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:07:58,065 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 8s...
+2026-02-01 16:07:58,065 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:07:58,078 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 8s...
+2026-02-01 16:07:58,078 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:07:58,268 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:07:58,269 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:07:58,282 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:07:58,285 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:58,286 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:07:58,314 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:58,314 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:07:58,317 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:07:58,328 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:07:58,331 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:59,546 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:07:59,592 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:07:59,592 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:07:59,611 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:03,288 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:08,120 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:08,121 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:08,121 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:08,122 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:08,124 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:08,125 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:08,126 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:08,132 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:08,162 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:08,162 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:08,172 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 16s...
+2026-02-01 16:08:08,172 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:08:08,183 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 16s...
+2026-02-01 16:08:08,183 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:08:08,193 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 16s...
+2026-02-01 16:08:08,194 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:08:08,211 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 16s...
+2026-02-01 16:08:08,211 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:08:08,217 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 16s...
+2026-02-01 16:08:08,217 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:08:08,223 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 16s...
+2026-02-01 16:08:08,223 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:08:08,237 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 16s...
+2026-02-01 16:08:08,237 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:08:08,446 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:08:08,446 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:08:08,461 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:08:08,465 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:08:08,466 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:08,517 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:08:08,517 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:08:08,520 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:08:08,525 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:08:08,527 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:08:09,744 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:08:09,794 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:08:09,794 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:08:09,813 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:13,468 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:18,281 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:18,281 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:18,281 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:18,283 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:18,284 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:18,285 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:18,286 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:18,310 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:18,340 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:18,340 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:28,546 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:28,546 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:28,546 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:28,548 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:28,550 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:28,550 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:28,553 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:28,565 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:28,641 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:28,641 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:28,647 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 32s...
+2026-02-01 16:08:28,647 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:08:28,657 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 32s...
+2026-02-01 16:08:28,657 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:08:28,672 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 32s...
+2026-02-01 16:08:28,672 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:08:28,681 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 32s...
+2026-02-01 16:08:28,682 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:08:28,693 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 32s...
+2026-02-01 16:08:28,693 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:08:28,702 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 32s...
+2026-02-01 16:08:28,702 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:08:28,711 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 32s...
+2026-02-01 16:08:28,712 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:08:29,279 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:08:29,279 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:08:29,280 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:08:29,285 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:08:29,309 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:29,351 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:08:29,351 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:08:29,356 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:08:29,365 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:08:29,369 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:08:33,404 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:08:33,450 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:08:33,451 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:08:33,467 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:34,316 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:38,846 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:38,846 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:38,846 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:38,850 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:38,852 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:38,853 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:38,855 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:38,902 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:38,954 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:38,954 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:49,104 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:49,105 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:49,105 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:49,106 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:49,108 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:49,108 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:49,110 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:49,152 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:49,202 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:49,202 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:59,252 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:59,252 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:08:59,252 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:08:59,253 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:59,254 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:59,255 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:08:59,256 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:59,280 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:08:59,319 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:08:59,319 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:09,357 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:09,357 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:09,357 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:09,359 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:09,360 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:09,360 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:09,362 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:09,388 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:09:09,417 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:09:09,417 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:09,420 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 60s...
+2026-02-01 16:09:09,420 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:09:09,425 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 60s...
+2026-02-01 16:09:09,425 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:09:09,429 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 60s...
+2026-02-01 16:09:09,429 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:09:09,435 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 60s...
+2026-02-01 16:09:09,435 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:09:09,439 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 60s...
+2026-02-01 16:09:09,439 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:09:09,443 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 60s...
+2026-02-01 16:09:09,443 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:09:09,448 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 60s...
+2026-02-01 16:09:09,448 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:09:09,710 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:09:09,711 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:09:09,711 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:09:09,713 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:09:09,732 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:09:09,749 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:09:09,749 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:09:09,752 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:09:09,756 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:09:09,759 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:09:11,390 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:09:11,438 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:09:11,438 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:09:11,457 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:09:14,735 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:09:19,491 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:19,491 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:19,491 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:19,493 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:19,495 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:19,495 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:19,496 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:19,520 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:09:19,551 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:09:19,551 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:29,629 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:29,629 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:29,629 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:29,630 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:29,632 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:29,632 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:29,633 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:29,658 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:09:29,695 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:09:29,695 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:39,733 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:39,733 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:39,733 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:39,734 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:39,735 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:39,736 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:39,737 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:39,762 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:09:39,795 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:09:39,795 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:49,837 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:49,837 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:49,837 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:49,840 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:49,841 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:49,842 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:49,844 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:49,868 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:09:49,907 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:09:49,907 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:59,960 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:59,960 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:09:59,960 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:09:59,961 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:59,962 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:59,962 [Global] - DB-Maintenance - INFO - 启动数据库定期自愈维护任务...
+2026-02-01 16:09:59,964 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:59,988 [Global] - MasterDaemon - INFO - 系统效益快报: 已节省 0.0 小时
+2026-02-01 16:10:00,018 [Global] - CashflowPredictor - INFO - 正在计算增强型现金流天气预报 (Weather Forecast)...
+2026-02-01 16:10:00,018 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:10:07,076 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:10:07,086 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:10:08,556 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:10:08,614 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:10:08,614 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:08,621 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:08,630 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:08,637 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:08,646 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:08,653 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:08,662 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:08,737 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:08,737 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:08,737 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:08,740 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:08,744 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:08,744 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:08,764 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:10:08,764 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:08,778 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:10:08,778 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:08,797 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:10:08,797 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:08,813 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:10:08,813 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:08,829 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:10:08,829 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:08,845 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:10:08,845 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:08,860 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:10:08,860 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:09,137 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:10:09,137 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:10:09,152 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:10:09,157 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:10:09,157 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:09,191 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:09,191 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:10:09,195 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:10:09,200 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:10:09,203 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:10,955 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:10:11,001 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:10:11,002 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:10:11,021 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:14,159 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:18,952 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:18,952 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:18,952 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:18,955 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:18,956 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:18,956 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:18,984 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:10:18,984 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:18,995 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:10:18,995 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:19,006 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:10:19,006 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:19,026 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:10:19,026 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:19,032 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:10:19,032 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:19,038 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:10:19,038 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:19,051 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:10:19,052 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:19,250 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:10:19,250 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:10:19,264 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:10:19,267 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:10:19,269 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:19,304 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:19,304 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:10:19,307 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:10:19,312 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:10:19,314 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:21,404 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:10:21,447 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:10:21,447 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:10:21,463 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:24,273 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:29,094 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:29,094 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:29,094 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:29,096 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:29,097 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:29,097 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:29,125 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:10:29,125 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:29,136 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:10:29,136 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:29,147 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:10:29,147 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:29,165 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:10:29,166 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:29,172 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:10:29,172 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:29,178 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:10:29,178 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:29,196 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:10:29,196 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:29,433 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:10:29,433 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:10:29,443 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:10:29,446 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:10:29,451 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:29,478 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:29,479 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:10:29,481 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:10:29,486 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:10:29,487 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:30,967 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:10:31,016 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:10:31,016 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:10:31,036 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:34,530 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:39,247 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:39,247 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:39,247 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:39,248 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:39,250 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:39,250 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:39,277 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 8s...
+2026-02-01 16:10:39,278 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:39,289 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 8s...
+2026-02-01 16:10:39,290 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:39,302 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 8s...
+2026-02-01 16:10:39,302 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:39,320 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 8s...
+2026-02-01 16:10:39,320 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:39,327 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 8s...
+2026-02-01 16:10:39,328 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:39,335 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 8s...
+2026-02-01 16:10:39,335 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:39,349 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 8s...
+2026-02-01 16:10:39,350 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:39,543 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:10:39,543 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:10:39,564 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:39,565 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:10:39,569 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:10:39,602 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:39,602 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:10:39,605 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:10:39,610 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:10:39,612 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:40,931 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:10:40,981 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:10:40,981 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:10:41,001 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:44,566 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:49,469 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:49,469 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:49,469 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:49,471 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:49,472 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:49,472 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:49,502 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 16s...
+2026-02-01 16:10:49,502 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:10:49,515 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 16s...
+2026-02-01 16:10:49,515 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:10:49,527 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 16s...
+2026-02-01 16:10:49,527 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:10:49,545 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 16s...
+2026-02-01 16:10:49,545 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:10:49,551 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 16s...
+2026-02-01 16:10:49,551 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:10:49,558 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 16s...
+2026-02-01 16:10:49,558 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:10:49,573 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 16s...
+2026-02-01 16:10:49,573 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:10:49,787 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:10:49,787 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:10:49,800 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:10:49,804 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:10:49,805 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:49,837 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:49,837 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:10:49,839 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:10:49,844 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:10:49,845 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:51,459 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:10:51,512 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:10:51,513 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:10:51,533 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:54,807 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:59,691 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:59,692 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:10:59,692 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:10:59,694 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:59,695 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:59,695 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:09,885 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:09,885 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:09,885 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:09,887 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:09,888 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:09,888 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:09,911 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 32s...
+2026-02-01 16:11:09,911 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:09,917 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 32s...
+2026-02-01 16:11:09,917 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:09,924 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 32s...
+2026-02-01 16:11:09,924 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:09,930 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 32s...
+2026-02-01 16:11:09,931 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:09,937 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 32s...
+2026-02-01 16:11:09,937 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:09,943 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 32s...
+2026-02-01 16:11:09,944 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:09,950 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 32s...
+2026-02-01 16:11:09,951 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:10,173 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,174 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,175 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:10,174 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:10,175 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:10,178 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:10,196 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:10,204 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,213 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:10,213 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:10,215 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:10,220 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:10,222 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:10,243 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,283 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,322 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,748 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,752 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:11:11,806 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,807 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:11:11,808 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:11:11,828 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:16,326 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:16,327 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:11:16,337 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:11:17,556 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:11:17,576 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:11:17,576 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:17,582 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:17,588 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:17,595 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:17,601 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:17,608 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:17,616 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:17,666 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,668 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:17,668 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:17,668 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:17,671 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:17,674 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:17,674 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:17,686 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:11:17,686 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:17,698 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:11:17,698 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:17,708 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:11:17,708 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:17,719 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:11:17,719 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:17,731 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:11:17,731 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:17,740 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:11:17,741 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:17,751 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:11:17,751 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:17,970 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,971 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:17,971 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:17,983 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,984 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:17,987 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:17,992 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:18,011 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,020 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:18,020 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:18,022 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:18,027 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:18,029 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:18,049 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,086 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,124 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,321 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,324 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:11:19,373 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,374 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:11:19,374 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:11:19,394 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:22,994 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:27,798 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:27,801 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:27,801 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:27,801 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:27,804 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:27,805 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:27,805 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:27,834 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 2s...
+2026-02-01 16:11:27,834 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:27,851 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 2s...
+2026-02-01 16:11:27,851 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:27,867 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 2s...
+2026-02-01 16:11:27,867 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:27,889 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 2s...
+2026-02-01 16:11:27,889 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:27,897 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 2s...
+2026-02-01 16:11:27,897 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:27,906 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 2s...
+2026-02-01 16:11:27,906 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:27,921 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 2s...
+2026-02-01 16:11:27,922 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:28,165 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,166 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:28,166 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:28,179 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,179 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:28,182 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:28,187 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:28,207 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,216 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:28,216 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:28,219 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:28,223 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:28,226 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:28,245 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,282 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,318 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,598 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,603 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:11:29,649 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,651 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:11:29,651 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:11:29,677 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:33,189 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:37,993 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:37,996 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:37,996 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:37,996 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:37,999 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:38,002 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:38,002 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:38,038 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 4s...
+2026-02-01 16:11:38,038 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:38,052 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 4s...
+2026-02-01 16:11:38,053 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:38,069 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 4s...
+2026-02-01 16:11:38,069 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:38,099 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 4s...
+2026-02-01 16:11:38,100 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:38,112 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 4s...
+2026-02-01 16:11:38,112 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:38,120 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 4s...
+2026-02-01 16:11:38,120 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:38,142 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 4s...
+2026-02-01 16:11:38,142 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:38,375 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,376 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:38,376 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:38,390 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,391 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:38,394 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:38,395 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:38,414 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,432 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:38,432 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:38,434 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:38,439 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:38,441 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:38,453 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,489 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,525 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,018 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,022 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:11:40,076 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,077 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:11:40,078 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:11:40,100 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:43,396 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:48,197 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,200 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:48,200 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:48,200 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:48,202 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:48,203 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:48,203 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:48,231 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 8s...
+2026-02-01 16:11:48,231 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:48,241 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 8s...
+2026-02-01 16:11:48,241 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:48,251 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 8s...
+2026-02-01 16:11:48,251 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:48,268 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 8s...
+2026-02-01 16:11:48,268 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:48,274 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 8s...
+2026-02-01 16:11:48,274 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:48,279 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 8s...
+2026-02-01 16:11:48,279 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:48,292 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 8s...
+2026-02-01 16:11:48,292 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:48,493 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,495 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:48,495 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:48,508 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,509 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:48,513 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:48,515 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:48,531 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,550 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:48,550 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:48,553 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:48,558 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:48,560 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:48,574 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,612 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,653 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,879 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,882 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:11:49,939 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,940 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:11:49,940 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:11:49,962 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:53,516 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:58,333 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,335 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:58,335 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:11:58,335 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:11:58,337 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:58,339 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:58,339 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:58,347 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 16s...
+2026-02-01 16:11:58,347 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:11:58,357 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 16s...
+2026-02-01 16:11:58,358 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:11:58,368 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 16s...
+2026-02-01 16:11:58,368 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:11:58,386 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 16s...
+2026-02-01 16:11:58,386 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:11:58,391 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 16s...
+2026-02-01 16:11:58,392 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:11:58,397 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 16s...
+2026-02-01 16:11:58,397 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:11:58,409 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 16s...
+2026-02-01 16:11:58,409 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:11:58,616 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,617 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:11:58,618 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:11:58,635 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,636 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:11:58,637 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:58,640 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:11:58,659 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,694 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:58,694 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:11:58,696 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:11:58,700 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,700 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:11:58,704 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:58,739 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,777 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:12:00,003 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:00,006 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:00,056 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:00,057 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:00,057 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:00,076 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:07,837 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:07,837 [Global] - MasterDaemon - INFO - === LedgerAlpha Master Daemon v1.5.0-perfect 启动 ===
+2026-02-01 16:12:07,846 [Global] - MasterDaemon - INFO - 执行系统启动预检与自愈恢复...
+2026-02-01 16:12:09,054 [Global] - MasterDaemon - INFO - 核心依赖库 (openai, pandas, yaml) 检查通过。
+2026-02-01 16:12:09,095 [Global] - MasterDaemon - INFO - 预检与自愈通过。
+2026-02-01 16:12:09,095 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:09,101 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:09,106 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:09,111 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:09,117 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:09,122 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:09,129 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:09,178 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,181 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:09,181 [Global] - KnowledgeBridge - INFO - 启动增强型时效性语义蒸馏程序...
+2026-02-01 16:12:09,181 [Global] - KnowledgeBridge - INFO - 执行从已审计交易提取知识...
+2026-02-01 16:12:09,184 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:09,188 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:09,188 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:09,200 [Global] - MasterDaemon - WARNING - 服务 InteractionHub 异常重启，冷却 1s...
+2026-02-01 16:12:09,200 [Global] - MasterDaemon - INFO - 正在启动子服务: InteractionHub
+2026-02-01 16:12:09,210 [Global] - MasterDaemon - WARNING - 服务 Collector 异常重启，冷却 1s...
+2026-02-01 16:12:09,210 [Global] - MasterDaemon - INFO - 正在启动子服务: Collector
+2026-02-01 16:12:09,222 [Global] - MasterDaemon - WARNING - 服务 MatchEngine 异常重启，冷却 1s...
+2026-02-01 16:12:09,222 [Global] - MasterDaemon - INFO - 正在启动子服务: MatchEngine
+2026-02-01 16:12:09,233 [Global] - MasterDaemon - WARNING - 服务 AccountingAgent 异常重启，冷却 1s...
+2026-02-01 16:12:09,233 [Global] - MasterDaemon - INFO - 正在启动子服务: AccountingAgent
+2026-02-01 16:12:09,246 [Global] - MasterDaemon - WARNING - 服务 Auditor 异常重启，冷却 1s...
+2026-02-01 16:12:09,246 [Global] - MasterDaemon - INFO - 正在启动子服务: Auditor
+2026-02-01 16:12:09,259 [Global] - MasterDaemon - WARNING - 服务 Sentinel 异常重启，冷却 1s...
+2026-02-01 16:12:09,259 [Global] - MasterDaemon - INFO - 正在启动子服务: Sentinel
+2026-02-01 16:12:09,272 [Global] - MasterDaemon - WARNING - 服务 APIServer 异常重启，冷却 1s...
+2026-02-01 16:12:09,272 [Global] - MasterDaemon - INFO - 正在启动子服务: APIServer
+2026-02-01 16:12:09,493 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,494 [Global] - InteractionHub - INFO - InteractionHub 轮询服务启动 (Event-Driven Mode)...
+2026-02-01 16:12:09,494 [Global] - InteractionHub - INFO - InteractionHub 服务已启动...
+2026-02-01 16:12:09,507 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,508 [Global] - MatchEngine - INFO - MatchEngine 守护进程模式启动 (并发模式)...
+2026-02-01 16:12:09,511 [Global] - MatchEngine - INFO - 执行多模态并行对账匹配任务...
+2026-02-01 16:12:09,516 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:09,543 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:09,543 [Global] - MatchEngine - INFO - 启动周期性账本完整性校验...
+2026-02-01 16:12:09,543 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,546 [Global] - MatchEngine - INFO - 账本完整性校验通过: 完整性校验通过
+2026-02-01 16:12:09,551 [Global] - MatchEngine - INFO - 执行主动证据追索扫描 (Hunter Mode)...
+2026-02-01 16:12:09,553 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:09,583 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,623 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,660 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,828 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,831 [Global] - AccountingAgent - INFO - 规则库已更新: /Users/yongjunwu/trea/myAgent/src/core/accounting_rules.yaml (共 3 条规则)
+2026-02-01 16:12:10,880 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,882 [Global] - AccountingAgent - INFO - AccountingAgent 服务已启动 (包含自愈模块)...
+2026-02-01 16:12:10,882 [Global] - AccountingAgent - INFO - RecoveryWorker 启动: 监听 REJECTED 队列 (间隔: 60s)...
+2026-02-01 16:12:10,901 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:14,518 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+

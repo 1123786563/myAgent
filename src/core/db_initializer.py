@@ -46,6 +46,7 @@ class DBInitializer:
             cursor.execute("CREATE TABLE IF NOT EXISTS sys_status (service_name TEXT PRIMARY KEY, last_heartbeat TIMESTAMP, status TEXT, metrics JSONB, lock_owner TEXT)")
             cursor.execute("CREATE TABLE IF NOT EXISTS system_events (id SERIAL PRIMARY KEY, event_type TEXT, service_name TEXT, message TEXT, trace_id TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
             
+            # [Fix Round 12] 确保所有字段存在 (SQLite 迁移遗留)
             cursor.execute('''CREATE TABLE IF NOT EXISTS transactions (
                 id SERIAL PRIMARY KEY,
                 status TEXT,
@@ -62,14 +63,41 @@ class DBInitializer:
             )''')
             
             cursor.execute("CREATE TABLE IF NOT EXISTS transaction_tags (id SERIAL PRIMARY KEY, transaction_id INTEGER REFERENCES transactions(id), tag_key TEXT, tag_value TEXT)")
-            cursor.execute("CREATE TABLE IF NOT EXISTS pending_entries (id SERIAL PRIMARY KEY, amount DECIMAL(10, 2), vendor_keyword TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
+            
+            # [Fix] pending_entries 增加 status 字段
+            cursor.execute('''CREATE TABLE IF NOT EXISTS pending_entries (
+                id SERIAL PRIMARY KEY, 
+                amount DECIMAL(10, 2), 
+                vendor_keyword TEXT, 
+                status TEXT DEFAULT 'PENDING',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )''')
+            
             cursor.execute("CREATE TABLE IF NOT EXISTS trial_balance (account_code TEXT PRIMARY KEY, debit_total DECIMAL(15, 2) DEFAULT 0, credit_total DECIMAL(15, 2) DEFAULT 0, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)")
             cursor.execute("CREATE TABLE IF NOT EXISTS roi_metrics_history (report_date DATE PRIMARY KEY, human_hours_saved DECIMAL(10, 2), token_spend_usd DECIMAL(10, 4), roi_ratio DECIMAL(10, 2))")
-            cursor.execute("CREATE TABLE IF NOT EXISTS knowledge_base (entity_name TEXT PRIMARY KEY, consecutive_success INTEGER DEFAULT 0, hit_count INTEGER DEFAULT 0, quality_score DECIMAL(3, 2) DEFAULT 1.0)")
+            
+            # [Fix] knowledge_base 增加 audit_status, category_mapping, reject_count, updated_at
+            cursor.execute('''CREATE TABLE IF NOT EXISTS knowledge_base (
+                entity_name TEXT PRIMARY KEY, 
+                category_mapping TEXT,
+                audit_status TEXT DEFAULT 'GRAY',
+                consecutive_success INTEGER DEFAULT 0, 
+                reject_count INTEGER DEFAULT 0,
+                hit_count INTEGER DEFAULT 0, 
+                quality_score DECIMAL(3, 2) DEFAULT 1.0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )''')
             
             # 索引
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_trans_status ON transactions (status)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_trans_vendor ON transactions (vendor)")
+            
+            # 创建视图 (如果不存在)
+            cursor.execute('''
+                CREATE OR REPLACE VIEW v_knowledge_conflicts AS
+                SELECT entity_name FROM knowledge_base 
+                GROUP BY entity_name HAVING COUNT(DISTINCT category_mapping) > 1
+            ''')
             
             conn.commit()
         except Exception as e:

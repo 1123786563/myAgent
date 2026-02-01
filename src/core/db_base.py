@@ -72,7 +72,7 @@ class DBBase:
             return False
 
     @contextmanager
-    def transaction(self):
+    def transaction(self, mode=None):
         retry_count = ConfigManager.get_int("db.retry_count", 5)
         base_delay = ConfigManager.get_float("db.retry_delay", 0.1)
         slow_threshold = ConfigManager.get_float("db.slow_threshold", 0.5)
@@ -89,8 +89,21 @@ class DBBase:
             conn = None
             try:
                 conn = self._get_conn()
-                # psycopg2 事务默认是开启的，但在上下文管理器中我们手动控制
-                yield conn
+                # 兼容性包装：使用一个代理类来模拟 SQLite connection 的 behavior
+                class ConnProxy:
+                    def __init__(self, real_conn):
+                        self._conn = real_conn
+                    def execute(self, sql, params=()):
+                        cur = self._conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+                        cur.execute(sql, params)
+                        return cur
+                    def cursor(self, *args, **kwargs):
+                        return self._conn.cursor(*args, **kwargs)
+                    def commit(self): return self._conn.commit()
+                    def rollback(self): return self._conn.rollback()
+                    def __getattr__(self, name): return getattr(self._conn, name)
+
+                yield ConnProxy(conn)
                 conn.commit()
 
                 duration = time.perf_counter() - start_t
@@ -106,7 +119,6 @@ class DBBase:
                 retries_used = i + 1
                 
                 # PG 的并发冲突通常是 serialization_failure 或 deadlock_detected
-                # 这里可以根据具体的 SQLState 进行判断
                 if hasattr(e, 'pgcode') and e.pgcode in ('40001', '40P01'):
                     wait_time = (base_delay * (2 ** i)) + (random.random() * 0.1)
                     time.sleep(wait_time)

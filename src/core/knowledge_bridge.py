@@ -77,7 +77,7 @@ class KnowledgeBridge:
                     SET hit_count = hit_count + 1, 
                         consecutive_success = consecutive_success + 1,
                         updated_at = CURRENT_TIMESTAMP
-                    WHERE entity_name = ?
+                    WHERE entity_name = %s
                 """,
                     (keyword,),
                 )
@@ -86,7 +86,7 @@ class KnowledgeBridge:
                 row = conn.execute(
                     """
                     SELECT category_mapping, audit_status, consecutive_success, reject_count 
-                    FROM knowledge_base WHERE entity_name = ?
+                    FROM knowledge_base WHERE entity_name = %s
                 """,
                     (keyword,),
                 ).fetchone()
@@ -118,7 +118,7 @@ class KnowledgeBridge:
                     SET reject_count = reject_count + 1, 
                         consecutive_success = 0,
                         updated_at = CURRENT_TIMESTAMP
-                    WHERE entity_name = ?
+                    WHERE entity_name = %s
                 """,
                     (keyword,),
                 )
@@ -127,7 +127,7 @@ class KnowledgeBridge:
                 self._recalculate_quality_score(conn, keyword)
 
                 row = conn.execute(
-                    "SELECT reject_count, audit_status FROM knowledge_base WHERE entity_name = ?",
+                    "SELECT reject_count, audit_status FROM knowledge_base WHERE entity_name = %s",
                     (keyword,),
                 ).fetchone()
                 if row and row["audit_status"] == "GRAY" and row["reject_count"] >= 2:
@@ -135,7 +135,7 @@ class KnowledgeBridge:
                         f"规则 {keyword} 驳回次数过多 ({row['reject_count']})，已被标记为 BLOCKED 废弃。"
                     )
                     conn.execute(
-                        "UPDATE knowledge_base SET audit_status = 'BLOCKED', quality_score = 0.0 WHERE entity_name = ?",
+                        "UPDATE knowledge_base SET audit_status = 'BLOCKED', quality_score = 0.0 WHERE entity_name = %s",
                         (keyword,),
                     )
             return True
@@ -151,14 +151,14 @@ class KnowledgeBridge:
         sql = """
             UPDATE knowledge_base 
             SET quality_score = CAST(hit_count AS REAL) / (hit_count + reject_count * 2 + 1)
-            WHERE entity_name = ?
+            WHERE entity_name = %s
         """
         conn.execute(sql, (keyword,))
 
         # 2. 检查冲突蒸馏 (Suggestion 1)
         conflict_sql = """
             SELECT id, quality_score FROM knowledge_base 
-            WHERE entity_name = ? AND audit_status = 'GRAY'
+            WHERE entity_name = %s AND audit_status = 'GRAY'
             ORDER BY quality_score DESC
         """
         rows = conn.execute(conflict_sql, (keyword,)).fetchall()
@@ -166,7 +166,7 @@ class KnowledgeBridge:
             best_id = rows[0]["id"]
             log.info(f"检测到规则冲突: {keyword}, 正在执行蒸馏，保留 ID: {best_id}")
             conn.execute(
-                "DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?",
+                "DELETE FROM knowledge_base WHERE entity_name = %s AND id != %s",
                 (keyword, best_id),
             )
 
@@ -180,7 +180,7 @@ class KnowledgeBridge:
                     """
                     UPDATE knowledge_base 
                     SET audit_status = 'STABLE' 
-                    WHERE entity_name = ?
+                    WHERE entity_name = %s
                 """,
                     (keyword,),
                 )
@@ -223,7 +223,7 @@ class KnowledgeBridge:
         try:
             with self.db.transaction("DEFERRED") as conn:
                 existing = conn.execute(
-                    "SELECT category_mapping, audit_status FROM knowledge_base WHERE entity_name = ?",
+                    "SELECT category_mapping, audit_status FROM knowledge_base WHERE entity_name = %s",
                     (keyword,),
                 ).fetchone()
                 if (
@@ -261,11 +261,11 @@ class KnowledgeBridge:
                     """
                     INSERT INTO knowledge_base 
                     (entity_name, category_mapping, audit_status, hit_count)
-                    VALUES (?, ?, ?, 1)
+                    VALUES (%s, %s, %s, 1)
                     ON CONFLICT(entity_name) DO UPDATE SET
                         category_mapping = excluded.category_mapping,
-                        audit_status = CASE WHEN audit_status = 'BLOCKED' THEN 'GRAY' ELSE audit_status END,
-                        hit_count = hit_count + 1,
+                        audit_status = CASE WHEN knowledge_base.audit_status = 'BLOCKED' THEN 'GRAY' ELSE knowledge_base.audit_status END,
+                        hit_count = knowledge_base.hit_count + 1,
                         updated_at = CURRENT_TIMESTAMP
                 """,
                     (keyword, category, audit_status),
@@ -346,7 +346,7 @@ class KnowledgeBridge:
 
                     # [Safety Fix] Check if a STABLE rule exists for this entity
                     stable_row = conn.execute(
-                        "SELECT id, category_mapping FROM knowledge_base WHERE entity_name = ? AND audit_status = 'STABLE'",
+                        "SELECT id, category_mapping FROM knowledge_base WHERE entity_name = %s AND audit_status = 'STABLE'",
                         (name,),
                     ).fetchone()
 
@@ -354,7 +354,7 @@ class KnowledgeBridge:
                         # If STABLE exists, purge all GRAY rules that conflict (or all GRAYs to be clean)
                         # We trust the STABLE rule as the ground truth.
                         conn.execute(
-                            "DELETE FROM knowledge_base WHERE entity_name = ? AND audit_status = 'GRAY'",
+                            "DELETE FROM knowledge_base WHERE entity_name = %s AND audit_status = 'GRAY'",
                             (name,),
                         )
                         log.info(
@@ -365,14 +365,14 @@ class KnowledgeBridge:
                         # Strategy: Keep the one with highest score, tie-break with recency
                         sql_best = """
                             SELECT id FROM knowledge_base 
-                            WHERE entity_name = ? 
+                            WHERE entity_name = %s 
                             ORDER BY quality_score DESC, updated_at DESC
                             LIMIT 1
                         """
                         best_row = conn.execute(sql_best, (name,)).fetchone()
                         if best_row:
                             conn.execute(
-                                "DELETE FROM knowledge_base WHERE entity_name = ? AND id != ?",
+                                "DELETE FROM knowledge_base WHERE entity_name = %s AND id != %s",
                                 (name, best_row["id"]),
                             )
 
@@ -433,7 +433,7 @@ class KnowledgeBridge:
                     UPDATE knowledge_base 
                     SET hit_count = hit_count + 1,
                         updated_at = CURRENT_TIMESTAMP
-                    WHERE entity_name = ?
+                    WHERE entity_name = %s
                 """,
                     (keyword,),
                 )
@@ -446,10 +446,10 @@ class KnowledgeBridge:
                 sql = """
                     DELETE FROM knowledge_base 
                     WHERE audit_status = 'GRAY' 
-                    AND hit_count <= ? 
-                    AND updated_at < date('now', ?)
+                    AND hit_count <= %s 
+                    AND updated_at < CURRENT_TIMESTAMP - (%s || ' day')::interval
                 """
-                cursor = conn.execute(sql, (min_hits, f"-{days_old} days"))
+                cursor = conn.execute(sql, (min_hits, str(days_old)))
                 log.info(f"清理了 {cursor.rowcount} 条过期临时规则。")
             return True
         except Exception as e:

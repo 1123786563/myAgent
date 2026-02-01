@@ -50,15 +50,39 @@ class DBHelper(DBTransactions, DBQueries, DBMaintenance):
         except:
             return False
 
-    def get_now(self):
-        import datetime
-        return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def verify_outbox_integrity(self, service_name):
+        try:
+            with self.transaction() as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT COUNT(*) FROM system_events WHERE service_name = %s AND created_at > CURRENT_TIMESTAMP - interval '1 hour'", (service_name,))
+                return cur.fetchone()[0]
+        except Exception as e:
+            get_logger("DB-Outbox").error(f"验证 Outbox 完整性失败: {e}")
+            return 0
 
-    def acquire_business_lock(self, service_name, owner_id):
-        sql = '''
-            UPDATE sys_status 
-            SET lock_owner = %s, last_heartbeat = CURRENT_TIMESTAMP
-            WHERE service_name = %s AND (lock_owner IS NULL OR lock_owner = %s)
-        '''
-        res = self._execute(sql, (owner_id, service_name, owner_id))
-        return res.rowcount > 0
+    def fix_orphaned_transactions(self):
+        try:
+            with self.transaction() as conn:
+                cur = conn.cursor()
+                cur.execute("UPDATE transactions SET status = 'PENDING' WHERE status = 'PROCESSING' AND created_at < CURRENT_TIMESTAMP - interval '10 minutes'")
+                return cur.rowcount
+        except Exception as e:
+            get_logger("DB-Fix").error(f"修复孤儿事务失败: {e}")
+            return 0
+
+    def perform_db_maintenance(self):
+        """[Optimization Round 12] PG 专版定期维护：VACUUM 与统计更新"""
+        log.info("启动数据库定期自愈维护任务...")
+        try:
+            # PostgreSQL 的 VACUUM 严禁在事务块内运行
+            # 我们通过获取一个非事务连接来执行
+            conn = psycopg2.connect(**self.pg_config)
+            conn.set_isolation_level(psycopg2.extensions.ISOLATION_LEVEL_AUTOCOMMIT)
+            with conn.cursor() as cur:
+                cur.execute("VACUUM (ANALYZE) transactions")
+                cur.execute("VACUUM (ANALYZE) knowledge_base")
+                cur.execute("VACUUM (ANALYZE) trial_balance")
+            conn.close()
+            log.info("数据库定期自愈维护任务完成。")
+        except Exception as e:
+            log.error(f"维护任务失败: {e}")

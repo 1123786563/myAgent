@@ -7983,3 +7983,1319 @@ TypeError: 'datetime.date' object is not subscriptable
 2026-02-01 15:40:08,044 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
 2026-02-01 15:40:18,055 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
 2026-02-01 15:40:28,100 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,745 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:29,751 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:29,806 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:30,147 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:30,200 [Global] - MatchEngine - ERROR - 并行匹配异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:30,212 [Global] - MatchEngine - ERROR - 证据追索任务异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:32,076 [Global] - AccountingAgent - ERROR - 自愈扫描异常: DBBase.transaction() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 330, in run
+    with self.db.transaction("DEFERRED") as conn:
+         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 305, in helper
+    return _GeneratorContextManager(func, args, kwds)
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 109, in __init__
+    self.gen = func(*args, **kwds)
+               ~~~~^^^^^^^^^^^^^^^
+TypeError: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:35,147 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,956 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:39,958 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:40,013 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:40,308 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:40,333 [Global] - MatchEngine - ERROR - 并行匹配异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:40,341 [Global] - MatchEngine - ERROR - 证据追索任务异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:41,828 [Global] - AccountingAgent - ERROR - 自愈扫描异常: DBBase.transaction() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 330, in run
+    with self.db.transaction("DEFERRED") as conn:
+         ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 305, in helper
+    return _GeneratorContextManager(func, args, kwds)
+  File "/usr/local/Cellar/python@3.14/3.14.2_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/contextlib.py", line 109, in __init__
+    self.gen = func(*args, **kwds)
+               ~~~~^^^^^^^^^^^^^^^
+TypeError: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:45,309 [Global] - InteractionHub - ERROR - Hub 轮询异常: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,124 [Global] - KnowledgeBridge - ERROR - 清理规则失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,125 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,125 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: DBBase.transaction() takes 1 positional argument but 2 were given
+2026-02-01 16:06:50,127 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:50,188 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:50,479 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:50,498 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:50,506 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,563 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,564 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,565 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,569 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:06:56,615 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:06:56,898 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,916 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:56,924 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:06:58,212 [Global] - AccountingAgent - ERROR - 自愈扫描异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ^^^^^^^^^^^^
+AttributeError: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:01,920 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,789 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,790 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:06,792 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:06,845 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:07,118 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:07,149 [Global] - MatchEngine - ERROR - 并行匹配异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:07,158 [Global] - MatchEngine - ERROR - 证据追索任务异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:08,500 [Global] - AccountingAgent - ERROR - 自愈扫描异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ^^^^^^^^^^^^
+AttributeError: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:12,118 [Global] - InteractionHub - ERROR - Hub 轮询异常: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,961 [Global] - KnowledgeBridge - ERROR - 清理规则失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,962 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,962 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: 'psycopg2.extensions.connection' object has no attribute 'execute'
+2026-02-01 16:07:16,964 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:17,020 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:20,453 [Global] - MasterDaemon - ERROR - 预检失败: 数据库连接或自愈异常: 'psycopg2.extensions.connection' object has no attribute 'execute' and no __dict__ for setting new attributes
+2026-02-01 16:07:20,453 [Global] - MasterDaemon - ERROR - 系统预检失败，程序退出。
+2026-02-01 16:07:27,297 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:27,300 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:27,302 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:27,306 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:27,351 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:27,630 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:27,667 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:27,675 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:28,970 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:32,701 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:37,537 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:37,539 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:37,540 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:37,542 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:37,578 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:37,885 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:37,917 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:37,929 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:39,231 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:42,887 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:47,691 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:47,693 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:47,694 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:47,696 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:47,750 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:48,058 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:48,091 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:48,100 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:49,387 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:07:53,062 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:57,945 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:07:57,948 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:07:57,950 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:07:57,952 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:07:58,007 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:07:58,285 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:07:58,314 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:07:58,331 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:07:59,611 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:03,288 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:08,120 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:08,122 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:08,124 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:08,126 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:08,162 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:08,466 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:08,517 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:08:08,527 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:08:09,813 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:13,468 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:18,281 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:18,283 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:18,284 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:18,286 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:18,340 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:28,546 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:28,548 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:28,550 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:28,553 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:28,641 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:29,309 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:29,351 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:08:29,369 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:08:33,467 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:08:34,316 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:08:38,846 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:38,850 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:38,852 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:38,855 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:38,954 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:49,104 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:49,106 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:49,108 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:49,110 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:49,202 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:08:59,252 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:08:59,253 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:08:59,254 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:08:59,256 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:08:59,319 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:09,357 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:09,359 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:09,360 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:09,362 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:09,417 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:09,732 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:09:09,749 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:09:09,759 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:09:11,457 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:09:14,735 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:09:19,491 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:19,493 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:19,495 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:19,496 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:19,551 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:29,629 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:29,630 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:29,632 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:29,633 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:29,695 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:39,733 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:39,734 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:39,735 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:39,737 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:39,795 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:49,837 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:49,840 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:49,841 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:49,844 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:09:49,907 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:09:59,960 [Global] - KnowledgeBridge - ERROR - 清理规则失败: syntax error at or near "AND"
+LINE 5:                     AND updated_at < date('now', ?)
+                            ^
+
+2026-02-01 16:09:59,961 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:09:59,962 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:09:59,964 [Global] - DB - ERROR - 维护任务失败: VACUUM cannot run inside a transaction block
+
+2026-02-01 16:10:00,018 [Global] - MasterDaemon - ERROR - 定时指标更新失败: 'DBHelper' object has no attribute 'verify_outbox_integrity'
+2026-02-01 16:10:08,737 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:08,740 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:08,744 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:08,744 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:09,157 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:09,191 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:09,203 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:11,021 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:14,159 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:18,952 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:18,955 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:18,956 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:18,956 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:19,269 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:19,304 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:19,314 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:21,463 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:24,273 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:29,094 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:29,096 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:29,097 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:29,097 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:29,451 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:29,478 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:29,487 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:31,036 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:34,530 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:39,247 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:39,248 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:39,250 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:39,250 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:39,564 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:39,602 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:39,612 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:41,001 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:44,566 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:49,469 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:49,471 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:49,472 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:49,472 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:10:49,805 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:49,837 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:10:49,845 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:10:51,533 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:10:54,807 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:10:59,691 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:10:59,694 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:10:59,695 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:10:59,695 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:09,885 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:09,887 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:09,888 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:09,888 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:10,173 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,174 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,196 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:10,204 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,213 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:10,222 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:10,243 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,283 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:10,322 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,748 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,806 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:11,828 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:16,326 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,666 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,668 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:17,671 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:17,674 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:17,674 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:17,970 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,983 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:17,992 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:18,011 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,020 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:18,029 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:18,049 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,086 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:18,124 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,321 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,373 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:19,394 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:22,994 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:27,798 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:27,801 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:27,804 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:27,805 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:27,805 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:28,165 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,179 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,187 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:28,207 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,216 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:28,226 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:28,245 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,282 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:28,318 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,598 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,649 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:29,677 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:33,189 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:37,993 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:37,996 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:37,999 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:38,002 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:38,002 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:38,375 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,390 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,394 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:38,414 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,432 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:38,441 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:38,453 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,489 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:38,525 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,018 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,076 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:40,100 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:43,396 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:48,197 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,200 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:48,202 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:48,203 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:48,203 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:48,493 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,508 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,515 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:48,531 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,550 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:48,560 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:48,574 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,612 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:48,653 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,879 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,939 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:49,962 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:11:53,516 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:58,333 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,335 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:11:58,337 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:11:58,339 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:11:58,339 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:11:58,616 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,635 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,637 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:11:58,659 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,694 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:11:58,700 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,704 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:11:58,739 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:11:58,777 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "audit_status" does not exist
+LINE 4:                 WHERE audit_status = 'GRAY'
+                              ^
+
+2026-02-01 16:12:00,003 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:00,056 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:00,076 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:07,837 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,178 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,181 [Global] - KnowledgeBridge - ERROR - 清理规则失败: column "audit_status" does not exist
+LINE 3:                     WHERE audit_status = 'GRAY' 
+                                  ^
+
+2026-02-01 16:12:09,184 [Global] - KnowledgeBridge - ERROR - 从交易提取知识失败: column k.audit_status does not exist
+LINE 8: ...               WHERE k.entity_name = t.vendor AND k.audit_st...
+                                                             ^
+
+2026-02-01 16:12:09,188 [Global] - KnowledgeBridge - ERROR - 知识蒸馏失败: relation "v_knowledge_conflicts" does not exist
+LINE 1: SELECT entity_name FROM v_knowledge_conflicts
+                                ^
+
+2026-02-01 16:12:09,188 [Global] - MasterDaemon - ERROR - 定时指标更新失败: name 'log' is not defined
+2026-02-01 16:12:09,493 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,507 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,516 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+2026-02-01 16:12:09,543 [Global] - MatchEngine - ERROR - 并行匹配异常: column "status" does not exist
+LINE 1: ...or_keyword, created_at FROM pending_entries WHERE status = '...
+                                                             ^
+
+2026-02-01 16:12:09,543 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,553 [Global] - MatchEngine - ERROR - 证据追索任务异常: column "status" does not exist
+LINE 4:                     WHERE status = 'PENDING' 
+                                  ^
+
+2026-02-01 16:12:09,583 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,623 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:09,660 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,828 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,880 [Global] - DB-Init - ERROR - 初始化 PG 表结构失败: column "category_mapping" does not exist
+LINE 4: ...       GROUP BY entity_name HAVING COUNT(DISTINCT category_m...
+                                                             ^
+
+2026-02-01 16:12:10,901 [Global] - AccountingAgent - ERROR - 自愈扫描异常: tuple index out of range
+Traceback (most recent call last):
+  File "/Users/yongjunwu/trea/myAgent/src/agents/accounting_agent.py", line 339, in run
+    tasks = conn.execute(sql).fetchall()
+            ~~~~~~~~~~~~^^^^^
+  File "/Users/yongjunwu/trea/myAgent/src/core/db_base.py", line 98, in execute
+    cur.execute(sql, params)
+    ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/Users/yongjunwu/trea/myAgent/venv/lib/python3.14/site-packages/psycopg2/extras.py", line 146, in execute
+    return super().execute(query, vars)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+IndexError: tuple index out of range
+2026-02-01 16:12:14,518 [Global] - InteractionHub - ERROR - Hub 轮询异常: function datetime(unknown, unknown) does not exist
+LINE 5:                         AND created_at > datetime('now', '-3...
+                                                 ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
