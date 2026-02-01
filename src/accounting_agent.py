@@ -146,21 +146,29 @@ class AccountingAgent(AgentBase):
         self.db = DBHelper()
         self._load_rules()
         
-        # [Optimization Round 8] 输入文本归一化处理
+        # [Optimization Round 8/40/43/47] 输入文本归一化处理
         raw_text = str(x.get("content", ""))
-        normalized_text = re.sub(r'\s+', ' ', raw_text.strip())
+        # [Round 43/47] 移除 URL 和流水 ID
+        clean_text = re.sub(r'https?://\S+|www\.\S+', '', raw_text)
+        clean_text = re.sub(r'NO\.\d+|ID[:：]?\d+', '', clean_text)
+        normalized_text = re.sub(r'\s+', ' ', clean_text.strip())
         
         amount = float(x.get("amount", 0))
         vendor = x.get("vendor", "Unknown")
         trace_id = x.get("trace_id")
 
-        # [Optimization Round 11] L2 级别动态提示词渲染 (Whitepaper 2.5)
+        # [Round 40] 注入系统运行时间
+        if not hasattr(self, '_start_t'): self._start_t = time.time()
+        system_uptime = time.time() - self._start_t
+
+        # [Optimization Round 11/40] L2 级别动态提示词渲染 (Whitepaper 2.5)
         # 逻辑：对于特定的高风险供应商，注入定制化上下文
         context_params = {
             "vendor": vendor,
             "amount": amount,
             "text": normalized_text[:50],
-            "trace_id": trace_id
+            "trace_id": trace_id,
+            "uptime": round(system_uptime, 1)
         }
         
         # 1. 动态路由预检 (Expert Routing)

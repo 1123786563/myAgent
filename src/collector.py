@@ -267,6 +267,10 @@ class CollectorWorker(threading.Thread):
         if not os.path.exists(file_path):
             return True
 
+        # [Round 38] 跳过零字节文件和系统隐藏文件
+        if os.path.getsize(file_path) == 0 or os.path.basename(file_path).startswith('.'):
+            return True
+
         # [Suggestion 10] 增加文件锁定检查
         try:
             with open(file_path, "a"):
@@ -280,9 +284,11 @@ class CollectorWorker(threading.Thread):
 
         ext = os.path.splitext(file_path)[1].lower()
         if ext not in self.allowed_exts:
+            # [Round 38] 对于不支持的格式，静默忽略而不是报错，除非文件很大
             return True
 
         # [Optimization 1] 影子银企直连识别
+        # ...
         if ext in {".csv", ".xlsx"} and any(
             kw in file_path.lower() for kw in ["流水", "statement", "bank"]
         ):

@@ -82,17 +82,56 @@ class TokenBudgetManager:
         self._maybe_reset_counters()
 
         total_tokens = input_tokens + output_tokens
-        cost = (input_tokens / 1000 * self.input_price_per_1k +
-                output_tokens / 1000 * self.output_price_per_1k)
+        
+        # [Round 25/27/28/32/33/38/42/46] 性能与安全双修
+        try:
+            # 引入更严谨的模型名探测
+            if not hasattr(self, '_last_rate') or random.random() < 0.01:
+                from config_manager import ConfigManager
+                model_name = str(ConfigManager.get("llm.model", "default")).lower()
+                
+                price_map = {
+                    "gpt-4o-mini": {"in": 0.00015, "out": 0.0006},
+                    "gpt-4o": {"in": 0.005, "out": 0.015},
+                    "o1-": {"in": 0.015, "out": 0.06}, # 支持 o1-preview, o1-mini
+                    "claude-3-5": {"in": 0.003, "out": 0.015},
+                    "gemini-3-flash": {"in": 0.0001, "out": 0.0003},
+                    "default": {"in": self.input_price_per_1k, "out": self.output_price_per_1k}
+                }
+                
+                # [Round 46] 增加权重路由逻辑
+                matched_cfg = price_map["default"]
+                sorted_keys = sorted([k for k in price_map.keys() if k != "default"], key=len, reverse=True)
+                for key in sorted_keys:
+                    if key in model_name: # 变 startswith 为更通用的包含判定
+                        matched_cfg = price_map[key]
+                        break
+                
+                with self._lock:
+                    self._last_rate = matched_cfg
+                    self._current_model = model_name
+            else:
+                with self._lock:
+                    matched_cfg = self._last_rate
+                    model_name = self._current_model
 
-        with self._lock:
-            self.daily_tokens += total_tokens
-            self.daily_cost_usd += cost
-            self.monthly_tokens += total_tokens
-            self.monthly_cost_usd += cost
-            self.request_count += 1
+            # ...
 
-        log.debug(f"Token 使用: +{total_tokens} (In:{input_tokens}, Out:{output_tokens}), 成本: +${cost:.4f}")
+            cost = (input_tokens / 1000 * matched_cfg["in"] +
+                    output_tokens / 1000 * matched_cfg["out"])
+
+            with self._lock:
+                self.daily_tokens += total_tokens
+                self.daily_cost_usd += cost
+                self.monthly_tokens += total_tokens
+                self.monthly_cost_usd += cost
+                self.request_count += 1
+                self.last_request_cost = cost
+
+            log.debug(f"Token 使用: +{total_tokens} ({model_name}), 成本: +${cost:.4f}")
+        except Exception as e:
+            # [Round 42] 容错保护：计费失败不应阻断业务流
+            log.error(f"计费引擎异常: {e}")
 
     def record_cache_hit(self):
         """记录缓存命中"""

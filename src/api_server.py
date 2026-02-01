@@ -338,42 +338,115 @@ async def feishu_webhook(
 @app.get("/dashboard", response_class=HTMLResponse)
 async def get_dashboard(api_key: str = Depends(get_api_key)):
     """
-    [Optimization Round 10/12/20/21] 增强型可视化仪表盘 (带 ROI 趋势与鉴权)
+    [Optimization Round 10/12/20/21/24/36/39/41/44/45] 增强型可视化仪表盘
     """
     db = DBHelper()
     stats = db.get_ledger_stats()
     roi = db.get_roi_metrics()
     trend = db.get_roi_weekly_trend()
     
-    # 格式化 7 天趋势
-    trend_html = " | ".join([f"{t['report_date'][-2:]}日:{t['human_hours_saved']}h" for t in reversed(trend)])
+    # [Round 39] 自动计算任务通过率与待办预警
+    total_active = sum(s['count'] for s in stats if s['status'] != 'REJECTED')
+    audit_passed = sum(s['count'] for s in stats if s['status'] in ('AUDITED', 'POSTED', 'COMPLETED'))
+    pass_rate = round((audit_passed / total_active * 100), 1) if total_active > 0 else 100.0
     
-    rows_html = "".join([
-        f"<tr><td>{s['status']}</td><td>{s['count']}</td><td>￥{s['total_amount'] or 0:,.2f}</td></tr>" 
-        for s in stats
-    ])
+    pending_count = next((s['count'] for s in stats if s['status'] == 'PENDING'), 0)
+    
+    # [Round 41/45] 归档与全量金额感知
+    archived_count = getattr(db, '_archived_count', 0)
+    global_total = getattr(db, '_global_total_amount', 0.0)
+    
+    # [Round 44] 计算最近一小时压力
+    with db.transaction("DEFERRED") as conn:
+        recent_tx = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE created_at > datetime('now', '-1 hour')").fetchone()['cnt']
+    
+    # 1. 效益快报
+    trend_html = " | ".join([f"{t['report_date'][-2:]}日: {t['human_hours_saved']:.1f}h" for t in trend])
     
     roi_html = f"""
-    <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+    <div class="card" style="border-left: 5px solid #2196F3;">
         <h2 style="margin-top: 0;">💰 效益快报 (ROI)</h2>
-        <p>累计节省人工: <b>{roi.get('human_hours_saved', 0)}</b> 小时</p>
-        <p>今日 Token 支出: <b>${roi.get('token_cost_usd', 0):.4f}</b></p>
-        <p>当前 ROI 系数: <b>{roi.get('roi_ratio', 0)}</b> (1h/$)</p>
-        <p style="font-size: 0.9em; color: #555;"><b>最近 7 天趋势:</b> {trend_html}</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <p>累计节省人工: <b>{roi.get('human_hours_saved', 0)}</b> 小时</p>
+                <p>全量业务金额: <b>￥{global_total:,.2f}</b></p>
+                <p>最近一小时入账: <b>{recent_tx}</b> 笔</p>
+            </div>
+            <div>
+                <p>系统处理通过率: <b style="color: {'#4CAF50' if pass_rate > 90 else '#FF9800'};">{pass_rate}%</b></p>
+                <p>历史归档总数: <b>{archived_count}</b> 笔</p>
+                <p>待处理积压: <b style="color: {'#f44336' if pending_count > 10 else '#2196F3'};">{pending_count}</b> 笔</p>
+            </div>
+        </div>
+        <p style="font-size: 0.9em; color: #555; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+            <b>最近 7 天趋势:</b> {trend_html}
+        </p>
     </div>
     """
     
+    # ...
+    
+    # ...
+    
+    # ...
+    
+    # ...
+    
+    # 2. 状态统计 (Round 36: 友好状态显示)
+    rows_html = "".join([
+        f"<tr><td>{s['display_name']}</td><td>{s['count']}</td><td>￥{s['total_amount'] or 0:,.2f}</td></tr>" 
+        for s in stats
+    ])
+    
+    # 3. 系统自愈与心跳监控
+    with db.transaction("DEFERRED") as conn:
+        svc_stats = conn.execute("SELECT service_name, last_heartbeat, status, metrics FROM sys_status").fetchall()
+    
+    svc_rows = ""
+    for svc in svc_stats:
+        metrics_obj = json.loads(svc["metrics"]) if svc["metrics"] else {}
+        cpu = metrics_obj.get("cpu_percent", "N/A")
+        mem = metrics_obj.get("memory_mb", "N/A")
+        cpu_str = f"{cpu:.1f}%" if isinstance(cpu, (int, float)) else "N/A"
+        mem_str = f"{mem:.1f}MB" if isinstance(mem, (int, float)) else "N/A"
+        svc_rows += f"<tr><td>{svc['service_name']}</td><td>{svc['status']}</td><td>{cpu_str} / {mem_str}</td><td>{svc['last_heartbeat']}</td></tr>"
+
     html_content = f"""
     <html>
-        <head><title>LedgerAlpha Dashboard</title></head>
-        <body style="font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto;">
+        <head>
+            <title>LedgerAlpha Dashboard</title>
+            <style>
+                body {{ font-family: sans-serif; padding: 20px; max-width: 900px; margin: auto; background: #f9f9f9; }}
+                .card {{ background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+                th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #eee; }}
+                th {{ background: #f2f2f2; }}
+                .status-ok {{ color: green; font-weight: bold; }}
+                .status-err {{ color: red; font-weight: bold; }}
+            </style>
+        </head>
+        <body>
             <h1>🐶 LedgerAlpha 运行看板</h1>
+            
             {roi_html}
-            <table border="1" style="width: 100%; text-align: left; border-collapse: collapse;">
-                <tr style="background: #f2f2f2;"><th>状态</th><th>笔数</th><th>合计金额</th></tr>
-                {rows_html}
-            </table>
-            <p style="color: #666;">系统版本: v1.3.1 | 最后更新: {datetime.now().strftime('%H:%M:%S')}</p>
+
+            <div class="card">
+                <h2>📊 账务状态分布</h2>
+                <table>
+                    <tr><th>业务状态</th><th>单据笔数</th><th>合计金额</th></tr>
+                    {rows_html}
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>串 核心服务心跳</h2>
+                <table>
+                    <tr><th>服务名称</th><th>运行状态</th><th>资源占用 (CPU/MEM)</th><th>最后心跳</th></tr>
+                    {svc_rows}
+                </table>
+            </div>
+
+            <p style="text-align: center; color: #999;">系统版本: v1.3.1 | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
         </body>
     </html>
     """

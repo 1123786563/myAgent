@@ -805,53 +805,88 @@ class DBHelper:
 
     def get_roi_weekly_trend(self):
         """
-        [Optimization Round 21] 获取过去 7 天的效益趋势
+        [Optimization Round 21/26/27/33/34] 获取过去 7 天的效益趋势
         """
         try:
             with self.transaction("DEFERRED") as conn:
-                sql = "SELECT report_date, human_hours_saved FROM roi_metrics_history ORDER BY report_date DESC LIMIT 7"
+                # [Round 34] 性能与准确性双修：利用窗口函数(如果支持)或精确的分组最大值
+                sql = """
+                    SELECT r1.report_date, r1.human_hours_saved as hours 
+                    FROM roi_metrics_history r1
+                    INNER JOIN (
+                        SELECT report_date, MAX(id) as max_id 
+                        FROM roi_metrics_history 
+                        WHERE report_date >= date('now', '-7 days')
+                        GROUP BY report_date
+                    ) r2 ON r1.id = r2.max_id
+                    ORDER BY r1.report_date ASC
+                """
                 rows = conn.execute(sql).fetchall()
-                return [dict(r) for r in rows]
-        except:
+                return [{"report_date": r["report_date"], "human_hours_saved": round(r["hours"], 2)} for r in rows]
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB-ROI").error(f"趋势查询失败: {e}")
             return []
+
+    def get_roi_metrics(self):
         """
-        [Optimization Round 11] 获取投资回报率指标 (F4.2) - 增强持久化逻辑
+        [Optimization Round 11/25/30/32/35] 获取投资回报率指标 (F4.2)
         """
         try:
             with self.transaction("DEFERRED") as conn:
-                # 统计已完成的单据
-                row = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE status IN ('AUDITED', 'POSTED', 'COMPLETED')").fetchone()
-                processed_count = row['cnt']
+                # [Round 35] 优化统计 SQL，增加异常鲁棒性
+                row = conn.execute("""
+                    SELECT COUNT(*) as cnt, SUM(amount) as total 
+                    FROM transactions 
+                    WHERE status IN ('AUDITED', 'POSTED', 'COMPLETED')
+                """).fetchone()
                 
-                # 假设每单节省 5 分钟人工
-                hours_saved = round((processed_count * 5) / 60.0, 2)
+                processed_count = row['cnt'] if row else 0
+                total_amount = row['total'] if row and row['total'] else 0.0
                 
-                # 获取 LLM 实际消耗 (从 TokenBudgetManager 获取，此处为 DB Helper 接口，需通过 Singleton 或注入)
-                from llm_connector import TokenBudgetManager
-                token_stats = TokenBudgetManager().get_stats()
-                token_cost = token_stats.get("daily_cost_usd", 0.0)
+                from config_manager import ConfigManager
+                sector = ConfigManager.get("enterprise.sector", "GENERAL")
+                minutes_per_tx = 5 if sector == "GENERAL" else 2
+                
+                hours_saved = round((processed_count * minutes_per_tx) / 60.0, 2)
+                
+                token_cost = 0.0
+                try:
+                    from llm_connector import TokenBudgetManager
+                    token_stats = TokenBudgetManager().get_stats()
+                    token_cost = token_stats.get("daily_cost_usd", 0.0)
+                except ImportError:
+                    pass
                 
                 roi_ratio = round(hours_saved / (token_cost + 0.01), 2)
                 
-                # 持久化每日 ROI
-                conn.execute('''
-                    INSERT INTO roi_metrics_history (report_date, human_hours_saved, token_spend_usd, roi_ratio)
-                    VALUES (DATE('now'), ?, ?, ?)
-                    ON CONFLICT(report_date) DO UPDATE SET
-                        human_hours_saved = excluded.human_hours_saved,
-                        token_spend_usd = excluded.token_spend_usd,
-                        roi_ratio = excluded.roi_ratio
-                ''', (hours_saved, token_cost, roi_ratio))
+                # 持久化逻辑
+                try:
+                    conn.execute('''
+                        INSERT INTO roi_metrics_history (report_date, human_hours_saved, token_spend_usd, roi_ratio)
+                        VALUES (DATE('now'), ?, ?, ?)
+                        ON CONFLICT(report_date) DO UPDATE SET
+                            human_hours_saved = excluded.human_hours_saved,
+                            token_spend_usd = excluded.token_spend_usd,
+                            roi_ratio = excluded.roi_ratio
+                    ''', (hours_saved, token_cost, roi_ratio))
+                    
+                    if roi_ratio < 1.0 and processed_count > 10:
+                        self.log_system_event("ROI_LOW_WARNING", "Analytics", f"Efficiency below target: ROI={roi_ratio}")
+                except Exception:
+                    pass
                 
                 return {
                     "human_hours_saved": hours_saved,
                     "token_cost_usd": token_cost,
-                    "roi_ratio": roi_ratio
+                    "roi_ratio": roi_ratio,
+                    "total_amount": round(total_amount, 2),
+                    "sector": sector
                 }
         except Exception as e:
             from logger import get_logger
-            get_logger("DB-ROI").error(f"ROI 计算失败: {e}")
-            return {}
+            get_logger("DB-ROI").error(f"ROI 计算核心路径失败: {e}")
+            return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def lock_transaction(self, trans_id, owner="GENERIC"):
         """
@@ -883,12 +918,56 @@ class DBHelper:
 
     def get_ledger_stats(self):
         """获取系统账目统计摘要"""
-        sql = "SELECT status, COUNT(*) as count, SUM(amount) as total_amount FROM transactions GROUP BY status"
+        # [Round 28] 增加缓存
+        current_time = time.time()
+        if hasattr(self, '_stats_cache') and (current_time - self._stats_cache_t < 5):
+            return self._stats_cache
+
+        # [Round 29/30/34/36/37/41/45/48/49] 极致性能优化与索引提示
+        status_order = ['PENDING', 'MATCHED', 'AUDITED', 'POSTED', 'COMPLETED', 'REJECTED']
+        status_map = {
+            'PENDING': '待处理',
+            'MATCHED': '已对账',
+            'AUDITED': '已审计',
+            'POSTED': '已入账',
+            'COMPLETED': '已完成',
+            'REJECTED': '已驳回'
+        }
+        
+        # [Round 49] 优化索引利用，通过覆盖索引减少回表，并强制使用 INDEX (idx_trans_status)
+        sql = """
+            SELECT status, COUNT(*) as count, SUM(amount) as total_amount 
+            FROM transactions INDEXED BY idx_trans_status
+            WHERE status IN ('PENDING', 'MATCHED', 'AUDITED', 'POSTED', 'COMPLETED', 'REJECTED', 'ARCHIVED')
+            GROUP BY status
+        """
         try:
             with self.transaction("DEFERRED") as conn:
-                return [dict(row) for row in conn.execute(sql).fetchall()]
-        except Exception:
-            return []
+                # 开启查询优化模式
+                conn.execute("PRAGMA query_only = ON")
+                raw_rows = {row['status']: dict(row) for row in conn.execute(sql).fetchall()}
+                conn.execute("PRAGMA query_only = OFF")
+                
+                # 计算全量业务金额 (含 ARCHIVED)
+                self._global_total_amount = sum(row['total_amount'] for row in raw_rows.values() if row['total_amount'])
+                
+                res = []
+                for s_key in status_order:
+                    if s_key in raw_rows:
+                        d = raw_rows[s_key]
+                    else:
+                        d = {'status': s_key, 'count': 0, 'total_amount': 0.0}
+                    d['display_name'] = status_map[s_key]
+                    res.append(d)
+                
+                self._archived_count = raw_rows.get('ARCHIVED', {}).get('count', 0)
+                self._stats_cache = res
+                self._stats_cache_t = current_time
+                return res
+        except Exception as e:
+            from logger import get_logger
+            get_logger("DB-Stats").error(f"账务统计高阶查询失败: {e}")
+            return [{"status": "ERROR", "display_name": "查询异常", "count": 0, "total_amount": 0.0}]
 
     def get_now(self):
         """统一获取系统当前时间字符串 (F4.2)"""

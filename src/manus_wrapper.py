@@ -54,7 +54,24 @@ class OpenManusAnalyst:
             return f"Tax ID '{action_input}' is VALID. Registered as 'General Taxpayer'."
             
         elif action_name == "browser_fetch":
-            # ... (保持原逻辑)
+            # 调用 Round 1 实现的 BrowserBankConnector
+            try:
+                from connectors.browser_bank_connector import BrowserBankConnector
+                connector = BrowserBankConnector(bank_name="Shadow-Checking-01")
+                # 简单映射：如果 input 是 '7d'，则抓取 7 天
+                days = 7
+                if "30d" in action_input: days = 30
+                
+                raw_data = connector.fetch_raw_data(since_time=f"{days}d")
+                return f"Browser fetch successful. Retrieved {len(raw_data)} transactions."
+            except Exception as e:
+                return f"Browser fetch failed: {str(e)}"
+                
+        elif action_name == "ask_user":
+            return "User interaction requested. (Simulated: User provided clarification)"
+            
+        else:
+            return f"Unknown tool: {action_name}"
 
     def _parse_llm_step(self, response_text: str) -> Dict[str, Any]:
         """
@@ -98,16 +115,25 @@ class OpenManusAnalyst:
 
     def investigate(self, task_description: str, context_data: Dict = None) -> Dict[str, Any]:
         """
-        [Round 2] 启动 ReAct 循环
+        [Round 2/31] 启动带动态上下文的 ReAct 循环
         """
         if not self.cost_control.check_and_record(estimated_cost=0.1):
             return {"category": "MANUAL_REVIEW", "reason": "Cost limit exceeded", "confidence": 0.0}
 
-        history = [f"Task: {task_description}"]
+        # [Round 31] 注入更详尽的系统上下文与隐私脱敏
+        from config_manager import ConfigManager
+        sector = ConfigManager.get("enterprise.sector", "GENERAL")
+        
+        history = [f"System Context: Corporate Sector is {sector}."]
+        history.append(f"Task: {task_description}")
         if context_data:
-            history.append(f"Context: {json.dumps(context_data, ensure_ascii=False)}")
+            # 自动过滤 Context 中的敏感信息 (PII)
+            from privacy_guard import PrivacyGuard
+            guard = PrivacyGuard(role="AGENT_INTERNAL")
+            safe_context = {k: (guard.desensitize(v) if isinstance(v, str) else v) for k, v in context_data.items()}
+            history.append(f"Sanitized Context: {json.dumps(safe_context, ensure_ascii=False)}")
             
-        history.append("Available Tools: search_web, browser_fetch, ask_user")
+        history.append("Available Tools: search_web, browser_fetch, ask_user, verify_tax_id")
         history.append("Format your response as:\nThought: ...\nAction: tool_name(args)\nOR\nFinal Answer: JSON_STRING")
 
         reasoning_trace = []
@@ -115,14 +141,8 @@ class OpenManusAnalyst:
         for step in range(self.max_steps):
             prompt = "\n".join(history) + "\n\nBegin Step " + str(step+1)
             
-            # 1. LLM Generate
-            llm_result = self.llm.generate_response(prompt)
-            # generate_response 返回的是结构化 dict，我们需要提取 text 用于 ReAct 解析
-            # 这里由于 BaseLLM 接口是针对分类优化的，我们需要稍微 hack 一下或者假定 LLM 能理解 ReAct prompt
-            # 实际上 OpenAICompatibleLLM 会返回 {"result": {"category":...}} 这种结构
-            # 为了支持 ReAct，我们需要让 LLM 返回自由文本。
-            # 这里的改进点是：LLMFactory 应该支持 mode="chat" 而不仅仅是 "classification"
-            # 暂时假设 generate_response 的 'reasoning' 字段包含我们需要的内容，或者我们直接修改 prompt 让它把 ReAct 思考过程放在 reasoning 里
+            # 1. LLM Generate (使用增强的 V2 接口支持上下文)
+            llm_result = self.llm.generate_response(prompt, context_params={"sector": sector, "mode": "REASONING"})
             
             response_text = llm_result.get("reasoning", "") + "\n" + json.dumps(llm_result.get("result", {}))
             

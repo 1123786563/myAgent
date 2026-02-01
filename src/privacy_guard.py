@@ -39,6 +39,11 @@ class PrivacyGuard:
 
     def _update_keyword_pattern(self):
         # 优化点：动态合并配置与数据库敏感词
+        # [Round 26] 增加缓存机制，避免频繁从数据库加载
+        current_time = time.time()
+        if hasattr(self, '_last_kw_load') and (current_time - self._last_kw_load < 300):
+            return
+
         db_keywords = self._get_db_keywords()
         all_keywords = list(set(self.custom_keywords + db_keywords))
 
@@ -47,6 +52,8 @@ class PrivacyGuard:
             self.keyword_pattern = re.compile(f"({'|'.join(escaped)})")
         else:
             self.keyword_pattern = None
+        
+        self._last_kw_load = current_time
 
     def _get_db_keywords(self):
         """模拟从数据库加载动态敏感词库"""
