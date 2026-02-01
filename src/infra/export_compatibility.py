@@ -103,6 +103,11 @@ class QB_SAP_Exporter:
         try:
             yy_data = []
             for r in records:
+                # [Iteration 8] 导出格式合规性自检
+                if not r.get('category'):
+                    log.warning(f"跳过无科目分录: {r.get('id')}")
+                    continue
+                
                 yy_data.append({
                     '日期': r.get('created_at', '').split(' ')[0],
                     '凭证类别': '记账凭证',
@@ -112,8 +117,15 @@ class QB_SAP_Exporter:
                     '贷方': 0,
                     '制单人': 'LedgerAlpha'
                 })
-            pd.DataFrame(yy_data).to_csv(target_path, index=False, encoding='gbk')
-            log.info(f"用友格式导出成功: {target_path}")
+            
+            if not yy_data: return None
+            df = pd.DataFrame(yy_data)
+            # 模拟 Schema 校验
+            if '科目编码' not in df.columns or df['借方'].isnull().any():
+                raise ValueError("用友格式校验不通过：关键字段缺失或空值")
+
+            df.to_csv(target_path, index=False, encoding='gbk')
+            log.info(f"用友格式导出成功且通过 Schema 自检: {target_path}")
             return target_path
         except Exception as e:
             log.error(f"用友导出失败: {e}")

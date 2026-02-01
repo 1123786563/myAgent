@@ -104,7 +104,7 @@ class DBQueries(DBBase):
             return {"human_hours_saved": 0, "token_cost_usd": 0, "roi_ratio": 0}
 
     def get_historical_trend(self, vendor, months=12):
-        # [Iteration 6/7] 动态调整挖掘窗口以优化超长上下文，并引入时序分析
+        # [Iteration 6/7/8] 动态调整挖掘窗口以优化超长上下文，并引入时序与年度分析
         sql = """
             SELECT category, amount, created_at, inference_log 
             FROM transactions 
@@ -121,21 +121,29 @@ class DBQueries(DBBase):
                 categories = [r['category'] for r in rows]
                 amounts = [float(r['amount']) for r in rows]
                 
-                # [Iteration 7] 时序特征提取：识别周期性模式
+                # [Iteration 7/8] 时序特征提取：识别周期性与年度模式
+                pattern_summary = ""
                 try:
                     from datetime import datetime
-                    dow_stats = {} # Day of Week
+                    dow_stats = {} 
+                    month_stats = {}
                     for r in rows:
                         dt = datetime.strptime(r['created_at'], "%Y-%m-%d %H:%M:%S")
                         dow = dt.strftime("%A")
+                        mon = dt.month
                         dow_stats[dow] = dow_stats.get(dow, 0) + 1
+                        month_stats[mon] = month_stats.get(mon, 0) + 1
                     
                     top_dow = max(dow_stats, key=dow_stats.get)
                     if dow_stats[top_dow] / len(rows) > 0.6:
-                        pattern_summary = f"常在 {top_dow} 发生 ({dow_stats[top_dow]}次)"
-                    else:
-                        pattern_summary = ""
-                except: pattern_summary = ""
+                        pattern_summary = f"规律: 周内{top_dow}"
+                    
+                    # [Iteration 8] 年度/月度重复特征
+                    top_mon = max(month_stats, key=month_stats.get)
+                    if month_stats[top_mon] / len(rows) > 0.4 and len(rows) > 5:
+                        mon_str = f"规律: 年度第{top_mon}月高频"
+                        pattern_summary = f"{pattern_summary} | {mon_str}" if pattern_summary else mon_str
+                except: pass
 
                 # [Iteration 3/7] 提取长上下文中的行为模式（标签级）
                 recurrent_tags = []
