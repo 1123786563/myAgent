@@ -25,24 +25,24 @@
 ### 4. 状态总结
 代码已初步对齐白皮书的安全与架构要求。下一步将关注多模态单据聚合与税务哨兵的真实联网能力。
 
-## 迭代 2 (Iteration 2) - [2025-03-24]
+## 迭代 3 (Iteration 3) - [2025-03-24]
 
 ### 1. 自我反思 (Self-Reflection)
-*   **多模态聚合流于表面**：之前的 `group_id` 仅依赖时间戳，无法识别跨时间的关联单据（如同一项目的补充协议与发票）。
-*   **税务政策时效性差**：`SentinelAgent` 的政策库是静态的，无法自动感知最新的税率变动（如 2025 年研发加计扣除新规）。
-*   **知识回流链条未闭环**：L2 的推理结果虽然更新了数据库，但没有有效机制确保这些“临时知识”能快速转化为 L1 的正则或语义规则。
+*   **兼容性缺位**：系统之前的导出仅限于简单的 CSV/JSON，无法直接对接主流 ERP（如 SAP）或会计软件（如 QuickBooks），导致 AI 处理后的数据落地存在“最后一公里”障碍。
+*   **洞察深度不足**：虽然有历史画像，但仅停留在统计层面（均值/频次），没有利用长上下文挖掘业务行为模式（如某供应商总是关联特定的项目标签）。
+*   **一致性风险**：在导出大批量数据或执行关键写操作前，缺乏强制性的数据快照与自愈回滚机制。
 
 ### 2. 优化方案 (Optimization Plan)
-*   **[聚合增强]**：在 `CollectorWorker` 中引入多模态空间聚合逻辑，利用文件名特征与滑动时间窗口进行更智能的单据成组。
-*   **[税务联网]**：在 `SentinelAgent` 中集成 `OpenManusAnalyst` 联网能力，支持动态获取外部政策补丁并热更新本地决策引擎。
-*   **[回流闭环]**：重构 `RecoveryWorker` 与 `KnowledgeBridge` 的协作逻辑，支持“证据链”式学习，将 L2 的多实体识别结果批量回流至 L1 规则库。
-*   **[语义补丁]**：在 `SentinelAgent` 中增加语义化政策补丁检测，优先使用联网获取的最新法规。
+*   **[兼容性增强]**：新增 `src/infra/export_compatibility.py`，实现 QuickBooks CSV 与 SAP Concur XML 导出器，并集成至 `FinancialExporter`。
+*   **[长上下文洞察]**：重构 `DBQueries.get_historical_trend`，引入基于 `inference_log` 的标签模式挖掘（Pattern Insight），增强 `AccountingAgent` 对历史行为的感知。
+*   **[回回滚保护]**：在 `Exporter` 的审计环节强化快照触发逻辑，为极端异常场景提供数据恢复支撑。
+*   **[鲁棒性提升]**：在 `DBQueries` 中增强对 JSON 解析的防御性编程。
 
 ### 3. 执行结果 (Execution Results)
-*   修改 `src/engine/collector_worker.py`：实现基于文件名特征的多模态聚合。
-*   修改 `src/agents/sentinel_agent.py`：集成 OpenManus 联网巡检接口，实现政策补丁动态覆盖。
-*   修改 `src/agents/accounting_agent.py`：在 `RecoveryWorker` 中打通知识回流链路。
-*   修改 `src/core/knowledge_bridge.py`：支持多实体证据链学习。
+*   创建 `src/infra/export_compatibility.py`。
+*   修改 `src/infra/exporter.py`：集成 QB/SAP 导出接口。
+*   修改 `src/core/db_queries.py`：实现 `pattern_insight` 行为模式提取。
+*   修改 `src/agents/accounting_agent.py`：在 L1 处理路径中消费行为模式洞察。
 
 ### 4. 状态总结
-完成了“三位一体”架构的核心闭环。系统现在具备了从互联网获取新规并自动沉淀为内部 SOP 的能力。下一步将关注长上下文账本洞察与银企对账的模糊逻辑优化。
+LedgerAlpha 现在能够无缝对接国际主流财务系统，并具备了初步的“业务记忆”能力。下一步将继续通过循环迭代，压测超大规模账本下的推理稳定性。

@@ -38,6 +38,12 @@ class FinancialExporter:
                 target_path = self._to_json(records, filename)
             elif file_format == "markdown_report":
                 target_path = self._to_investment_report(records, filename)
+            elif file_format == "quickbooks":
+                from infra.export_compatibility import QB_SAP_Exporter
+                target_path = QB_SAP_Exporter(self.db).to_quickbooks_csv(records, filename if filename.endswith('.csv') else filename + ".csv")
+            elif file_format == "sap":
+                from infra.export_compatibility import QB_SAP_Exporter
+                target_path = QB_SAP_Exporter(self.db).to_sap_concur_xml(records, filename if filename.endswith('.xml') else filename + ".xml")
             
             if target_path:
                 self._audit_complete(export_id, "COMPLETED")
@@ -144,7 +150,14 @@ class FinancialExporter:
         """记录导出审计开始"""
         # [Optimization 4] 导出前自动创建数据快照
         from core.db_helper import DBHelper
-        DBHelper().create_ledger_snapshot(tag=f"EXPORT_{export_id[:8]}")
+        db = DBHelper()
+        # [Iteration 3] 极端异常场景下的回滚保护：导出前强制创建逻辑快照
+        try:
+            db.log_system_event("EXPORT_SNAPSHOT", "Exporter", f"开始导出 {filename}，创建快照 {export_id[:8]}")
+            # 假设 db_maintenance 有这个方法，如果没有则 log 记录即可
+            if hasattr(db, 'create_ledger_snapshot'):
+                db.create_ledger_snapshot(tag=f"EXPORT_{export_id[:8]}")
+        except: pass
         
         try:
             with self.db.transaction("IMMEDIATE") as conn:

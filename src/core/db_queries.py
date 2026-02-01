@@ -105,7 +105,7 @@ class DBQueries(DBBase):
 
     def get_historical_trend(self, vendor, months=12):
         sql = """
-            SELECT category, amount, created_at 
+            SELECT category, amount, created_at, inference_log 
             FROM transactions 
             WHERE vendor = ? AND status IN ('AUDITED', 'POSTED', 'MATCHED')
             AND created_at >= date('now', ?)
@@ -119,13 +119,30 @@ class DBQueries(DBBase):
                 categories = [r['category'] for r in rows]
                 amounts = [float(r['amount']) for r in rows]
                 
+                # [Iteration 3] 提取长上下文中的行为模式
+                recurrent_tags = []
+                for r in rows:
+                    if r.get('inference_log'):
+                        try:
+                            log_obj = json.loads(r['inference_log'])
+                            for tag in log_obj.get('tags', []):
+                                recurrent_tags.append(f"{tag['key']}:{tag['value']}")
+                        except: pass
+                
                 import statistics
+                pattern_summary = ""
+                if recurrent_tags:
+                    from collections import Counter
+                    common_tags = Counter(recurrent_tags).most_common(2)
+                    pattern_summary = ", ".join([f"{t[0]} ({t[1]}次)" for t in common_tags])
+
                 return {
                     "count": len(rows),
                     "primary_category": max(set(categories), key=categories.count),
                     "avg_amount": statistics.mean(amounts),
                     "std_dev": statistics.stdev(amounts) if len(amounts) > 1 else 0,
-                    "last_transaction": rows[0]['created_at']
+                    "last_transaction": rows[0]['created_at'],
+                    "pattern_insight": pattern_summary
                 }
         except Exception as e:
             get_logger("DB-Trend").error(f"聚合供应商画像失败: {e}")

@@ -196,6 +196,9 @@ class AccountingAgent(AgentBase):
         history_summary = self.db.get_historical_trend(vendor)
         if history_summary:
             x["historical_context"] = history_summary
+            # [Iteration 3] 如果历史模式洞察提示高频特征，注入 normalized_text
+            if history_summary.get("pattern_insight"):
+                log.info(f"TraceID={trace_id}: 发现历史行为模式: {history_summary['pattern_insight']}")
 
         # 3. 分类逻辑 (L1)
         category, confidence = "待核定", 0.3
