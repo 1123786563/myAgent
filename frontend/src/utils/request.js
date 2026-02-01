@@ -44,7 +44,10 @@ request.interceptors.response.use(
       switch (status) {
         case 401:
           message.error('登录已过期，请重新登录');
-          // window.location.href = '/login';
+          localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user_info');
+          window.location.href = '/login';
           break;
         case 403:
           notification.error({

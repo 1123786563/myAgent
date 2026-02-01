@@ -74,63 +74,112 @@ const Dashboard = () => {
         duration: 1000,
       },
     },
-    point: {
-      size: 5,
-      shape: 'diamond',
-    },
-    label: {
+    color: ['#1890ff', '#52c41a'],
+    area: {
       style: {
-        fill: '#aaa',
+        fill: 'l(270) 0:#ffffff 0.5:#1890ff 1:#1890ff',
+        fillOpacity: 0.1,
       },
     },
+    legend: {
+      position: 'top-right',
+    },
+    point: {
+      size: 4,
+      shape: 'circle',
+      style: {
+        fill: '#fff',
+        stroke: '#1890ff',
+        lineWidth: 2,
+      },
+    },
+    tooltip: {
+      showMarkers: true,
+    },
+    interactions: [{ type: 'element-active' }],
+  };
+
+  const cardStyle = {
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    transition: 'all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1)',
+    cursor: 'pointer',
   };
 
   return (
-    <PageContainer title="财务智能看板">
-      <Row gutter={16}>
+    <PageContainer
+      title="财务智能看板"
+      content="基于 AI 洞察的实时财务健康监控与自动化建议"
+    >
+      <Row gutter={[24, 24]}>
         <Col span={18}>
-          <StatisticCard.Group direction="row">
+          <StatisticCard.Group direction="row" gutter={16}>
             <StatisticCard
               statistic={{
                 title: '账户总余额',
                 value: data.metrics.balance,
                 precision: 2,
                 suffix: 'CNY',
-                icon: <AccountBookOutlined style={{ color: '#1890ff', fontSize: '32px' }} />,
+                icon: (
+                  <div style={{ background: '#e6f7ff', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                    <AccountBookOutlined style={{ color: '#1890ff', fontSize: '24px' }} />
+                  </div>
+                ),
               }}
+              hoverable
+              style={cardStyle}
             />
-            <Divider type="vertical" />
             <StatisticCard
               statistic={{
                 title: '待过账凭证',
                 value: data.metrics.pending_vouchers,
-                icon: <TransactionOutlined style={{ color: '#faad14', fontSize: '32px' }} />,
+                icon: (
+                  <div style={{ background: '#fff7e6', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                    <TransactionOutlined style={{ color: '#faad14', fontSize: '24px' }} />
+                  </div>
+                ),
               }}
+              hoverable
+              style={cardStyle}
             />
-            <Divider type="vertical" />
             <StatisticCard
               statistic={{
                 title: '已勾稽发票',
                 value: data.metrics.matched_invoices,
-                icon: <SafetyOutlined style={{ color: '#52c41a', fontSize: '32px' }} />,
+                icon: (
+                  <div style={{ background: '#f6ffed', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                    <SafetyOutlined style={{ color: '#52c41a', fontSize: '24px' }} />
+                  </div>
+                ),
               }}
+              hoverable
+              style={cardStyle}
             />
-            <Divider type="vertical" />
             <StatisticCard
               statistic={{
                 title: '合规健康分',
                 value: data.metrics.health_score,
                 suffix: '/ 100',
-                icon: <LineChartOutlined style={{ color: '#722ed1', fontSize: '32px' }} />,
+                icon: (
+                  <div style={{ background: '#f9f0ff', padding: '8px', borderRadius: '50%', display: 'flex' }}>
+                    <LineChartOutlined style={{ color: '#722ed1', fontSize: '24px' }} />
+                  </div>
+                ),
               }}
+              hoverable
+              style={cardStyle}
             />
           </StatisticCard.Group>
 
-          <Card title="收支趋势 (最近 14 天)" style={{ marginTop: 24, height: 400 }}>
+          <Card
+            title="收支趋势 (最近 14 天)"
+            style={{ ...cardStyle, marginTop: 24 }}
+            bodyStyle={{ padding: '24px' }}
+          >
              {chartData.length > 0 ? (
                <Line {...chartConfig} style={{ height: 320 }} />
              ) : (
-               <div style={{ textAlign: 'center', paddingTop: 100, color: '#999' }}>
+               <div style={{ textAlign: 'center', padding: '100px 0', color: '#bfbfbf' }}>
                  暂无趋势数据，等待交易产生...
                </div>
              )}
@@ -141,22 +190,29 @@ const Dashboard = () => {
           <Card
             title={
               <Space>
-                <Badge dot color="blue" />
-                <span>智能助理洞察</span>
+                <Badge status="processing" color="#1890ff" />
+                <span style={{ fontWeight: 600 }}>智能助理洞察</span>
               </Space>
             }
-            bodyStyle={{ padding: '12px' }}
+            bodyStyle={{ padding: '16px' }}
+            style={cardStyle}
           >
-            {data.actions.map(action => (
-              <ActionCard
-                key={action.id}
-                title={action.title}
-                description={action.description}
-                type={action.type}
-                date={action.date}
-                onAction={() => message.info('正在导航至相关业务模块...')}
-              />
-            ))}
+            {data.actions.length > 0 ? (
+              data.actions.map(action => (
+                <ActionCard
+                  key={action.id}
+                  title={action.title}
+                  description={action.description}
+                  type={action.type}
+                  date={action.date}
+                  onAction={() => message.info('正在导航至相关业务模块...')}
+                />
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', color: '#bfbfbf', padding: '20px 0' }}>
+                目前没有需要处理的建议
+              </div>
+            )}
           </Card>
         </Col>
       </Row>

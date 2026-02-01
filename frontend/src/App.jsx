@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { ProLayout, PageContainer } from '@ant-design/pro-components';
 import {
   BankOutlined,
@@ -12,6 +12,8 @@ import {
 import { ConfigProvider, Dropdown } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
 
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
 // Placeholder pages
 import Reconciliation from './pages/Reconciliation';
 import Workflow from './pages/Workflow';
@@ -21,11 +23,26 @@ import Reports from './pages/accounting/Reports';
 import InvoiceWorkbench from './pages/invoice/InvoiceWorkbench';
 import Dashboard from './pages/dashboard/Dashboard';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
 
-const Layout = ({ children }) => {
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
+const LayoutContent = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [pathname, setPathname] = useState(location.pathname);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div
@@ -101,6 +118,7 @@ const Layout = ({ children }) => {
                       key: 'logout',
                       icon: <UserOutlined />,
                       label: '退出登录',
+                      onClick: handleLogout,
                     },
                   ],
                 }}
@@ -132,37 +150,49 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <ConfigProvider
-      locale={zhCN}
-      theme={{
-        token: {
-          colorPrimary: '#1677ff',
-          borderRadius: 6,
-          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
-        },
-        components: {
-          Layout: {
-            headerBg: '#001529',
-            siderBg: '#001529',
+    <AuthProvider>
+      <ConfigProvider
+        locale={zhCN}
+        theme={{
+          token: {
+            colorPrimary: '#1677ff',
+            borderRadius: 6,
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif',
           },
-        },
-      }}
-    >
-      <BrowserRouter>
-        <Layout>
+          components: {
+            Layout: {
+              headerBg: '#001529',
+              siderBg: '#001529',
+            },
+          },
+        }}
+      >
+        <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/accounting/chart" element={<AccountChart />} />
-            <Route path="/accounting/voucher" element={<VoucherEntry />} />
-            <Route path="/accounting/reports" element={<Reports />} />
-            <Route path="/invoice" element={<InvoiceWorkbench />} />
-            <Route path="/reconciliation" element={<Reconciliation />} />
-            <Route path="/workflow" element={<Workflow />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <LayoutContent>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/accounting/chart" element={<AccountChart />} />
+                      <Route path="/accounting/voucher" element={<VoucherEntry />} />
+                      <Route path="/accounting/reports" element={<Reports />} />
+                      <Route path="/invoice" element={<InvoiceWorkbench />} />
+                      <Route path="/reconciliation" element={<Reconciliation />} />
+                      <Route path="/workflow" element={<Workflow />} />
+                      <Route path="/settings" element={<Settings />} />
+                    </Routes>
+                  </LayoutContent>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </Layout>
-      </BrowserRouter>
-    </ConfigProvider>
+        </BrowserRouter>
+      </ConfigProvider>
+    </AuthProvider>
   );
 }
 
