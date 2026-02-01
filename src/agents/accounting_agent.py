@@ -333,8 +333,8 @@ class RecoveryWorker(threading.Thread):
                         SELECT id, vendor, amount, inference_log
                         FROM transactions
                         WHERE status = 'REJECTED'
-                        AND created_at > datetime('now', '-1 day')
-                        AND inference_log NOT LIKE '%RECOVERY_ATTEMPT%'
+                        AND created_at > CURRENT_TIMESTAMP - interval '1 day'
+                        AND (inference_log::text NOT LIKE '%%RECOVERY_ATTEMPT%%' OR inference_log IS NULL)
                     """
                     tasks = conn.execute(sql).fetchall()
 
@@ -445,8 +445,8 @@ class RecoveryWorker(threading.Thread):
                 conn.execute(
                     """
                     UPDATE transactions 
-                    SET category = ?, status = 'PENDING_AUDIT', inference_log = ? 
-                    WHERE id = ?
+                    SET category = %s, status = 'PENDING_AUDIT', inference_log = %s 
+                    WHERE id = %s
                 """,
                     (new_category, final_log, tid),
                 )

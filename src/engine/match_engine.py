@@ -111,8 +111,8 @@ class MatchEngine:
                     cursor = conn.execute("""
                         SELECT id, vendor, group_id, status FROM transactions 
                         WHERE status IN ('PENDING', 'GROUPED', 'MATCHED') 
-                        AND amount = ? 
-                        AND ABS(strftime('%s', ?) - strftime('%s', created_at)) < 604800
+                        AND amount = %s 
+                        AND ABS(extract(epoch from %s) - extract(epoch from created_at)) < 604800
                     """, (s['amount'], s['created_at']))
                     candidates = [dict(row) for row in cursor.fetchall()]
                     
@@ -155,7 +155,7 @@ class MatchEngine:
                     SELECT id, amount, vendor_keyword, created_at 
                     FROM pending_entries 
                     WHERE status = 'PENDING' 
-                    AND datetime(created_at) < datetime('now', '-2 days')
+                    AND created_at < NOW() - INTERVAL '2 days'
                 """
                 reminders = [dict(row) for row in conn.execute(sql).fetchall()]
                 

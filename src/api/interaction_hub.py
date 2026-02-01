@@ -95,7 +95,7 @@ class PollingWorker(threading.Thread):
                         SELECT id, event_type, message, trace_id 
                         FROM system_events 
                         WHERE event_type IN ('PUSH_CARD', 'EVIDENCE_REQUEST') 
-                        AND created_at > datetime('now', '-30 seconds')
+                        AND created_at > CURRENT_TIMESTAMP - interval '30 seconds'
                         ORDER BY created_at ASC
                     """
                     events = conn.execute(sql).fetchall()
@@ -134,7 +134,7 @@ class PollingWorker(threading.Thread):
     def _check_proactive_tasks(self):
         try:
             with self.db.transaction("DEFERRED") as conn:
-                sql = "SELECT id, vendor, amount, status, trace_id FROM transactions WHERE (status = 'REJECTED' AND updated_at < datetime('now', '-1 minute')) OR (status = 'PENDING' AND file_path IS NULL AND created_at < datetime('now', '-10 minutes')) LIMIT 3"
+                sql = "SELECT id, vendor, amount, status, trace_id FROM transactions WHERE (status = 'REJECTED' AND created_at < CURRENT_TIMESTAMP - interval '1 minute') OR (status = 'PENDING' AND created_at < CURRENT_TIMESTAMP - interval '10 minutes') LIMIT 3"
                 tasks = conn.execute(sql).fetchall()
             for task in tasks:
                 if task["status"] == "REJECTED":

@@ -63,11 +63,13 @@ async def feishu_webhook(request: Request, background_tasks: BackgroundTasks):
 async def dashboard(api_key: str = Depends(get_api_key)):
     db = DBHelper()
     with db.transaction("DEFERRED") as conn:
-        recent_tx = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE created_at > datetime('now', '-1 hour')").fetchone()['cnt']
+        recent_tx = conn.execute("SELECT COUNT(*) as cnt FROM transactions WHERE created_at > NOW() - INTERVAL '1 hour'").fetchone()['cnt']
         svc_stats = conn.execute("SELECT service_name, last_heartbeat, status, metrics FROM sys_status").fetchall()
     return render_dashboard(db.get_ledger_stats(), db.get_roi_metrics(), db.get_roi_weekly_trend(), getattr(db, '_archived_count', 0), getattr(db, '_global_total_amount', 0.0), recent_tx, svc_stats)
 
-def start_server(host="0.0.0.0", port=8000):
+def start_server(host="0.0.0.0", port=None):
+    if port is None:
+        port = int(os.getenv("PORT", 8000))
     uvicorn.run(app, host=host, port=port, log_config=None)
 
 if __name__ == "__main__":

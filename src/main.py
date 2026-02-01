@@ -229,7 +229,7 @@ class MasterDaemon:
                             metrics["processed_count"] = processed_count
                             last_metrics_update = current_time
                         except Exception as e:
-                            log.error(f"定时指标更新失败: {e}")
+                            print(f"定时指标更新失败: {e}")
 
                     self.db.update_heartbeat("Master-Daemon", "ACTIVE", metrics=json.dumps(metrics))
                     
@@ -262,7 +262,7 @@ class MasterDaemon:
                     
                     time.sleep(poll_interval)
                 except Exception as e:
-                    log.error(f"Daemon 主循环异常: {e}")
+                    print(f"Daemon 主循环异常: {e}")
                     time.sleep(poll_interval)
             
             log.info("Master Daemon 运行结束。")
