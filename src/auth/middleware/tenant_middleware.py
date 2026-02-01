@@ -6,11 +6,12 @@ class TenantMiddleware(BaseHTTPMiddleware):
     """
     Middleware to extract Tenant ID from headers and set it in the context.
     Currently trusts the X-Tenant-ID header for development purposes.
+    If no tenant ID is provided, uses a default tenant ID.
     """
     async def dispatch(self, request: Request, call_next):
         # Extract tenant ID from headers
-        # Default to None if not present
-        tenant_id = request.headers.get("X-Tenant-ID")
+        # Default to "default" if not present
+        tenant_id = request.headers.get("X-Tenant-ID") or "default"
 
         # Set the tenant ID in the context variable
         token = set_tenant_id(tenant_id)

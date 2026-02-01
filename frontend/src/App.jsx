@@ -7,6 +7,7 @@ import {
   DashboardOutlined,
   SettingOutlined,
   UserOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import { ConfigProvider, Dropdown } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
