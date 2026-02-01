@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { PageContainer, ProCard, ProTable } from '@ant-design/pro-components';
-import { Steps, Button, Result, Space, Alert, message, Card, Statistic, Row, Col, Divider, Modal } from 'antd';
+import { PageContainer, ProCard } from '@ant-design/pro-components';
+import { Steps, Button, Result, Space, Alert, message, Card, Statistic, Row, Col, Divider, Modal, ConfigProvider, theme } from 'antd';
 import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
@@ -27,7 +27,6 @@ const ClosingWorkbench = () => {
   const handleIntegrityCheck = async () => {
     setLoading(true);
     try {
-      // 模拟前端检查逻辑（实际调用后端验证接口）
       const res = await request.get('/accounting/vouchers', { params: { year: period.year, month: period.month, status: 'DRAFT' } });
       if (res.total > 0) {
         setCheckResult({
@@ -69,7 +68,7 @@ const ClosingWorkbench = () => {
       message.success(`结转凭证生成成功：No.${res.voucher_number}`);
       setCurrentStep(3);
     } catch (e) {
-      // 错误已处理
+      // Error handled by interceptor
     }
     setLoading(false);
   };
@@ -80,105 +79,170 @@ const ClosingWorkbench = () => {
       await request.post('/accounting/periods/close', { year: period.year, month: period.month });
       setCurrentStep(4);
     } catch (e) {
-      // 错误已处理
+      // Error handled by interceptor
     }
     setLoading(false);
   };
 
+  const glassCardStyle = {
+    background: 'rgba(255, 255, 255, 0.03)',
+    backdropFilter: 'blur(20px)',
+    WebkitBackdropFilter: 'blur(20px)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '24px',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+    padding: '40px',
+    width: '100%',
+    maxWidth: '800px',
+    margin: '0 auto'
+  };
+
   const renderContent = () => {
+    const commonResultProps = {
+      style: { color: '#fff' }
+    };
+
     if (currentStep === 0) {
       return (
-        <Result
-          icon={<FileTextOutlined />}
-          title="第一步：凭证完整性检查"
-          subTitle={`系统将检查 ${period.year}年${period.month}月 是否存在草稿或待审批凭证`}
-          extra={[
-            <Button type="primary" key="check" onClick={handleIntegrityCheck} loading={loading}>
-              开始检查
-            </Button>,
-          ]}
-        >
-          {checkResult?.status === 'error' && (
-            <Alert message={checkResult.message} type="error" showIcon style={{ marginTop: 16 }} />
-          )}
-        </Result>
+        <div style={glassCardStyle}>
+          <Result
+            icon={<FileTextOutlined style={{ color: '#1677ff', fontSize: '64px' }} />}
+            title={<span style={{ color: '#fff' }}>第一步：凭证完整性检查</span>}
+            subTitle={<span style={{ color: 'rgba(255,255,255,0.45)' }}>系统将检查 {period.year}年{period.month}月 是否存在草稿或待审批凭证</span>}
+            extra={[
+              <Button type="primary" key="check" onClick={handleIntegrityCheck} loading={loading} size="large" style={{ borderRadius: '8px', height: '48px', padding: '0 32px' }}>
+                开始检查
+              </Button>,
+            ]}
+          >
+            {checkResult?.status === 'error' && (
+              <Alert
+                message={<span style={{ color: '#ff4d4f' }}>{checkResult.message}</span>}
+                type="error"
+                showIcon
+                style={{ marginTop: 24, background: 'rgba(255, 77, 79, 0.1)', border: '1px solid rgba(255, 77, 79, 0.2)' }}
+              />
+            )}
+          </Result>
+        </div>
       );
     }
 
     if (currentStep === 1) {
       return (
-        <Result
-          icon={<SafetyCertificateOutlined style={{ color: '#52c41a' }} />}
-          title="第二步：试算平衡校验"
-          subTitle="在关账前，必须确保资产 = 负债 + 所有者权益"
-          extra={[
-            <Button type="primary" key="balance" onClick={handleTrialBalance} loading={loading}>
-              执行试算平衡
-            </Button>,
-          ]}
-        />
+        <div style={glassCardStyle}>
+          <Result
+            icon={<SafetyCertificateOutlined style={{ color: '#52c41a', fontSize: '64px' }} />}
+            title={<span style={{ color: '#fff' }}>第二步：试算平衡校验</span>}
+            subTitle={<span style={{ color: 'rgba(255,255,255,0.45)' }}>在关账前，必须确保资产 = 负债 + 所有者权益</span>}
+            extra={[
+              <Button type="primary" key="balance" onClick={handleTrialBalance} loading={loading} size="large" style={{ borderRadius: '8px', height: '48px', padding: '0 32px' }}>
+                执行试算平衡
+              </Button>,
+            ]}
+          />
+        </div>
       );
     }
 
     if (currentStep === 2) {
       return (
-        <Result
-          icon={<LoadingOutlined />}
-          title="第三步：损益结转"
-          subTitle="由 AI 自动扫描所有收入与费用科目，一键结转至本年利润"
-          extra={[
-            <Button type="primary" key="transfer" onClick={handlePLTransfer} loading={loading}>
-              一键生成结转凭证
-            </Button>,
-          ]}
-        />
+        <div style={glassCardStyle}>
+          <Result
+            icon={<LoadingOutlined style={{ color: '#7c3aed', fontSize: '64px' }} />}
+            title={<span style={{ color: '#fff' }}>第三步：损益结转</span>}
+            subTitle={<span style={{ color: 'rgba(255,255,255,0.45)' }}>由 AI 自动扫描所有收入与费用科目，一键结转至本年利润</span>}
+            extra={[
+              <Button type="primary" key="transfer" onClick={handlePLTransfer} loading={loading} size="large" style={{ borderRadius: '8px', height: '48px', padding: '0 32px' }}>
+                一键生成结转凭证
+              </Button>,
+            ]}
+          />
+        </div>
       );
     }
 
     if (currentStep === 3) {
       return (
-        <Result
-          status="warning"
-          title="最后一步：正式锁定期间"
-          subTitle="关账后将禁止在该期间录入任何新凭证，请确保所有核算已完成"
-          extra={[
-            <Button type="primary" danger key="close" onClick={handleFinalClose} loading={loading}>
-              确认关账
-            </Button>,
-          ]}
-        />
+        <div style={glassCardStyle}>
+          <Result
+            status="warning"
+            title={<span style={{ color: '#fff' }}>最后一步：正式锁定期间</span>}
+            subTitle={<span style={{ color: 'rgba(255,255,255,0.45)' }}>关账后将禁止在该期间录入任何新凭证，请确保所有核算已完成</span>}
+            extra={[
+              <Button type="primary" danger key="close" onClick={handleFinalClose} loading={loading} size="large" style={{ borderRadius: '8px', height: '48px', padding: '0 32px' }}>
+                确认关账
+              </Button>,
+            ]}
+          />
+        </div>
       );
     }
 
     if (currentStep === 4) {
       return (
-        <Result
-          status="success"
-          title={`${period.year}年${period.month}月 结账成功`}
-          subTitle="期间已锁定，您可以开始下一期间的操作或导出报表"
-          extra={[
-            <Button key="next">进入下个期间</Button>,
-            <Button key="report" type="primary">查看资产负债表</Button>,
-          ]}
-        />
+        <div style={glassCardStyle}>
+          <Result
+            status="success"
+            title={<span style={{ color: '#fff' }}>{period.year}年{period.month}月 结账成功</span>}
+            subTitle={<span style={{ color: 'rgba(255,255,255,0.45)' }}>期间已锁定，您可以开始下一期间的操作或导出报表</span>}
+            extra={[
+              <Button key="next" size="large" style={{ borderRadius: '8px', height: '48px' }}>进入下个期间</Button>,
+              <Button key="report" type="primary" size="large" style={{ borderRadius: '8px', height: '48px' }}>查看资产负债表</Button>,
+            ]}
+          />
+        </div>
       );
     }
   };
 
   return (
-    <PageContainer title="期末结账工作台">
-      <ProCard>
-        <Steps
-          current={currentStep}
-          items={steps}
-          style={{ padding: '24px 48px' }}
-        />
-        <Divider />
-        <div style={{ minHeight: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {renderContent()}
-        </div>
-      </ProCard>
-    </PageContainer>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          colorPrimary: '#1677ff',
+        },
+      }}
+    >
+      <PageContainer title={<span style={{ color: '#fff', fontSize: '24px', fontWeight: 700 }}>期末结账工作台</span>}>
+        <ProCard style={{ background: 'transparent', border: 'none' }}>
+          <Steps
+            current={currentStep}
+            items={steps}
+            style={{ padding: '24px 48px', marginBottom: '48px' }}
+          />
+          <div style={{ minHeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {renderContent()}
+          </div>
+        </ProCard>
+      </PageContainer>
+
+      <style>
+        {`
+          .ant-steps-item-title {
+            color: rgba(255, 255, 255, 0.85) !important;
+            font-weight: 600 !important;
+          }
+          .ant-steps-item-description {
+            color: rgba(255, 255, 255, 0.45) !important;
+          }
+          .ant-steps-item-process .ant-steps-item-icon {
+            background: #1677ff !important;
+            border-color: #1677ff !important;
+          }
+          .ant-steps-item-finish .ant-steps-item-icon {
+            border-color: #52c41a !important;
+          }
+          .ant-steps-item-finish .ant-steps-item-icon > .ant-steps-icon {
+            color: #52c41a !important;
+          }
+          .ant-steps-item-finish > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title::after {
+            background-color: #52c41a !important;
+          }
+        `}
+      </style>
+    </ConfigProvider>
   );
 };
 

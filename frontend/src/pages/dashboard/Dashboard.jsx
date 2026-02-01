@@ -156,10 +156,10 @@ const Dashboard = () => {
         },
       }}
     >
-      <div style={backgroundStyle}>
+      <div className="fintech-bg">
         {/* Animated Background Blobs */}
-        <div style={{ ...blobStyle, width: '600px', height: '600px', background: '#1e40af', top: '-10%', right: '-5%' }} />
-        <div style={{ ...blobStyle, width: '500px', height: '500px', background: '#7c3aed', bottom: '10%', left: '-5%' }} />
+        <div className="fintech-blob blob-blue" />
+        <div className="fintech-blob blob-purple" />
 
         <PageContainer
           title={<span style={{ color: '#fff', fontSize: '24px', fontWeight: 700 }}>财务智能看板</span>}
@@ -176,36 +176,36 @@ const Dashboard = () => {
                     precision: 2,
                     suffix: <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px' }}>CNY</span>,
                     icon: (
-                      <div style={{ background: 'rgba(22, 119, 255, 0.15)', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+                      <div className="metric-icon-wrapper" style={{ background: 'rgba(22, 119, 255, 0.15)' }}>
                         <AccountBookOutlined style={{ color: '#1677ff', fontSize: '24px' }} />
                       </div>
                     ),
                   }}
-                  style={glassStyle}
+                  className="glass-card"
                 />
                 <StatisticCard
                   statistic={{
                     title: <span style={{ color: 'rgba(255,255,255,0.65)' }}>待过账凭证</span>,
                     value: data.metrics.pending_vouchers,
                     icon: (
-                      <div style={{ background: 'rgba(250, 173, 20, 0.15)', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+                      <div className="metric-icon-wrapper" style={{ background: 'rgba(250, 173, 20, 0.15)' }}>
                         <TransactionOutlined style={{ color: '#faad14', fontSize: '24px' }} />
                       </div>
                     ),
                   }}
-                  style={glassStyle}
+                  className="glass-card"
                 />
                 <StatisticCard
                   statistic={{
                     title: <span style={{ color: 'rgba(255,255,255,0.65)' }}>已勾稽发票</span>,
                     value: data.metrics.matched_invoices,
                     icon: (
-                      <div style={{ background: 'rgba(82, 196, 26, 0.15)', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+                      <div className="metric-icon-wrapper" style={{ background: 'rgba(82, 196, 26, 0.15)' }}>
                         <SafetyOutlined style={{ color: '#52c41a', fontSize: '24px' }} />
                       </div>
                     ),
                   }}
-                  style={glassStyle}
+                  className="glass-card"
                 />
                 <StatisticCard
                   statistic={{
@@ -213,18 +213,19 @@ const Dashboard = () => {
                     value: data.metrics.health_score,
                     suffix: <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '14px' }}>/ 100</span>,
                     icon: (
-                      <div style={{ background: 'rgba(124, 58, 237, 0.15)', padding: '10px', borderRadius: '12px', display: 'flex' }}>
+                      <div className="metric-icon-wrapper" style={{ background: 'rgba(124, 58, 237, 0.15)' }}>
                         <LineChartOutlined style={{ color: '#7c3aed', fontSize: '24px' }} />
                       </div>
                     ),
                   }}
-                  style={glassStyle}
+                  className="glass-card"
                 />
               </StatisticCard.Group>
 
               <Card
                 title={<span style={{ color: '#fff', fontWeight: 600 }}>收支趋势 (最近 14 天)</span>}
-                style={{ ...glassStyle, marginTop: 24 }}
+                className="glass-card"
+                style={{ marginTop: 24 }}
                 bodyStyle={{ padding: '24px' }}
               >
                 {chartData.length > 0 ? (
@@ -246,7 +247,7 @@ const Dashboard = () => {
                   </Space>
                 }
                 bodyStyle={{ padding: '16px' }}
-                style={glassStyle}
+                className="glass-card"
               >
                 {data.actions.length > 0 ? (
                   data.actions.map(action => (
@@ -269,35 +270,6 @@ const Dashboard = () => {
             </Col>
           </Row>
         </PageContainer>
-
-        <style>
-          {`
-            .ant-pro-page-container-children-content {
-              margin: 0 !important;
-            }
-            .ant-statistic-content-value {
-              color: #fff !important;
-              font-family: 'Inter', sans-serif;
-              font-weight: 700 !important;
-            }
-            .ant-card:hover {
-              border-color: rgba(22, 119, 255, 0.3) !important;
-              box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
-              transform: translateY(-2px);
-            }
-            /* ActionCard Overrides for Dark Mode */
-            .ant-card-small {
-              background: rgba(255,255,255,0.02) !important;
-              border: 1px solid rgba(255,255,255,0.05) !important;
-            }
-            .ant-card-head-title {
-              color: #fff !important;
-            }
-            .ant-typography {
-              color: rgba(255,255,255,0.65) !important;
-            }
-          `}
-        </style>
       </div>
     </ConfigProvider>
   );

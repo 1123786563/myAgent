@@ -6,10 +6,138 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f0f2f5;
+  background-color: #0F172A; /* Deep Fintech Navy */
+  color: #fff;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* --- Global Fintech Theme --- */
+
+.fintech-bg {
+  position: relative;
+  min-height: 100vh;
+  background: #0F172A;
+  overflow-x: hidden;
+}
+
+.fintech-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: 0;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.blob-blue {
+  width: 600px;
+  height: 600px;
+  background: #1e40af;
+  top: -10%;
+  right: -5%;
+}
+
+.blob-purple {
+  width: 500px;
+  height: 500px;
+  background: #7c3aed;
+  bottom: 10%;
+  left: -5%;
+}
+
+/* Glassmorphism Utilities */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.glass-card:hover {
+  border-color: rgba(22, 119, 255, 0.3) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+/* Ant Design Overrides for Dark/Glass Theme */
+.ant-layout {
+  background: transparent !important;
+}
+
+.ant-pro-layout-content {
+  background: transparent !important;
+  padding: 24px !important;
+}
+
+.ant-pro-page-container {
+  background: transparent !important;
+}
+
+.ant-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.ant-card-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-card-head-title {
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+.ant-table {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.ant-table-tbody > tr > td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.ant-pro-page-container-content {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.ant-breadcrumb-link, .ant-breadcrumb-separator {
+  color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.ant-typography {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.ant-statistic-content-value {
+  color: #fff !important;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700 !important;
+}
+
+.ant-pro-page-container-children-content {
+  margin: 0 !important;
+}
+
+/* Dashboard Specifics */
+.metric-icon-wrapper {
+  padding: 10px;
+  border-radius: 12px;
+  display: flex;
 }

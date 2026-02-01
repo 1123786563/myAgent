@@ -44,84 +44,11 @@ const LayoutContent = ({ children }) => {
     navigate('/login');
   };
 
-  const backgroundStyle = {
-    position: 'relative',
-    minHeight: '100vh',
-    background: '#0F172A', // Deep Fintech Navy
-    overflow: 'hidden',
-  };
-
-  const blobStyle = {
-    position: 'absolute',
-    borderRadius: '50%',
-    filter: 'blur(100px)',
-    zIndex: 0,
-    opacity: 0.3,
-  };
-
   return (
-    <div style={backgroundStyle}>
+    <div className="fintech-bg">
       {/* Global Fintech Background Blobs */}
-      <div style={{ ...blobStyle, width: '600px', height: '600px', background: '#1e40af', top: '-10%', right: '-5%' }} />
-      <div style={{ ...blobStyle, width: '500px', height: '500px', background: '#7c3aed', bottom: '10%', left: '-5%' }} />
-
-      <style>
-        {`
-          .ant-layout {
-            background: transparent !important;
-          }
-          .ant-pro-layout-content {
-            background: transparent !important;
-            padding: 24px !important;
-          }
-          .ant-pro-page-container {
-            background: transparent !important;
-          }
-          /* Glassmorphic Cards Global */
-          .ant-card {
-            background: rgba(255, 255, 255, 0.03) !important;
-            backdrop-filter: blur(20px) !important;
-            -webkit-backdrop-filter: blur(20px) !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
-            transition: all 0.3s ease !important;
-          }
-          .ant-card:hover {
-            border-color: rgba(22, 119, 255, 0.3) !important;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
-            transform: translateY(-2px);
-          }
-          .ant-card-head {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-          }
-          .ant-card-head-title {
-            color: #fff !important;
-            font-weight: 600 !important;
-          }
-          .ant-table {
-            background: transparent !important;
-            color: rgba(255, 255, 255, 0.85) !important;
-          }
-          .ant-table-thead > tr > th {
-            background: rgba(255, 255, 255, 0.05) !important;
-            color: #fff !important;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-          }
-          .ant-table-tbody > tr > td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-          }
-          .ant-table-tbody > tr:hover > td {
-            background: rgba(255, 255, 255, 0.02) !important;
-          }
-          .ant-pro-page-container-content {
-            color: rgba(255, 255, 255, 0.45) !important;
-          }
-          .ant-breadcrumb-link, .ant-breadcrumb-separator {
-            color: rgba(255, 255, 255, 0.45) !important;
-          }
-        `}
-      </style>
+      <div className="fintech-blob blob-blue" />
+      <div className="fintech-blob blob-purple" />
 
       <ProLayout
         title={<span style={{ color: '#fff', fontWeight: 700 }}>Ledger Alpha</span>}
