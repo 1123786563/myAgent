@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer, StatisticCard } from '@ant-design/pro-components';
-import { Row, Col, Card, Typography, Space, Badge, message, ConfigProvider, theme } from 'antd';
+import { Row, Col, Card, Typography, Space, Badge, message, ConfigProvider, theme, Drawer, Button } from 'antd';
 import {
   LineChartOutlined,
   AccountBookOutlined,
   TransactionOutlined,
-  SafetyOutlined
+  SafetyOutlined,
+  RobotOutlined
 } from '@ant-design/icons';
 import { Line } from '@ant-design/plots';
 import ActionCard from '../../components/ProactiveHub/ActionCard';
+import ReasoningChain from '../../components/ProactiveHub/ReasoningChain';
 import request from '../../utils/request';
 
 const { Title, Text } = Typography;
@@ -20,6 +22,8 @@ const Dashboard = () => {
     actions: []
   });
   const [chartData, setChartData] = useState([]);
+  const [selectedAction, setSelectedAction] = useState(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,14 +40,30 @@ const Dashboard = () => {
               title: '对账差异提醒',
               description: '发现在“支付宝”流水中有一笔 500.00 元的款项未找到对应的记账凭证，建议核对。',
               type: 'WARNING',
-              date: '10分钟前'
+              date: '10分钟前',
+              route: '/reconciliation',
+              cot_trace: [
+                { step: 'INPUT_ANALYSIS', details: '扫描支付宝流水与ERP凭证表', result: 'Found unmatched' },
+                { step: 'RULE_MATCH', details: '执行规则 R-102: 流水未匹配凭证', match_type: 'Exact' },
+                { step: 'CONFIDENCE_SCORING', details: '金额完全一致，时间偏差<1min', confidence: 0.95 }
+              ],
+              confidence: 0.95,
+              engine: 'LedgerAlpha-Core'
             },
             {
               id: 2,
               title: '发票自动勾稽完成',
               description: '系统已自动为 24 张进项发票匹配了银行流水，请进入工作台进行最终确认。',
               type: 'SUCCESS',
-              date: '1小时前'
+              date: '1小时前',
+              route: '/invoice',
+              cot_trace: [
+                 { step: 'INPUT_ANALYSIS', details: '读取新上传发票 24 张', result: 'Parsed' },
+                 { step: 'ROUTING', details: '调用发票流水匹配模型', result: 'Invoked' },
+                 { step: 'RULE_MATCH', details: '匹配成功 24/24', match_type: 'Batch' }
+              ],
+              confidence: 0.99,
+              engine: 'LedgerAlpha-Core'
             }
           ]
         });
@@ -58,6 +78,15 @@ const Dashboard = () => {
     };
     fetchData();
   }, []);
+
+  const handleViewReasoning = (action) => {
+    setSelectedAction(action);
+    setDrawerVisible(true);
+  };
+
+  const handleAction = (route) => {
+    window.location.href = route;
+  };
 
   const chartConfig = {
     data: chartData,
@@ -257,7 +286,8 @@ const Dashboard = () => {
                         description={action.description}
                         type={action.type}
                         date={action.date}
-                        onAction={() => message.info('正在导航至相关业务模块...')}
+                        onAction={() => handleAction(action.route)}
+                        onViewReasoning={() => handleViewReasoning(action)}
                       />
                     </div>
                   ))
@@ -269,6 +299,27 @@ const Dashboard = () => {
               </Card>
             </Col>
           </Row>
+
+          <Drawer
+            title={
+              <Space>
+                <RobotOutlined style={{ color: '#1677ff' }} />
+                <span>AI 决策详情</span>
+              </Space>
+            }
+            placement="right"
+            onClose={() => setDrawerVisible(false)}
+            open={drawerVisible}
+            width={400}
+            bodyStyle={{ background: '#0F172A', padding: 0 }}
+            headerStyle={{ background: '#0F172A', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+          >
+            {selectedAction && (
+              <div style={{ padding: 24 }}>
+                <ReasoningChain log={selectedAction} loading={false} />
+              </div>
+            )}
+          </Drawer>
         </PageContainer>
       </div>
     </ConfigProvider>

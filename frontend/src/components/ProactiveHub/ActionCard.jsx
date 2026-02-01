@@ -9,7 +9,7 @@ import {
 
 const { Text, Paragraph } = Typography;
 
-const ActionCard = ({ title, description, type, actionText, onAction, date }) => {
+const ActionCard = ({ title, description, type, actionText, onAction, date, onViewReasoning }) => {
   const getIcon = () => {
     switch (type) {
       case 'WARNING': return <ExclamationCircleOutlined style={{ color: '#faad14' }} />;
@@ -33,8 +33,13 @@ const ActionCard = ({ title, description, type, actionText, onAction, date }) =>
       <Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: 12 }}>
         {description}
       </Paragraph>
-      <div style={{ textAlign: 'right' }}>
-        <Button type="link" onClick={onAction} icon={<ArrowRightOutlined />}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+        {onViewReasoning && (
+          <Button size="small" type="text" onClick={onViewReasoning} icon={<RobotOutlined />}>
+            AI分析
+          </Button>
+        )}
+        <Button size="small" type="link" onClick={onAction} icon={<ArrowRightOutlined />}>
           {actionText || '去处理'}
         </Button>
       </div>

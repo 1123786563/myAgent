@@ -55,7 +55,11 @@ const VoucherEntry = () => {
   };
 
   return (
-    <PageContainer title="记账凭证录入">
+    <div className="fintech-bg">
+      <div className="fintech-blob blob-blue" />
+      <div className="fintech-blob blob-purple" />
+      
+      <PageContainer title={<span style={{ color: '#fff' }}>记账凭证录入</span>}>
       <Row gutter={16}>
         <Col span={18}>
           <ProForm
@@ -79,32 +83,67 @@ const VoucherEntry = () => {
               },
             }}
           >
-            <Card title="基础信息" style={{ marginBottom: 24 }} size="small">
+            <Card title={<span style={{ color: '#fff' }}>AI 辅助录入</span>} style={{ marginBottom: 24 }} size="small" className="glass-card" extra={<RobotOutlined style={{ color: '#1890ff' }} />}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <ProFormText
+                  fieldProps={{
+                    prefix: <RobotOutlined style={{ color: '#1890ff' }} />,
+                    onPressEnter: (e) => {
+                      const text = e.target.value;
+                      if (!text) return;
+                      // Mock AI parsing logic
+                      message.loading('AI 正在分析语义...', 1).then(() => {
+                        if (text.includes('支付宝') && text.includes('500')) {
+                          const items = form.getFieldValue('items') || [];
+                          // Update first item (Debit)
+                          items[0] = { ...items[0], account_code: '1002', abstract: text, debit: 500 };
+                          // Update second item (Credit)
+                          items[1] = { ...items[1], account_code: '6001', abstract: text, credit: 500 };
+                          form.setFieldsValue({ items });
+                          message.success('AI 已自动生成分录，请核对');
+                        } else {
+                          message.warning('未能完全识别，请手动补充');
+                        }
+                      });
+                    },
+                    style: { background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff' }
+                  }}
+                  name="ai_input"
+                  placeholder="试试输入: “收到支付宝转账500元餐费” (按回车触发)"
+                  noStyle
+                />
+              </div>
+            </Card>
+
+            <Card title={<span style={{ color: '#fff' }}>基础信息</span>} style={{ marginBottom: 24 }} size="small" className="glass-card">
               <Row gutter={16}>
                 <Col span={8}>
                   <ProFormDatePicker
                     name="voucher_date"
-                    label="凭证日期"
+                    label={<span style={{ color: 'rgba(255,255,255,0.85)' }}>凭证日期</span>}
                     rules={[{ required: true }]}
                     width="100%"
+                    fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                   />
                 </Col>
                 <Col span={16}>
                   <ProFormText
                     name="description"
-                    label="总备注"
+                    label={<span style={{ color: 'rgba(255,255,255,0.85)' }}>总备注</span>}
                     placeholder="请输入该笔凭证的总体说明"
+                    fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                   />
                 </Col>
               </Row>
             </Card>
 
-            <Card title="分录明细" size="small">
+            <Card title={<span style={{ color: '#fff' }}>分录明细</span>} size="small" className="glass-card">
               <ProFormList
                 name="items"
                 initialValue={[{}, {}]}
                 creatorButtonProps={{
                   creatorButtonText: '添加分录',
+                  style: { color: '#1677ff', borderColor: '#1677ff', background: 'transparent' }
                 }}
                 min={2}
                 onAfterAdd={(index) => setActiveItemIndex(index)}
@@ -116,16 +155,17 @@ const VoucherEntry = () => {
                     style={{
                       padding: '16px',
                       marginBottom: '16px',
-                      border: activeItemIndex === index ? '1px solid #1890ff' : '1px solid #f0f0f0',
-                      borderRadius: '4px',
-                      background: activeItemIndex === index ? '#f0faff' : 'inherit'
+                      border: activeItemIndex === index ? '1px solid #1677ff' : '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: '8px',
+                      background: activeItemIndex === index ? 'rgba(22, 119, 255, 0.05)' : 'rgba(255,255,255,0.02)',
+                      transition: 'all 0.3s'
                     }}
                   >
                     <Row gutter={16} align="middle">
                       <Col span={6}>
                         <ProFormSelect
                           name="account_code"
-                          label="会计科目"
+                          label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>会计科目</span>}
                           showSearch
                           options={Object.values(accounts).map(acc => ({
                             label: `${acc.code} ${acc.name}`,
@@ -133,27 +173,35 @@ const VoucherEntry = () => {
                             disabled: !acc.is_leaf
                           }))}
                           rules={[{ required: true }]}
+                          fieldProps={{ 
+                            style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' },
+                            popupClassName: 'glass-dropdown'
+                          }}
                         />
                       </Col>
                       <Col span={6}>
-                        <ProFormText name="abstract" label="摘要" />
+                        <ProFormText 
+                          name="abstract" 
+                          label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>摘要</span>}
+                          fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
+                        />
                       </Col>
                       <Col span={6}>
                         <ProFormDigit
                           name="debit"
-                          label="借方金额"
+                          label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>借方金额</span>}
                           min={0}
                           precision={2}
-                          fieldProps={{ style: { width: '100%' } }}
+                          fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', width: '100%' } }}
                         />
                       </Col>
                       <Col span={6}>
                         <ProFormDigit
                           name="credit"
-                          label="贷方金额"
+                          label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>贷方金额</span>}
                           min={0}
                           precision={2}
-                          fieldProps={{ style: { width: '100%' } }}
+                          fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', width: '100%' } }}
                         />
                       </Col>
                     </Row>
@@ -166,13 +214,13 @@ const VoucherEntry = () => {
 
                         const dims = accConfig.auxiliary_types?.split(',') || [];
                         return (
-                          <div style={{ marginTop: 12, padding: '12px', background: '#fafafa', borderRadius: '4px' }}>
+                          <div style={{ marginTop: 12, padding: '12px', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                             <Space size="middle" wrap>
-                              <Text type="secondary" style={{ fontSize: '12px' }}>辅助核算:</Text>
+                              <Text type="secondary" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>辅助核算:</Text>
                               {dims.includes('DEPARTMENT') && (
                                 <ProFormSelect
                                   name="department"
-                                  label="部门"
+                                  label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>部门</span>}
                                   width="sm"
                                   options={[
                                     { label: '财务部', value: 'DEPT_FIN' },
@@ -180,33 +228,37 @@ const VoucherEntry = () => {
                                     { label: '销售部', value: 'DEPT_SALES' },
                                   ]}
                                   rules={[{ required: true }]}
+                                  fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                                 />
                               )}
                               {dims.includes('PROJECT') && (
                                 <ProFormSelect
                                   name="project"
-                                  label="项目"
+                                  label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>项目</span>}
                                   width="sm"
                                   options={[
                                     { label: 'LedgerAlpha 研发', value: 'PROJ_LA' },
                                     { label: '市场推广 2024', value: 'PROJ_MKT' },
                                   ]}
                                   rules={[{ required: true }]}
+                                  fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                                 />
                               )}
                               {(dims.includes('CUSTOMER') || dims.includes('SUPPLIER')) && (
                                 <ProFormText
                                   name={dims.includes('CUSTOMER') ? 'customer' : 'supplier'}
-                                  label={dims.includes('CUSTOMER') ? '客户' : '供应商'}
+                                  label={dims.includes('CUSTOMER') ? <span style={{ color: 'rgba(255,255,255,0.65)' }}>客户</span> : <span style={{ color: 'rgba(255,255,255,0.65)' }}>供应商</span>}
                                   width="sm"
                                   rules={[{ required: true }]}
+                                  fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                                 />
                               )}
                               {dims.includes('EMPLOYEE') && (
                                 <ProFormText
                                   name="employee"
-                                  label="员工"
+                                  label={<span style={{ color: 'rgba(255,255,255,0.65)' }}>员工</span>}
                                   width="sm"
+                                  fieldProps={{ style: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' } }}
                                 />
                               )}
                             </Space>
@@ -222,25 +274,26 @@ const VoucherEntry = () => {
         </Col>
 
         <Col span={6}>
-          <div style={{ position: 'sticky', top: 0 }}>
+          <div style={{ position: 'sticky', top: 24 }}>
             <ReasoningChain
               log={form.getFieldValue(['items', activeItemIndex])?.inference_log}
               loading={false}
             />
-            <Card title="快捷提示" size="small" style={{ marginTop: 16 }}>
+            <Card title={<span style={{ color: '#fff' }}>快捷提示</span>} size="small" style={{ marginTop: 16 }} className="glass-card">
               <Space direction="vertical">
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  <Badge status="processing" /> 选中分录行可查看 AI 建议详情
+                <Text type="secondary" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>
+                  <Badge status="processing" color="#1677ff" /> 选中分录行可查看 AI 建议详情
                 </Text>
-                <Text type="secondary" style={{ fontSize: '12px' }}>
-                  <Badge status="success" /> 辅助核算维度将自动保存至项目标签
+                <Text type="secondary" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)' }}>
+                  <Badge status="success" color="#52c41a" /> 辅助核算维度将自动保存至项目标签
                 </Text>
               </Space>
             </Card>
           </div>
         </Col>
       </Row>
-    </PageContainer>
+      </PageContainer>
+    </div>
   );
 };
 
