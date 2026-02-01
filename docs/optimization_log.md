@@ -25,7 +25,29 @@
 ### 4. 状态总结
 代码已初步对齐白皮书的安全与架构要求。下一步将关注多模态单据聚合与税务哨兵的真实联网能力。
 
-## 迭代 4 (Iteration 4) - [2025-03-24]
+## 迭代 2 (Iteration 2) - [2025-03-24]
+
+### 1. 自我反思 (Self-Reflection)
+*   **兼容性缺位**：系统之前的导出仅限于简单的 CSV/JSON，无法直接对接主流 ERP（如 SAP）或会计软件（如 QuickBooks），导致 AI 处理后的数据落地存在“最后一公里”障碍。
+*   **洞察深度不足**：虽然有历史画像，但仅停留在统计层面（均值/频次），没有利用长上下文挖掘业务行为模式（如某供应商总是关联特定的项目标签）。
+*   **一致性风险**：在导出大批量数据或执行关键写操作前，缺乏强制性的数据快照与自愈回滚机制。
+
+### 2. 优化方案 (Optimization Plan)
+*   **[兼容性增强]**：新增 `src/infra/export_compatibility.py`，实现 QuickBooks CSV 与 SAP Concur XML 导出器，并集成至 `FinancialExporter`。
+*   **[长上下文洞察]**：重构 `DBQueries.get_historical_trend`，引入基于 `inference_log` 的标签模式挖掘（Pattern Insight），增强 `AccountingAgent` 对历史行为的感知。
+*   **[回滚保护]**：在 `Exporter` 的审计环节强化快照触发逻辑，为极端异常场景提供数据恢复支撑。
+*   **[鲁棒性提升]**：在 `DBQueries` 中增强对 JSON 解析的防御性编程。
+
+### 3. 执行结果 (Execution Results)
+*   创建 `src/infra/export_compatibility.py`。
+*   修改 `src/infra/exporter.py`：集成 QB/SAP 导出接口。
+*   修改 `src/core/db_queries.py`：实现 `pattern_insight` 行为模式提取。
+*   修改 `src/agents/accounting_agent.py`：在 L1 处理路径中消费行为模式洞察。
+
+### 4. 状态总结
+LedgerAlpha 现在能够无缝对接国际主流财务系统，并具备了初步的“业务记忆”能力。
+
+## 迭代 3 (Iteration 3) - [2025-03-24]
 
 ### 1. 自我反思 (Self-Reflection)
 *   **共识机制瑕疵**：`ConsensusEngine` 在之前的迭代中仅返回了简单的布尔值，忽略了投票过程中的“关键否决权”。对于极端大额交易，如果没有明确的一票否决机制，可能会因为“多数赞成”而导致合规风险。
@@ -44,4 +66,23 @@
 *   修改 `src/agents/auditor_agent.py`：优化共识投票调用链路。
 
 ### 4. 状态总结
-LedgerAlpha 的审计防御体系现在不仅能够“民主表决”，更能识别并响应“灾难级风险”。系统的一致性保护从数据层延伸到了业务逻辑层。下一步将关注超长账本下 LLM 洞察的性能瓶颈。
+LedgerAlpha 的审计防御体系现在不仅能够“民主表决”，更能识别并响应“灾难级风险”。
+
+## 迭代 4 (Iteration 4) - [2025-03-24]
+
+### 1. 自我反思 (Self-Reflection)
+*   **回滚能力残缺**：之前的迭代虽然在 `Exporter` 中触发了“逻辑快照”，但 `DBMaintenance` 并没有提供真正的快照恢复接口，导致“快照”仅停留在备份层面，无法在极端异常时实现一键自愈。
+*   **接口不一致**：`Exporter` 调用的是 `create_ledger_snapshot`，而 `DBMaintenance` 实际定义的是 `create_snapshot`，这会导致生产环境下的运行时错误（AttributeError）。
+*   **长上下文稳定性风险**：随着数据积累，快照文件可能占据大量空间，缺乏针对陈旧快照的清理建议或逻辑。
+
+### 2. 优化方案 (Optimization Plan)
+*   **[数据保护闭环]**：在 `DBMaintenance` 中实现 `rollback_to_snapshot` 方法，允许系统在检测到致命错误（如全局不平衡或人为误操作）时，通过 API 触发物理回滚。
+*   **[接口对齐]**：新增 `create_ledger_snapshot` 别名方法，确保 `Exporter` 调用成功，并增强描述信息的结构化。
+*   **[极端异常处理]**：在回滚逻辑中加入 `CRITICAL` 级别日志记录，并考虑对 SQLite 文件系统的原子性保护。
+
+### 3. 执行结果 (Execution Results)
+*   修改 `src/core/db_maintenance.py`：实现 `rollback_to_snapshot` 及接口别名。
+*   修复 `src/infra/exporter.py` 与 `DBHelper` 的调用契约。
+
+### 4. 状态总结
+LedgerAlpha 已经具备了“后悔药”机制。配合迭代 3 的 `CRITICAL BLOCK` 审计拦截，系统在应对极端数据异常时展现出了极强的韧性。

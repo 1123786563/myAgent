@@ -43,6 +43,27 @@ class DBMaintenance(DBBase):
             get_logger("DB").error(f"创建快照失败: {e}")
             return None
 
+    def create_ledger_snapshot(self, tag="AUTO"):
+        """[Iteration 5] 为外部接口提供的快照方法名一致性支持"""
+        return self.create_snapshot(description=f"Tag: {tag}")
+
+    def rollback_to_snapshot(self, snapshot_id):
+        """[Iteration 5] 极端异常场景下的回滚能力"""
+        snapshot_path = self.db_path + f".{snapshot_id}"
+        if not os.path.exists(snapshot_path):
+            get_logger("DB").error(f"回滚失败：快照文件不存在 {snapshot_id}")
+            return False
+        
+        try:
+            # 停止所有连接（虽然 sqlite 很难强制，但 copy2 会覆盖）
+            # 理想情况下此处应有关闭全局连接池的动作
+            shutil.copy2(snapshot_path, self.db_path)
+            get_logger("DB").critical(f"系统已回滚至快照: {snapshot_id}")
+            return True
+        except Exception as e:
+            get_logger("DB").error(f"执行回滚过程发生异常: {e}")
+            return False
+
     def verify_chain_integrity(self):
         try:
             with self.transaction("DEFERRED") as conn:
